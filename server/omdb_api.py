@@ -2,6 +2,7 @@ import requests
 from requests import RequestException
 
 # Documentation for the API available at : https://developers.themoviedb.org/3/getting-started/introduction
+from server.omdb_model import Episode
 
 API_KEY = "84eae13884eb7a9e47fcc760ca08f593"
 API_URL = "https://api.themoviedb.org/3"
@@ -76,11 +77,9 @@ def get_tv_serie_episode(tv_id: int, season_number: int, episode_number: int):
     resp = requests.get(url)
     if resp.status_code != 200:
         raise create_request_exception('GET', url, resp)
-    json = resp.json()
+    json = Episode.from_json(resp)
     print(json)
 
 
-try:
-    get_tv_serie_season(80865, -1)
-except RequestExceptionOMDB as e:
-    print(e)
+get_tv_serie_episode(80865, 1, 1)
+
