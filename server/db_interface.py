@@ -5,8 +5,8 @@ from sqlalchemy import Column, String, Integer
 
 engine = create_engine('postgresql://admin:password@localhost:5432/series_app')
 Session = sessionmaker(bind=engine)
-
 Base = declarative_base()
+
 
 class User(Base):
     __tablename__ = 'users'
@@ -18,11 +18,15 @@ class User(Base):
         self.username = username
         self.password = password
 
+    def add_new_user(self, session):
+        session.add(self)
+        session.commit()
+
+
+
 #Test1
 if __name__ == "__main__":
-    Base.metadata.create_all(engine)
-    session = Session()
     User1 = User("clem","mdp")
-    session.add(User1)
-    session.commit()
+    session = Session()
+    User1.add_new_user(session)
     session.close()
