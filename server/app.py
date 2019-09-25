@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 
-from server.omdb_api import search_tv_serie_by_title
+from omdb_api import search_tv_serie_by_title
 
 application = Flask(__name__)
 
