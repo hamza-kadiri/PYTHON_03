@@ -28,7 +28,7 @@ services:
     restart: always
     image: sameersbn/postgresql:10-2
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       - DB_USER=admin
       - DB_PASS=password
@@ -39,4 +39,4 @@ services:
     image: adminer
     restart: always
     ports:
-      - 8080:8080
+      - '8080:8080'
