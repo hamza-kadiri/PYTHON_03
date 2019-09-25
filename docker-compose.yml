@@ -24,3 +24,19 @@ services:
       - '8001:8000'
     environment:
       - NODE_ENV=development
+  db:
+    restart: always
+    image: sameersbn/postgresql:10-2
+    ports:
+      - "5432:5432"
+    environment:
+      - DB_USER=admin
+      - DB_PASS=password
+      - DB_NAME=series_app
+    volumes:
+      - /srv/docker/postgresql:/var/lib/postgresql
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
