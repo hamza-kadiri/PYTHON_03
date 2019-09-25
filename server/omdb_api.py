@@ -2,7 +2,7 @@ import requests
 from requests import RequestException
 
 # Documentation for the API available at : https://developers.themoviedb.org/3/getting-started/introduction
-from server.omdb_model import SerieEpisode, SerieSeason, Serie, SerieListResults
+from omdb_model import SerieEpisode, SerieSeason, Serie, SerieListResults
 
 API_KEY = "84eae13884eb7a9e47fcc760ca08f593"
 API_URL = "https://api.themoviedb.org/3"
