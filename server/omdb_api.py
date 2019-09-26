@@ -2,7 +2,7 @@ import requests
 from requests import RequestException
 
 # Documentation for the API available at : https://developers.themoviedb.org/3/getting-started/introduction
-from server.omdb_model import SerieEpisode, SerieSeason, Serie, SerieListResults
+from omdb_model import SerieEpisode, SerieSeason, Serie, SerieListResults
 
 API_KEY = "84eae13884eb7a9e47fcc760ca08f593"
 API_URL = "https://api.themoviedb.org/3"
@@ -10,7 +10,8 @@ API_URL = "https://api.themoviedb.org/3"
 
 class RequestExceptionOMDB(RequestException):
     def __init__(self, method, url, http_status_code, api_status_message, api_status_code):
-        RequestException.__init__(self, '{} {} {}'.format(method, url, http_status_code))
+        RequestException.__init__(
+            self, '{} {} {}'.format(method, url, http_status_code))
         self.__method = method
         self.__url = url
         self.__http_status_code = http_status_code
@@ -44,7 +45,7 @@ def create_request_exception(method, url, resp):
 
 
 def search_tv_serie_by_title(query: str):
-    formatted_query = query.replace(" ","+")
+    formatted_query = query.replace(" ", "+")
     url = (API_URL + "/search/tv?api_key={}&query={}".format(API_KEY, formatted_query))
     resp = requests.get(url)
     print(url)
@@ -64,7 +65,8 @@ def get_tv_serie(tv_id: int):
 
 
 def get_tv_serie_season(tv_id: int, season_number: int):
-    url = API_URL + "/tv/{}/season/{}?api_key={}".format(tv_id, season_number, API_KEY)
+    url = API_URL + \
+        "/tv/{}/season/{}?api_key={}".format(tv_id, season_number, API_KEY)
     resp = requests.get(url)
     if resp.status_code != 200:
         raise create_request_exception('GET', url, resp)

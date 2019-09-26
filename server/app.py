@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request
+from flask import Flask, request, jsonify
 
-from server.omdb_api import search_tv_serie_by_title
+from omdb_api import search_tv_serie_by_title
 
 application = Flask(__name__)
 
@@ -13,7 +13,7 @@ def index():
 @application.route("/search")
 def search():
     query = request.args.get('query')
-    return dict(search_tv_serie_by_title(query))
+    return jsonify(dict(search_tv_serie_by_title(query)))
 
 
 if __name__ == "__main__":
