@@ -65,7 +65,9 @@ class RequestOMDB:
                 queryString = f'&query={urllib.parse.quote(query)}'
             url = f'{self.base_url}{endpoint}?api_key={self.api_key}{queryString or ""}'
             if (method == 'GET'):
+                print(url)
                 response = requests.get(url)
+                print(response)
                 if response.status_code != 200:
                     raise create_request_exception(method, url, response)
                 return response

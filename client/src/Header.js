@@ -1,19 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import { fade, makeStyles } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
-import InputBase from "@material-ui/core/InputBase";
+import Grid from "@material-ui/core/Grid";
 import Badge from "@material-ui/core/Badge";
 import MenuItem from "@material-ui/core/MenuItem";
 import Menu from "@material-ui/core/Menu";
 import MenuIcon from "@material-ui/icons/Menu";
 import SearchIcon from "@material-ui/icons/Search";
 import AccountCircle from "@material-ui/icons/AccountCircle";
-import MailIcon from "@material-ui/icons/Mail";
 import NotificationsIcon from "@material-ui/icons/Notifications";
 import MoreIcon from "@material-ui/icons/MoreVert";
+import AsyncSelect from "react-select/async";
+import ky from "ky";
+import { components } from "react-select";
+const { Option } = components;
 
 const useStyles = makeStyles(theme => ({
   grow: {
@@ -37,10 +40,9 @@ const useStyles = makeStyles(theme => ({
     },
     marginRight: theme.spacing(2),
     marginLeft: 0,
-    width: "100%",
+    width: "70%",
     [theme.breakpoints.up("sm")]: {
-      marginLeft: theme.spacing(3),
-      width: "auto"
+      marginLeft: theme.spacing(3)
     }
   },
   searchIcon: {
@@ -102,6 +104,24 @@ export default function PrimarySearchAppBar() {
     setMobileMoreAnchorEl(event.currentTarget);
   };
 
+  const ThumbailOption = props => (
+    <Option {...props}>
+      <Grid container align="center" className={classes.root} spacing={2}>
+        <Grid item>
+          <img
+            height="50"
+            src={props.data._SerieListResult__thumbnail_url}
+          ></img>
+        </Grid>
+        <Grid item>
+          <Typography className={classes.title} variant="h6" noWrap>
+            {props.label}
+          </Typography>
+        </Grid>
+      </Grid>
+    </Option>
+  );
+
   const menuId = "primary-search-account-menu";
   const renderMenu = (
     <Menu
@@ -151,6 +171,22 @@ export default function PrimarySearchAppBar() {
     </Menu>
   );
 
+  const getOptionValue = option => {
+    return option._SerieListResult__id;
+  };
+
+  const getOptionLabel = option => {
+    return option._SerieListResult__name;
+  };
+
+  const promiseOptions = async inputValue => {
+    const response = await ky.get("//localhost:8001/search", {
+      searchParams: { query: inputValue }
+    });
+    const json = await response.json();
+    return json._SerieListResults__results;
+  };
+
   return (
     <div className={classes.grow}>
       <AppBar position="static">
@@ -170,14 +206,18 @@ export default function PrimarySearchAppBar() {
             <div className={classes.searchIcon}>
               <SearchIcon />
             </div>
-            <InputBase
+            <AsyncSelect
               placeholder="Search…"
               classes={{
                 root: classes.inputRoot,
                 input: classes.inputInput
               }}
               inputProps={{ "aria-label": "search" }}
-            />
+              loadOptions={promiseOptions}
+              getOptionValue={getOptionValue}
+              getOptionLabel={getOptionLabel}
+              components={{ Option: ThumbailOption }}
+            ></AsyncSelect>
           </div>
           <div className={classes.grow} />
           <div className={classes.sectionDesktop}>
