@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 
 services:
   client:
@@ -7,28 +7,29 @@ services:
       context: ./client
       dockerfile: Dockerfile
     volumes:
-      - './client:/app'
-      - '/app/node_modules'
+      - "./client:/app"
+      - "/app/node_modules"
     ports:
-      - '3001:3000'
+      - "3001:3000"
     environment:
       - NODE_ENV=development
   server:
+    restart: always
     container_name: server
     build:
       context: ./server
       dockerfile: Dockerfile
     volumes:
-      - './server:/app'
+      - "./server:/app"
     ports:
-      - '8001:8000'
+      - "8001:8000"
     environment:
       - NODE_ENV=development
   db:
     restart: always
     image: sameersbn/postgresql:10-2
     ports:
-      - '5432:5432'
+      - "5432:5432"
     environment:
       - DB_USER=admin
       - DB_PASS=password
@@ -39,4 +40,4 @@ services:
     image: adminer
     restart: always
     ports:
-      - '8080:8080'
+      - "8080:8080"

@@ -1,3 +1,9 @@
+import json
+from flask import current_app as app
+
+from typing import NamedTuple
+
+
 class Author:
 
     @classmethod
@@ -239,7 +245,8 @@ class Serie:
     @classmethod
     def from_json(cls, json):
         return cls(json['id'], json['name'], [Author.from_json(i) for i in json['created_by']], json['first_air_date'],
-                   json['last_air_date'], [Genre.from_json(i) for i in json['genres']],
+                   json['last_air_date'], [
+                       Genre.from_json(i) for i in json['genres']],
                    [Network.from_json(i) for i in json['networks']],
                    json['number_of_seasons'], json['number_of_episodes'], json['overview'],
                    [SerieSeasonMini.from_json(i) for i in json['seasons']], json['status'])
@@ -320,17 +327,18 @@ class SerieListResult:
 
     @classmethod
     def from_json(cls, json):
-        return cls(json['id'], json['name'], json['first_air_date'], json['overview'])
+        return cls(json['id'], json['name'], json['first_air_date'], json['overview'], json['backdrop_path'])
 
-    def __init__(self, id: int, name: str, first_air_date: str, overview: str):
+    def __init__(self, id: int, name: str, first_air_date: str, overview: str, backdrop_path: str):
         self.__id = id
         self.__name = name
         self.__first_air_date = first_air_date
         self.__overview = overview
+        self.__thumbnail_url = f"{app.config['THUMBNAIL_BASE_URL']}{backdrop_path}"
 
     def __str__(self):
-        return '\r ID : {} \n Name : {} \n First Air Date : {} \n Overview : {}' \
-            .format(self.__id, self.__name, self.__first_air_date, self.__overview)
+        return '\r ID : {} \n Name : {} \n First Air Date : {} \n Overview : {} \n Thumbnail URL : {}' \
+            .format(self.__id, self.__name, self.__first_air_date, self.__overview, self.__thumbnail_url)
 
     @property
     def id(self):
@@ -348,6 +356,10 @@ class SerieListResult:
     def overview(self):
         return self.__overview
 
+    @property
+    def thumbnail_url(self):
+        return self.__thumbnail_url
+
 
 class SerieListResults:
 
@@ -364,9 +376,12 @@ class SerieListResults:
 
     def __str__(self):
         return 'Current Page : {}, Total Pages : {}, Total Results : {} \n Results : \n\r {}'.format(self.__page,
-                                                                                              self.__total_pages,
-                                                                                              self.total_results,
-                                                                                              "\n\r >>>>> \n\r".join([str(i) for i in self.__results]))
+                                                                                                     self.__total_pages,
+                                                                                                     self.total_results,
+                                                                                                     "\n\r >>>>> \n\r".join([str(i) for i in self.__results]))
+
+    def to_dict(self):
+        return json.loads(json.dumps(self, default=lambda o: o.__dict__))
 
     @property
     def page(self):
