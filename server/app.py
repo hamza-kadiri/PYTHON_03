@@ -1,8 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-
+from database import init_db
 from omdb_api import search_tv_serie_by_title
-
 
 def create_app():
     """Construct the core application."""
@@ -10,9 +9,9 @@ def create_app():
     app.config.from_object('config.Config')
     CORS(app)
     # Set globals
-    #db = SQLAlchemy()
+    init_db()
     with app.app_context():
-        # db.init_app(app)
+        # db.create_all()
         # Add some routes
         @app.route("/")
         def index():

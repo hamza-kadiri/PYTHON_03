@@ -4,10 +4,7 @@ class Config(object):
     DB_USER = 'admin'
     DB_PASSWORD = 'password'
     DB_NAME = 'series_app'
-
-    @property
-    def DATABASE_URI(self):         # Note: all caps
-        return 'postgresql://{}:{}@{}/{}'.format(self.DB_USER, self.DB_PASSWORD, self.DB_SERVER, self.DB_NAME)
+    DATABASE_URI = 'postgresql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_SERVER, DB_NAME)
 
     """API Config"""
 
