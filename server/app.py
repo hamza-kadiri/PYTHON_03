@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 from form_validation import validate_add_serie_form, validate_user_registration_form
-from database import init_db
+from database import init_db, save_obj
+from models import User
 from omdb_api import search_tv_serie_by_title
 
 
@@ -35,7 +36,8 @@ def create_app():
             username = request.form['username']
             password = request.form['password']
             email = request.form['email']
-            return {"username": username}
+            save_obj(User(username,email, password))
+            return {"isSaved":True}
 
         @app.route("/users/<int:user_id>", methods=['GET'])
         def get_user_details(user_id):
