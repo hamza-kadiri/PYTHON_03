@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from database import Base
 
 
@@ -24,3 +24,14 @@ class Serie(Base):
     def __init__(self, id_tmdb, title):
         self.id_tmdb = id_tmdb
         self.title = title
+
+
+class Subscription(Base):
+    __tablename__ = 'subscriptions'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('User.id')
+    serie_id = Column(Integer, ForeignKey('Serie_id'))
+
+    def __init__(self, user_id, serie_id):
+        self.user_id = user_id
+        self.serie_id = serie_id
