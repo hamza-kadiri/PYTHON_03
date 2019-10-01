@@ -96,26 +96,23 @@ def search_tv_serie_by_title(query: str):
     serie_list_results = SerieListResults.from_json(resp.json())
     return serie_list_results.to_dict()
 
-
 def get_tv_serie(tv_id: int):
     endpoint = f'/tv/{tv_id}'
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
-    serie = Serie.from_json(resp.json())
-    return serie
+    return resp.json()
 
 
 def get_tv_serie_season(tv_id: int, season_number: int):
     endpoint = f'/tv/{tv_id}/season/{season_number}'
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
-    serie_season = SerieSeason.from_json(resp.json())
-    return serie_season
+    return resp.json()
+
 
 
 def get_tv_serie_episode(tv_id: int, season_number: int, episode_number: int):
     endpoint = f'/tv/{tv_id}/season/{season_number}/episode/{episode_number}'
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
-    serie_episode = SerieEpisode.from_json(resp.json())
-    return serie_episode
+    return resp.json()
