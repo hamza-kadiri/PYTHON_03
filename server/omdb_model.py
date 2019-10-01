@@ -1,8 +1,6 @@
 import json
 from flask import current_app as app
 
-from typing import NamedTuple
-
 
 class Author:
 
