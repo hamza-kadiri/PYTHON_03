@@ -3,7 +3,8 @@ from flask_cors import CORS
 from form_validation import validate_add_serie_form, validate_user_registration_form
 from database import init_db, save_obj
 from models import User
-from omdb_api import search_tv_serie_by_title
+from tmdb_api import search_tv_serie_by_title
+from sqlalchemy.exc import IntegrityError
 
 
 def create_app():
@@ -23,7 +24,7 @@ def create_app():
         @app.route("/search", methods=['GET'])
         def search():
             query = request.args.get('query')
-            return (jsonify(search_tv_serie_by_title(query)))
+            return search_tv_serie_by_title(query)
 
         @app.route("/series/<int:serie_id>", methods=['GET'])
         def get_serie_details(serie_id):
@@ -33,10 +34,11 @@ def create_app():
         def add_user():
             if not validate_user_registration_form(request.form):
                 abort(400)
-            username = request.form['username']
-            password = request.form['password']
-            email = request.form['email']
-            save_obj(User(username,email, password))
+            user = User(request.form['username'],request.form['email'], request.form['password'])
+            try:
+                save_obj(user)
+            except IntegrityError:
+                abort(403)
             return {"isSaved":True}
 
         @app.route("/users/<int:user_id>", methods=['GET'])
@@ -49,6 +51,16 @@ def create_app():
                 abort(400)
             serie_id = request.form['serie_id']
             return {"user_id": user_id, "serie_id": serie_id}
+
+        @app.errorhandler(500)
+        def internal_server_error(error):
+            app.logger.error('Server Error: %s', (error))
+            return {'error_code':'500','error_message':'Internal Server Error'}
+
+        @app.errorhandler(Exception)
+        def unhandled_exception(error):
+            app.logger.error('Unhandled Exception: %s', (error))
+            return {'error_code':'500','error_message':'Internal Server Error'}
 
     return app
 

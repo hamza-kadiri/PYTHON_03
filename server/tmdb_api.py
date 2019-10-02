@@ -4,11 +4,6 @@ from requests import RequestException
 from flask import current_app as app
 
 # Documentation for the API available at : https://developers.themoviedb.org/3/getting-started/introduction
-from omdb_model import SerieEpisode, SerieSeason, Serie, SerieListResults, SerieListResult
-
-API_KEY = "84eae13884eb7a9e47fcc760ca08f593"
-API_URL = "https://api.themoviedb.org/3"
-THUMBNAIL_BASE_URL = "https://image.tmdb.org/t/p/w300"
 
 
 class RequestExceptionOMDB(RequestException):
@@ -93,7 +88,7 @@ def search_tv_serie_by_title(query: str):
     endpoint = "/search/tv"
     request = RequestOMDB()
     resp = request.perform_request(endpoint, query=query)
-    serie_list_results = SerieListResults.from_json(resp.json())
+    serie_list_results = resp.json()
     return serie_list_results.to_dict()
 
 def get_tv_serie(tv_id: int):
