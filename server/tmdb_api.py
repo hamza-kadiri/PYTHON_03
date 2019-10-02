@@ -3,9 +3,10 @@ import urllib.parse
 from requests import RequestException
 from flask import current_app as app
 
+
 # Documentation for the API available at : https://developers.themoviedb.org/3/getting-started/introduction
 
-
+# TODO : Delete single pattern ?
 class RequestExceptionOMDB(RequestException):
     def __init__(self, method, url, http_status_code, api_status_message, api_status_code):
         RequestException.__init__(
@@ -56,9 +57,10 @@ class RequestOMDB:
             return self._api_key
 
         def perform_request(self, endpoint: str, method='GET', query=None):
+            queryString=""
             if query is not None:
                 queryString = f'&query={urllib.parse.quote(query)}'
-            url = f'{self.base_url}{endpoint}?api_key={self.api_key}{queryString or ""}'
+            url = f'{self.base_url}{endpoint}?api_key={self.api_key}{queryString}'
             if (method == 'GET'):
                 print(url)
                 response = requests.get(url)
@@ -66,6 +68,7 @@ class RequestOMDB:
                 if response.status_code != 200:
                     raise create_request_exception(method, url, response)
                 return response
+
     instance = None
 
     def __init__(self):
@@ -89,7 +92,8 @@ def search_tv_serie_by_title(query: str):
     request = RequestOMDB()
     resp = request.perform_request(endpoint, query=query)
     serie_list_results = resp.json()
-    return serie_list_results.to_dict()
+    return serie_list_results
+
 
 def get_tv_serie(tv_id: int):
     endpoint = f'/tv/{tv_id}'
@@ -103,7 +107,6 @@ def get_tv_serie_season(tv_id: int, season_number: int):
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
     return resp.json()
-
 
 
 def get_tv_serie_episode(tv_id: int, season_number: int, episode_number: int):

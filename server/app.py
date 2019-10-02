@@ -2,8 +2,8 @@ from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 from form_validation import validate_add_serie_form, validate_user_registration_form
 from database import init_db, save_obj
-from models import User
-from tmdb_api import search_tv_serie_by_title
+from models import User, Serie, Subscription
+from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
 
 
@@ -21,6 +21,7 @@ def create_app():
         def index():
             return jsonify("Hello, World!!!")
 
+        # TODO Handle multiple pages results
         @app.route("/search", methods=['GET'])
         def search():
             query = request.args.get('query')
@@ -28,39 +29,58 @@ def create_app():
 
         @app.route("/series/<int:serie_id>", methods=['GET'])
         def get_serie_details(serie_id):
-            return {"serie_id": serie_id}
+            return get_tv_serie(serie_id)
 
         @app.route("/users", methods=['POST'])
         def add_user():
             if not validate_user_registration_form(request.form):
                 abort(400)
-            user = User(request.form['username'],request.form['email'], request.form['password'])
+            user = User(request.form['username'], request.form['email'], request.form['password'])
             try:
                 save_obj(user)
             except IntegrityError:
                 abort(403)
-            return {"isSaved":True}
+            return user.as_dict()
 
+        # TODO Add auth
         @app.route("/users/<int:user_id>", methods=['GET'])
         def get_user_details(user_id):
-            return {"user_id": user_id}
+            user = User.get_user_by_id(user_id)
+            if user is None:
+                abort(404)
+            return user.as_dict()
 
+        # TODO Add auth
         @app.route("/users/<int:user_id>/series", methods=['POST'])
         def add_serie_to_favorites(user_id):
             if not validate_add_serie_form(request.form):
                 abort(400)
             serie_id = request.form['serie_id']
-            return {"user_id": user_id, "serie_id": serie_id}
+            if Serie.get_serie_by_id(serie_id) is None:
+                serie_json = get_tv_serie(serie_id)
+                serie = Serie.from_json(serie_json)
+                save_obj(serie)
+            subscription = Subscription(user_id, serie_id)
+            try:
+                save_obj(subscription)
+            except IntegrityError:
+                abort(403)
+            return subscription.as_dict()
+
+        @app.errorhandler(404)
+        def not_found_error(error):
+            app.logger.error('404 Not Found Error: %s', (error))
+            return {'error_code': 404, 'error_message': 'The ressource you have requested could not be found'}
 
         @app.errorhandler(500)
         def internal_server_error(error):
             app.logger.error('Server Error: %s', (error))
-            return {'error_code':'500','error_message':'Internal Server Error'}
+            return {'error_code': 500, 'error_message': 'Internal Server Error'}
 
         @app.errorhandler(Exception)
         def unhandled_exception(error):
-            app.logger.error('Unhandled Exception: %s', (error))
-            return {'error_code':'500','error_message':'Internal Server Error'}
+            app.logger.error('Unhandled Exception: %s \n Stack Trace: %s', (error, str(traceback.format_exc())))
+            return {'error_code': 500, 'error_message': 'Internal Server Error'}
 
     return app
 
