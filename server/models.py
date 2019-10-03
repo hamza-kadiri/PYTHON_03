@@ -1,6 +1,9 @@
 from sqlalchemy import Column, Integer, Numeric, String, ForeignKey, UniqueConstraint
 from database import Base
-
+from passlib.apps import custom_app_context as pwd_context
+from itsdangerous import (TimedJSONWebSignatureSerializer
+                          as Serializer, BadSignature, SignatureExpired)
+from flask import current_app as app
 
 # TODO : Add encapsulation
 
@@ -9,12 +12,12 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(20), unique=True)
     email = Column(String(80))
-    password = Column(String(20))
+    password_hash = Column(String(128))
 
     def __init__(self, username, email, password):
         self.username = username
         self.email = email
-        self.password = password
+        self.password_hash = User.hash_password(password)
 
     # TODO : Add subscriptions / favorites series
     def as_dict(self):
@@ -23,6 +26,33 @@ class User(Base):
     @classmethod
     def get_user_by_id(cls, id: int):
         return User.query.filter_by(id=id).first()
+
+    @classmethod
+    def get_user_by_username(cls, username:str):
+        return User.query.filter_by(username=username).first()
+
+    @classmethod
+    def hash_password(cls, password:str):
+        return pwd_context.encrypt(password)
+
+    def verify_password(self, password:str):
+        return pwd_context.verify(password, self.password_hash)
+
+    def generate_auth_token(self, expiration=600):
+        s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'id': self.id})
+
+    @classmethod
+    def verify_auth_token(cls, token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            return None  # valid token, but expired
+        except BadSignature:
+            return None  # invalid token
+        user = User.get_user_by_id(data['id'])
+        return user
 
 # TODO : Add genre (commented out because it is, in fact, a many-to-many relationship)
 class Serie(Base):

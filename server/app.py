@@ -5,6 +5,7 @@ from database import init_db, save_obj
 from models import User, Serie, Subscription
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
+from flask_httpauth import HTTPBasicAuth
 
 
 def create_app():
@@ -14,8 +15,27 @@ def create_app():
     CORS(app)
     # Set globals
     init_db()
+    auth = HTTPBasicAuth()
     with app.app_context():
-        # db.create_all()
+
+        @auth.verify_password
+        def verify_password(username_or_token, password):
+            # first try to authenticate by token
+            user = User.verify_auth_token(username_or_token)
+            if not user:
+                # try to authenticate with username/password
+                user = User.get_user_by_username(username_or_token)
+                if not user or not user.verify_password(password):
+                    return False
+            g.user = user
+            return True
+
+        @app.route('/token')
+        @auth.login_required
+        def get_auth_token():
+            token = g.user.generate_auth_token()
+            return jsonify({'token': token.decode('ascii')})
+
         # Add some routes
         @app.route("/", methods=['GET'])
         def index():
