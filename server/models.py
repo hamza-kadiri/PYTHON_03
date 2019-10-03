@@ -70,6 +70,10 @@ class Subscription(Base):
     def as_dict(self):
         return {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie}
 
+    @classmethod
+    def get_subscriptions_from_user_id(cls, user_id):
+        return Subscription.query(tdmb_id_serie).filter_by(user_id=user_id)
+
 class Genre(Base):
     __tablename__ = 'genres'
     tmdb_id_genre = Column(Integer, primary_key=True)
