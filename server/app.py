@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from omdb_api import search_tv_serie_by_title
+from omdb_api import search_tv_serie_by_title, get_tv_serie
 
 
 def create_app():
@@ -21,7 +21,12 @@ def create_app():
         @app.route("/search")
         def search():
             query = request.args.get('query')
-            return (jsonify(search_tv_serie_by_title(query)))
+            return jsonify(search_tv_serie_by_title(query))
+
+        @app.route("/serie/<serie_id>")
+        def get_serie(serie_id):
+            serie_id = int(serie_id)
+            return jsonify(get_tv_serie(serie_id))
 
     return app
 
