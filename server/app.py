@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, abort
+from flask import Flask, request, jsonify, abort, g
 from flask_cors import CORS
 from form_validation import validate_add_serie_form, validate_user_registration_form
 from database import init_db, save_obj
@@ -6,7 +6,7 @@ from models import User, Serie, Subscription
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPBasicAuth
-
+from psycopg2.errors import UniqueViolation
 
 def create_app():
     """Construct the core application."""
@@ -43,11 +43,13 @@ def create_app():
 
         # TODO Handle multiple pages results
         @app.route("/search", methods=['GET'])
+        @auth.login_required
         def search():
             query = request.args.get('query')
             return search_tv_serie_by_title(query)
 
         @app.route("/series/<int:serie_id>", methods=['GET'])
+        @auth.login_required
         def get_serie_details(serie_id):
             return get_tv_serie(serie_id)
 
@@ -60,11 +62,16 @@ def create_app():
                 save_obj(user)
             except IntegrityError:
                 abort(403)
+            except IntegrityError:
+                abort(403)
             return user.as_dict()
 
         # TODO Add auth
         @app.route("/users/<int:user_id>", methods=['GET'])
+        @auth.login_required
         def get_user_details(user_id):
+            if user_id != g.user.id:
+                abort(403)
             user = User.get_user_by_id(user_id)
             if user is None:
                 abort(404)
@@ -72,7 +79,10 @@ def create_app():
 
         # TODO Add auth
         @app.route("/users/<int:user_id>/series", methods=['POST'])
+        @auth.login_required
         def add_serie_to_favorites(user_id):
+            if user_id != g.user.id:
+                abort(403)
             if not validate_add_serie_form(request.form):
                 abort(400)
             serie_id = request.form['serie_id']
@@ -86,6 +96,10 @@ def create_app():
             except IntegrityError:
                 abort(403)
             return subscription.as_dict()
+
+        @app.errorhandler(403)
+        def forbidden_error(error):
+            return {'error_code': 403, 'error_message': 'This operation is forbidden'}
 
         @app.errorhandler(404)
         def not_found_error(error):

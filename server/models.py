@@ -21,7 +21,7 @@ class User(Base):
 
     # TODO : Add subscriptions / favorites series
     def as_dict(self):
-        return {'id': self.id, 'username': self.username, 'email': self.email, 'password': self.password}
+        return {'id': self.id, 'username': self.username, 'email': self.email}
 
     @classmethod
     def get_user_by_id(cls, id: int):
@@ -65,7 +65,7 @@ class Serie(Base):
     vote_average = Column(Numeric(3, 1))
 
     def __init__(self, tmdb_id_serie, name, overview, backdrop_path, vote_count, vote_average):
-        self.tmdb_id_serie = id_tmdb_serie
+        self.tmdb_id_serie = tmdb_id_serie
         self.name = name
         self.overview = overview
         self.backdrop_path = backdrop_path
@@ -73,8 +73,8 @@ class Serie(Base):
         self.vote_average = vote_average
 
     @classmethod
-    def get_serie_by_id(cls, id_tmdb_serie: int):
-        return Serie.query.filter_by(id_tmdb_serie=id_tmdb_serie).first()
+    def get_serie_by_id(cls, tmdb_id_serie: int):
+        return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).first()
 
     @classmethod
     def get_serie_by_username(cls, username: str):
@@ -82,7 +82,7 @@ class Serie(Base):
 
     @classmethod
     def from_json(cls, json):
-        return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], 1, json['vote_count'],
+        return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['vote_count'],
                      json['vote_average'])
 
 class Subscription(Base):
