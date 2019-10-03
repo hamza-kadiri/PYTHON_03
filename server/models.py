@@ -5,7 +5,38 @@ from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from flask import current_app as app
 
-# TODO : Add encapsulation
+class Person():
+    def __init__(self, id: int, credit_id: str, name: str):
+        self.id = id
+        self.credit_id = credit_id
+        self.name = name
+        self.profile_path = profile_path
+
+class Actor(Person, Base):
+    __tablename__ = 'actors'
+    id = Column(Integer, primary_key=True)
+    credit_id = Column(String)
+    name = Column(String)
+    profile_path = Column(String)
+    department = Column(String)
+    job = Column(String)
+
+    def __init__(self, id: int, credit_id: str, name: str, profile_path: str, department: str, job: str):
+        Person.__init__(self, id, credit_id, name, profile_path)
+        self.department = department
+        self.job = job
+
+class Productor(Person, Base):
+    __tablename__ = 'productors'
+    id = Column(Integer, primary_key=True)
+    credit_id = Column(String)
+    name = Column(String)
+    profile_path = Column(String)
+    gender = Column(String)
+
+    def __init__(self, id: int, credit_id: str, name: str, profile_path: str, gender: int):
+        Person.__init(self, id, credit_id, name, profile_path)
+        self.gender = gender
 
 class User(Base):
     __tablename__ = 'users'
@@ -14,7 +45,7 @@ class User(Base):
     email = Column(String(80))
     password_hash = Column(String(128))
 
-    def __init__(self, username, email, password):
+    def __init__(self, username: str, email: str, password: str):
         self.username = username
         self.email = email
         self.password_hash = User.hash_password(password)
@@ -28,11 +59,11 @@ class User(Base):
         return User.query.filter_by(id=id).first()
 
     @classmethod
-    def get_user_by_username(cls, username:str):
+    def get_user_by_username(cls, username: str):
         return User.query.filter_by(username=username).first()
 
     @classmethod
-    def hash_password(cls, password:str):
+    def hash_password(cls, password: str):
         return pwd_context.encrypt(password)
 
     def verify_password(self, password:str):
@@ -54,7 +85,6 @@ class User(Base):
         user = User.get_user_by_id(data['id'])
         return user
 
-# TODO : Add genre (commented out because it is, in fact, a many-to-many relationship)
 class Serie(Base):
     __tablename__ = 'series'
     tmdb_id_serie = Column(Integer, primary_key=True)
