@@ -66,7 +66,7 @@ class User(Base):
     def hash_password(cls, password: str):
         return pwd_context.encrypt(password)
 
-    def verify_password(self, password:str):
+    def verify_password(self, password: str):
         return pwd_context.verify(password, self.password_hash)
 
     def generate_auth_token(self, expiration=600):
@@ -84,6 +84,7 @@ class User(Base):
             return None  # invalid token
         user = User.get_user_by_id(data['id'])
         return user
+
 
 class Serie(Base):
     __tablename__ = 'series'
@@ -115,6 +116,7 @@ class Serie(Base):
         return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['vote_count'],
                      json['vote_average'])
 
+
 class Subscription(Base):
     __tablename__ = 'subscriptions'
     id = Column(Integer, primary_key=True)
@@ -129,8 +131,9 @@ class Subscription(Base):
         return {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie}
 
     @classmethod
-    def get_subscriptions_from_user_id(cls, user_id):
-        return Subscription.query(tdmb_id_serie).filter_by(user_id=user_id)
+    def get_subscription_by_user_id_and_serie_id(cls, user_id: int, tmdb_id_serie: int):
+        return Subscription.query.filter_by(user_id=user_id).filter_by(tmdb_id_serie=tmdb_id_serie).first()
+
 
 class Genre(Base):
     __tablename__ = 'genres'
@@ -145,6 +148,7 @@ class Genre(Base):
     def get_genre_from_id(cls, ids):
         return Genre.query(name).filter_by(tmdb_id_genre.in_(ids))
 
+
 class Serie_Genre(Base):
     __tablename__ = 'series_genres'
     id = Column(Integer, primary_key=True)
@@ -158,4 +162,3 @@ class Serie_Genre(Base):
     @classmethod
     def get_id_genre_from_id_serie(cls, tmdb_id_serie):
         return Serie_Genre(tmdb_id_genre).query.filter_by(tmdb_id_seriee=tmdb_id_serie)
-

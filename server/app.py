@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, abort, g
 from flask_cors import CORS
 from form_validation import validate_add_serie_form, validate_user_registration_form
-from database import init_db, save_obj
+from database import init_db, save_obj, delete_obj
 from models import User, Serie, Subscription
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
@@ -32,7 +32,7 @@ def create_app():
             return True
 
         @app.route('/token')
-        #@auth.login_required
+        @auth.login_required
         def get_auth_token():
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii')})
@@ -44,13 +44,13 @@ def create_app():
 
         # TODO Handle multiple pages results
         @app.route("/search", methods=['GET'])
-        #@auth.login_required
+        @auth.login_required
         def search():
             query = request.args.get('query')
             return search_tv_serie_by_title(query)
 
         @app.route("/series/<int:serie_id>", methods=['GET'])
-        #@auth.login_required
+        @auth.login_required
         def get_serie_details(serie_id):
             return get_tv_serie(serie_id)
 
@@ -67,7 +67,6 @@ def create_app():
                 abort(403)
             return user.as_dict()
 
-        # TODO Add auth
         @app.route("/users/<int:user_id>", methods=['GET'])
         @auth.login_required
         def get_user_details(user_id):
@@ -78,9 +77,8 @@ def create_app():
                 abort(404)
             return user.as_dict()
 
-        # TODO Add auth
         @app.route("/users/<int:user_id>/series", methods=['POST'])
-        #@auth.login_required
+        @auth.login_required
         def add_serie_to_favorites(user_id):
             if user_id != g.user.id:
                 abort(403)
@@ -91,9 +89,28 @@ def create_app():
                 serie_json = get_tv_serie(serie_id)
                 serie = Serie.from_json(serie_json)
                 save_obj(serie)
+            if Subscription.get_subscription_by_user_id_and_serie_id(user_id, serie_id) is not None :
+                abort(403)
             subscription = Subscription(user_id, serie_id)
             try:
                 save_obj(subscription)
+            except IntegrityError:
+                abort(403)
+            return subscription.as_dict()
+
+        @app.route("/users/<int:user_id>/series", methods=['DELETE'])
+        @auth.login_required
+        def delete_serie_from_favorites(user_id):
+            if user_id != g.user.id:
+                abort(403)
+            if not validate_add_serie_form(request.form):
+                abort(400)
+            serie_id = request.form['serie_id']
+            subscription = Subscription.get_subscription_by_user_id_and_serie_id(user_id, serie_id)
+            if subscription is None :
+                abort(404)
+            try:
+                delete_obj(subscription)
             except IntegrityError:
                 abort(403)
             return subscription.as_dict()

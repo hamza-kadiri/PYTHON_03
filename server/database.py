@@ -17,3 +17,7 @@ def init_db():
 def save_obj(obj):
     db_session.add(obj)
     db_session.commit()
+
+def delete_obj(obj):
+    db_session.delete(obj)
+    db_session.commit()
