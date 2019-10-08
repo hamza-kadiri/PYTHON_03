@@ -113,7 +113,7 @@ class Serie(Base):
         return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).first()
 
     @classmethod
-    def get_favorite_serie_by_user_id(cls, userid):
+    def get_favorite_series_by_user_id(cls, db_session, userid):
         return db_session.query(Serie).join(Subscription).filter(Subscription.user_id == userid).all()
 
     @classmethod
