@@ -41,7 +41,7 @@ class Productor(Person, Base):
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
-    username = Column(String(20), unique=True)
+    username = Column(String(20))
     email = Column(String(80))
     password_hash = Column(String(128))
 

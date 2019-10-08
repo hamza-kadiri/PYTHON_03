@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPBasicAuth
 from psycopg2.errors import UniqueViolation
 
+
 def create_app():
     """Construct the core application."""
     app = Flask(__name__, instance_relative_config=False)
@@ -39,7 +40,7 @@ def create_app():
         # Add some routes
         @app.route("/", methods=['GET'])
         def index():
-            return jsonify("Hello, World!!!")
+            return jsonify("Welcome to our API")
 
         # TODO Handle multiple pages results
         @app.route("/search", methods=['GET'])
@@ -116,6 +117,11 @@ def create_app():
             app.logger.error('Unhandled Exception: %s \n Stack Trace: %s', (error, str(traceback.format_exc())))
             return {'error_code': 500, 'error_message': 'Internal Server Error'}
 
+
+        @app.route("/serie/<serie_id>")
+        def get_serie(serie_id):
+            serie_id = int(serie_id)
+            return jsonify(get_tv_serie(serie_id))
     return app
 
 

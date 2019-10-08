@@ -8,76 +8,87 @@ import Grid from "@material-ui/core/Grid";
 import Badge from "@material-ui/core/Badge";
 import MenuItem from "@material-ui/core/MenuItem";
 import Menu from "@material-ui/core/Menu";
-import MenuIcon from "@material-ui/icons/Menu";
-import SearchIcon from "@material-ui/icons/Search";
-import AccountCircle from "@material-ui/icons/AccountCircle";
-import NotificationsIcon from "@material-ui/icons/Notifications";
-import MoreIcon from "@material-ui/icons/MoreVert";
+import MenuIcon from "@material-ui/icons/MenuOutlined";
+import SearchIcon from "@material-ui/icons/SearchOutlined";
+import AccountCircle from "@material-ui/icons/AccountCircleOutlined";
+import NotificationsIcon from "@material-ui/icons/NotificationsOutlined";
+import MoreIcon from "@material-ui/icons/MoreVertOutlined";
 import AsyncSelect from "react-select/async";
 import ky from "ky";
 import { components } from "react-select";
+import { Link } from "react-router-dom";
 const { Option } = components;
 
-const useStyles = makeStyles(theme => ({
-  grow: {
-    flexGrow: 1
-  },
-  menuButton: {
-    marginRight: theme.spacing(2)
-  },
-  title: {
-    display: "none",
-    [theme.breakpoints.up("sm")]: {
-      display: "block"
-    }
-  },
-  search: {
-    position: "relative",
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: fade(theme.palette.common.white, 0.15),
-    "&:hover": {
-      backgroundColor: fade(theme.palette.common.white, 0.25)
+const useStyles = makeStyles(theme => {
+  return {
+    grow: {
+      flexGrow: 1
     },
-    marginRight: theme.spacing(2),
-    marginLeft: 0,
-    width: "70%",
-    [theme.breakpoints.up("sm")]: {
-      marginLeft: theme.spacing(3)
+    menuButton: {
+      marginRight: theme.spacing(2)
+    },
+    title: {
+      display: "none",
+      textShadow: "1px 1px 3px rgba(0,0,0,0.4)",
+      [theme.breakpoints.up("sm")]: {
+        display: "block"
+      }
+    },
+
+    appBar: {
+      backgroundColor: fade(theme.palette.primary.main, 0.05),
+      position: "fixed",
+      zIndex: 10
+    },
+    search: {
+      position: "relative",
+      borderRadius: theme.shape.borderRadius,
+      opacity: 1,
+      backgroundColor: fade(theme.palette.common.white, 0.15),
+      "&:hover": {
+        backgroundColor: fade(theme.palette.common.white, 0.25)
+      },
+      marginRight: theme.spacing(2),
+      marginLeft: 0,
+      width: "70%",
+      [theme.breakpoints.up("sm")]: {
+        marginLeft: theme.spacing(3)
+      }
+    },
+    searchIcon: {
+      width: theme.spacing(7),
+      height: "100%",
+      position: "absolute",
+      pointerEvents: "none",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    },
+    inputRoot: {
+      backgroundColor: theme.primary
+    },
+    inputInput: {
+      padding: theme.spacing(1, 1, 1, 7),
+      transition: theme.transitions.create("width"),
+      width: "100%",
+      [theme.breakpoints.up("md")]: {
+        width: 200
+      }
+    },
+    sectionDesktop: {
+      display: "none",
+      [theme.breakpoints.up("md")]: {
+        display: "flex"
+      }
+    },
+    sectionMobile: {
+      display: "flex",
+      [theme.breakpoints.up("md")]: {
+        display: "none"
+      }
     }
-  },
-  searchIcon: {
-    width: theme.spacing(7),
-    height: "100%",
-    position: "absolute",
-    pointerEvents: "none",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  inputRoot: {
-    backgroundColor: theme.primary
-  },
-  inputInput: {
-    padding: theme.spacing(1, 1, 1, 7),
-    transition: theme.transitions.create("width"),
-    width: "100%",
-    [theme.breakpoints.up("md")]: {
-      width: 200
-    }
-  },
-  sectionDesktop: {
-    display: "none",
-    [theme.breakpoints.up("md")]: {
-      display: "flex"
-    }
-  },
-  sectionMobile: {
-    display: "flex",
-    [theme.breakpoints.up("md")]: {
-      display: "none"
-    }
-  }
-}));
+  };
+});
 
 export default function PrimarySearchAppBar() {
   const classes = useStyles();
@@ -106,19 +117,18 @@ export default function PrimarySearchAppBar() {
 
   const ThumbailOption = props => (
     <Option {...props}>
-      <Grid container align="center" className={classes.root} spacing={2}>
-        <Grid item>
-          <img
-            height="50"
-            src={props.data._SerieListResult__thumbnail_url}
-          ></img>
+      <Link to={`/serie/${props.data.id}`} style={{ textDecoration: "none" }}>
+        <Grid container align="center" className={classes.root} spacing={2}>
+          <Grid item>
+            <img height="50" src={props.data.thumbnail_url}></img>
+          </Grid>
+          <Grid item>
+            <Typography className={classes.title} variant="h6" noWrap>
+              {props.label}
+            </Typography>
+          </Grid>
         </Grid>
-        <Grid item>
-          <Typography className={classes.title} variant="h6" noWrap>
-            {props.label}
-          </Typography>
-        </Grid>
-      </Grid>
+      </Link>
     </Option>
   );
 
@@ -172,11 +182,11 @@ export default function PrimarySearchAppBar() {
   );
 
   const getOptionValue = option => {
-    return option._SerieListResult__id;
+    return option.id;
   };
 
   const getOptionLabel = option => {
-    return option._SerieListResult__name;
+    return option.name;
   };
 
   const promiseOptions = async inputValue => {
@@ -184,13 +194,13 @@ export default function PrimarySearchAppBar() {
       searchParams: { query: inputValue }
     });
     const json = await response.json();
-    return json._SerieListResults__results;
+    return json.results;
   };
 
   return (
     <div className={classes.grow}>
-      <AppBar position="static">
-        <Toolbar>
+      <AppBar className={classes.appBar}>
+        <Toolbar style={{ color: "white" }}>
           <IconButton
             edge="start"
             className={classes.menuButton}
@@ -207,6 +217,7 @@ export default function PrimarySearchAppBar() {
               <SearchIcon />
             </div>
             <AsyncSelect
+              cacheOptions
               placeholder="Search…"
               classes={{
                 root: classes.inputRoot,

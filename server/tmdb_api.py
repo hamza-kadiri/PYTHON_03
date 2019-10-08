@@ -72,14 +72,34 @@ class RequestOMDB:
     instance = None
 
     def __init__(self):
-        if not RequestOMDB.instance:
-            try:
-                RequestOMDB.instance = RequestOMDB.__RequestOMDB()
-            except AttributeError:
-                print('Attribute Error')
+        try:
+            self._base_url = app.config['API_URL']
+            self._api_key = app.config['API_KEY']
+        except RuntimeError:
+            raise AttributeError(
+                "Cannot instantiate RequestOMDB without the app context")
 
-    def __getattr__(self, name):
-        return getattr(self.instance, name)
+    @property
+    def base_url(self):
+        return self._base_url
+
+    @property
+    def api_key(self):
+        return self._api_key
+
+    def perform_request(self, endpoint: str, method='GET', query=None):
+        if query is not None:
+            query_string = f'&query={urllib.parse.quote(query)}'
+            print(query_string)
+        else:
+            query_string = False
+        url = f'{self.base_url}{endpoint}?api_key={self.api_key}{query_string  or ""}'
+        print(url)
+        if (method == 'GET'):
+            response = requests.get(url)
+            if response.status_code != 200:
+                raise create_request_exception(method, url, response)
+            return response
 
 
 def create_request_exception(method, url, resp):
@@ -93,7 +113,6 @@ def search_tv_serie_by_title(query: str):
     resp = request.perform_request(endpoint, query=query)
     serie_list_results = resp.json()
     return serie_list_results
-
 
 def get_tv_serie(tv_id: int):
     endpoint = f'/tv/{tv_id}'
@@ -109,6 +128,7 @@ def get_tv_serie_season(tv_id: int, season_number: int):
     return resp.json()
 
 
+# noinspection PyInterpreter
 def get_tv_serie_episode(tv_id: int, season_number: int, episode_number: int):
     endpoint = f'/tv/{tv_id}/season/{season_number}/episode/{episode_number}'
     request = RequestOMDB()
