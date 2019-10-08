@@ -41,7 +41,7 @@ class Productor(Person, Base):
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
-    username = Column(String(20))
+    username = Column(String(20), unique=True)
     email = Column(String(80))
     password_hash = Column(String(128))
 
@@ -92,14 +92,20 @@ class Serie(Base):
     name = Column(String)
     overview = Column(String)
     backdrop_path = Column(String, nullable=True)
+    nb_seasons = Column(Integer)
+    nb_episodes = Column(Integer)
+    next_air_date = Column(String)
     vote_count = Column(Integer)
     vote_average = Column(Numeric(3, 1))
 
-    def __init__(self, tmdb_id_serie, name, overview, backdrop_path, vote_count, vote_average):
+    def __init__(self, tmdb_id_serie, name, overview, backdrop_path, nb_seasons, nb_episodes, next_air_date, vote_count, vote_average):
         self.tmdb_id_serie = tmdb_id_serie
         self.name = name
         self.overview = overview
         self.backdrop_path = backdrop_path
+        self.nb_seasons = nb_seasons
+        self.nb_episodes = nb_episodes
+        self.next_air_date = next_air_date
         self.vote_count = vote_count
         self.vote_average = vote_average
 
@@ -113,7 +119,7 @@ class Serie(Base):
 
     @classmethod
     def from_json(cls, json):
-        return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['vote_count'],
+        return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['nb_of_seasons'], json['nb_of_episodes'], json['vote_count'], json['next_episode_to_air']['air_date'],
                      json['vote_average'])
 
 
