@@ -114,10 +114,6 @@ class Serie(Base):
         return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).first()
 
     @classmethod
-    def get_serie_by_username(cls, username: str):
-        return Serie.query.filter_by(username=username).first()
-
-    @classmethod
     def from_json(cls, json):
         return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['nb_of_seasons'], json['nb_of_episodes'], json['vote_count'], json['next_episode_to_air']['air_date'],
                      json['vote_average'])

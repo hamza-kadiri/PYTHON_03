@@ -77,6 +77,14 @@ def create_app():
                 abort(404)
             return user.as_dict()
 
+        @app.route("/users/<int:user_id>/series", methods=['GET'])
+        @auth.login_required
+        def get_favorite_series(user_id):
+            if user_id != g.user.id:
+                abort(403)
+            series = User.get_favorite_series_by_id(user_id)
+            return [serie.as_dict() for serie in series]
+
         @app.route("/users/<int:user_id>/series", methods=['POST'])
         @auth.login_required
         def add_serie_to_favorites(user_id):
@@ -98,14 +106,11 @@ def create_app():
                 abort(403)
             return subscription.as_dict()
 
-        @app.route("/users/<int:user_id>/series", methods=['DELETE'])
+        @app.route("/users/<int:user_id>/series/<int:serie_id>", methods=['DELETE'])
         @auth.login_required
-        def delete_serie_from_favorites(user_id):
+        def delete_serie_from_favorites(user_id,serie_id):
             if user_id != g.user.id:
                 abort(403)
-            if not validate_add_serie_form(request.form):
-                abort(400)
-            serie_id = request.form['serie_id']
             subscription = Subscription.get_subscription_by_user_id_and_serie_id(user_id, serie_id)
             if subscription is None :
                 abort(404)
