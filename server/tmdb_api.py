@@ -111,21 +111,21 @@ def search_tv_serie_by_title(query: str):
     endpoint = "/search/tv"
     request = RequestOMDB()
     resp = request.perform_request(endpoint, query=query)
-    serie_list_results = resp.json()
-    return serie_list_results
+    json = resp.json()
+    results = json['results']
+    for result in results:
+        result['thumbnail_url'] = f"{app.config['THUMBNAIL_BASE_URL']}{result['backdrop_path']}"
+    json['results'] = results
+    return json
+
 
 def get_tv_serie(tv_id: int):
     endpoint = f'/tv/{tv_id}'
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
-    return resp.json()
-
-
-def get_tv_serie_season(tv_id: int, season_number: int):
-    endpoint = f'/tv/{tv_id}/season/{season_number}'
-    request = RequestOMDB()
-    resp = request.perform_request(endpoint)
-    return resp.json()
+    json = resp.json()
+    json['backdrop_url'] = f"{app.config['BACKDROP_BASE_URL']}{json['backdrop_path']}"
+    return json
 
 
 # noinspection PyInterpreter

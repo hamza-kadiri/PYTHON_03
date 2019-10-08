@@ -32,7 +32,7 @@ def create_app():
             return True
 
         @app.route('/token')
-        @auth.login_required
+        #@auth.login_required
         def get_auth_token():
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii')})
@@ -44,13 +44,13 @@ def create_app():
 
         # TODO Handle multiple pages results
         @app.route("/search", methods=['GET'])
-        @auth.login_required
+        #@auth.login_required
         def search():
             query = request.args.get('query')
             return search_tv_serie_by_title(query)
 
         @app.route("/series/<int:serie_id>", methods=['GET'])
-        @auth.login_required
+        #@auth.login_required
         def get_serie_details(serie_id):
             return get_tv_serie(serie_id)
 
@@ -80,7 +80,7 @@ def create_app():
 
         # TODO Add auth
         @app.route("/users/<int:user_id>/series", methods=['POST'])
-        @auth.login_required
+        #@auth.login_required
         def add_serie_to_favorites(user_id):
             if user_id != g.user.id:
                 abort(403)
