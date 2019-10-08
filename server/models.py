@@ -85,7 +85,6 @@ class User(Base):
         user = User.get_user_by_id(data['id'])
         return user
 
-
 class Serie(Base):
     __tablename__ = 'series'
     tmdb_id_serie = Column(Integer, primary_key=True)
@@ -114,9 +113,18 @@ class Serie(Base):
         return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).first()
 
     @classmethod
+    def get_favorite_serie_by_user_id(cls, userid):
+        return db_session.query(Serie).join(Subscription).filter(Subscription.user_id == userid).all()
+
+    @classmethod
     def from_json(cls, json):
-        return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['nb_of_seasons'], json['nb_of_episodes'], json['vote_count'], json['next_episode_to_air']['air_date'],
-                     json['vote_average'])
+        if json['next_episode_to_air'] != None:
+            print(json['next_episode_to_air'])
+            next_air_date = json['next_episode_to_air']['air_date']
+        else:
+            next_air_date = "null"
+        return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'], json['number_of_episodes'], next_air_date, json['vote_count'], json['vote_average'])
+
 
 
 class Subscription(Base):
