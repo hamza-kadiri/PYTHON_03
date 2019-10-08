@@ -80,7 +80,7 @@ def create_app():
 
         # TODO Add auth
         @app.route("/users/<int:user_id>/series", methods=['POST'])
-        #@auth.login_required
+        @auth.login_required
         def add_serie_to_favorites(user_id):
             if user_id != g.user.id:
                 abort(403)
