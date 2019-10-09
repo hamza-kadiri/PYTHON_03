@@ -12,7 +12,6 @@ const Serie = ({ match }) => {
       const response = await ky.get(`//localhost:8001/serie/${id}`);
       const json = await response.json();
       setSerie(json);
-      console.log(json);
       return json;
     };
     getSerie(match.params.id);
@@ -46,7 +45,7 @@ const Serie = ({ match }) => {
         }}
       >
         <Card
-          elevation="0"
+          elevation={0}
           style={{
             height: "80%",
             width: "25%",

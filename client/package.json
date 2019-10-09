@@ -5,8 +5,10 @@
   "dependencies": {
     "@material-ui/core": "^4.4.3",
     "@material-ui/icons": "^4.4.3",
+    "autosuggest-highlight": "^3.1.1",
     "ky": "^0.14.0",
     "react": "^16.9.0",
+    "react-autosuggest": "^9.4.3",
     "react-dom": "^16.9.0",
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.1.2",

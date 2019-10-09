@@ -13,11 +13,14 @@ import SearchIcon from "@material-ui/icons/SearchOutlined";
 import AccountCircle from "@material-ui/icons/AccountCircleOutlined";
 import NotificationsIcon from "@material-ui/icons/NotificationsOutlined";
 import MoreIcon from "@material-ui/icons/MoreVertOutlined";
-import AsyncSelect from "react-select/async";
+import Autosuggest from "react-autosuggest";
+import Paper from "@material-ui/core/Paper";
+import TextField from "@material-ui/core/TextField";
+import InputAdornment from "@material-ui/core/InputAdornment";
 import ky from "ky";
 import { components } from "react-select";
-import { Link } from "react-router-dom";
-const { Option } = components;
+import { Link, withRouter } from "react-router-dom";
+import CircularProgress from "@material-ui/core/CircularProgress";
 
 const useStyles = makeStyles(theme => {
   return {
@@ -55,26 +58,7 @@ const useStyles = makeStyles(theme => {
         marginLeft: theme.spacing(3)
       }
     },
-    searchIcon: {
-      width: theme.spacing(7),
-      height: "100%",
-      position: "absolute",
-      pointerEvents: "none",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    },
-    inputRoot: {
-      backgroundColor: theme.primary
-    },
-    inputInput: {
-      padding: theme.spacing(1, 1, 1, 7),
-      transition: theme.transitions.create("width"),
-      width: "100%",
-      [theme.breakpoints.up("md")]: {
-        width: 200
-      }
-    },
+
     sectionDesktop: {
       display: "none",
       [theme.breakpoints.up("md")]: {
@@ -86,14 +70,46 @@ const useStyles = makeStyles(theme => {
       [theme.breakpoints.up("md")]: {
         display: "none"
       }
+    },
+    container: {
+      position: "relative"
+    },
+    suggestionsContainerOpen: {
+      position: "absolute",
+      zIndex: 1,
+      marginTop: theme.spacing(1),
+      left: 0,
+      right: 0
+    },
+    suggestion: {
+      display: "block"
+    },
+    suggestionsList: {
+      margin: 0,
+      padding: 0,
+      listStyleType: "none"
+    },
+    divider: {
+      height: theme.spacing(2)
+    },
+    input: {
+      color: theme.palette.common.white
+    },
+    suggestions: {
+      root: {
+        color: theme.palette.common.white
+      }
     }
   };
 });
 
-export default function PrimarySearchAppBar() {
+function PrimarySearchAppBar(props) {
   const classes = useStyles();
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
+  const [value, setValue] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -114,23 +130,6 @@ export default function PrimarySearchAppBar() {
   const handleMobileMenuOpen = event => {
     setMobileMoreAnchorEl(event.currentTarget);
   };
-
-  const ThumbailOption = props => (
-    <Option {...props}>
-      <Link to={`/serie/${props.data.id}`} style={{ textDecoration: "none" }}>
-        <Grid container align="center" className={classes.root} spacing={2}>
-          <Grid item>
-            <img height="50" src={props.data.thumbnail_url}></img>
-          </Grid>
-          <Grid item>
-            <Typography className={classes.title} variant="h6" noWrap>
-              {props.label}
-            </Typography>
-          </Grid>
-        </Grid>
-      </Link>
-    </Option>
-  );
 
   const menuId = "primary-search-account-menu";
   const renderMenu = (
@@ -182,21 +181,99 @@ export default function PrimarySearchAppBar() {
   );
 
   const getOptionValue = option => {
-    return option.id;
-  };
-
-  const getOptionLabel = option => {
     return option.name;
   };
 
-  const promiseOptions = async inputValue => {
+  const loadSuggestions = async inputValue => {
+    setIsLoading(true);
     const response = await ky.get("//localhost:8001/search", {
       searchParams: { query: inputValue }
     });
     const json = await response.json();
+    setIsLoading(false);
     return json.results;
   };
 
+  const onSuggestionsFetchRequested = async ({ value }) => {
+    const results = await loadSuggestions(value);
+    setSuggestions(results);
+  };
+
+  const onSuggestionsClearRequested = () => {
+    setSuggestions([]);
+  };
+
+  const onChange = (event, { newValue }) => {
+    setValue(newValue);
+  };
+
+  function renderInputComponent(inputProps) {
+    const { classes, inputRef = () => {}, ref, ...other } = inputProps;
+    return (
+      <TextField
+        fullWidth
+        InputProps={{
+          inputRef: node => {
+            ref(node);
+            inputRef(node);
+          },
+          className: classes.input,
+          endAdornment: (
+            <InputAdornment position="end">
+              {isLoading ? (
+                <IconButton className={classes.input} aria-label="search">
+                  <CircularProgress size={16} />
+                </IconButton>
+              ) : (
+                <IconButton className={classes.input} aria-label="search">
+                  <SearchIcon />
+                </IconButton>
+              )}
+            </InputAdornment>
+          )
+        }}
+        {...other}
+      />
+    );
+  }
+
+  function renderSuggestion(suggestion, { query, isHighlighted }) {
+    return (
+      <MenuItem
+        selected={isHighlighted}
+        component={Link}
+        to={`/serie/${suggestion.id}`}
+        onKeyPress={e => {
+          console.log(e);
+        }}
+      >
+        <Grid container align="center" className={classes.root} spacing={1}>
+          <Grid item>
+            <img height="50" src={suggestion.thumbnail_url}></img>
+          </Grid>
+          <Grid item>
+            <Typography className={classes.title} variant="h6" noWrap>
+              {suggestion.name}
+            </Typography>
+          </Grid>
+        </Grid>
+      </MenuItem>
+    );
+  }
+
+  const onSuggestionSelected = (event, { suggestion }) => {
+    if (event.key === "Enter") {
+      const path = `/serie/${suggestion.id}`;
+      props.history.push(path);
+    }
+  };
+
+  const inputProps = {
+    placeholder: "Rechercher une série",
+    value,
+    onChange,
+    classes
+  };
   return (
     <div className={classes.grow}>
       <AppBar className={classes.appBar}>
@@ -210,25 +287,31 @@ export default function PrimarySearchAppBar() {
             <MenuIcon />
           </IconButton>
           <Typography className={classes.title} variant="h6" noWrap>
-            Series Préférées
+            Séries Préférées
           </Typography>
           <div className={classes.search}>
-            <div className={classes.searchIcon}>
-              <SearchIcon />
-            </div>
-            <AsyncSelect
-              cacheOptions
-              placeholder="Search…"
-              classes={{
-                root: classes.inputRoot,
-                input: classes.inputInput
+            <Autosuggest
+              highlightFirstSuggestion
+              suggestions={suggestions}
+              onSuggestionsFetchRequested={onSuggestionsFetchRequested}
+              onSuggestionsClearRequested={onSuggestionsClearRequested}
+              onSuggestionSelected={onSuggestionSelected}
+              getSuggestionValue={getOptionValue}
+              renderInputComponent={renderInputComponent}
+              renderSuggestion={renderSuggestion}
+              inputProps={inputProps}
+              renderSuggestionsContainer={options => (
+                <Paper {...options.containerProps} square>
+                  {options.children}
+                </Paper>
+              )}
+              theme={{
+                container: classes.container,
+                suggestionsContainerOpen: classes.suggestionsContainerOpen,
+                suggestionsList: classes.suggestionsList,
+                suggestion: classes.suggestion
               }}
-              inputProps={{ "aria-label": "search" }}
-              loadOptions={promiseOptions}
-              getOptionValue={getOptionValue}
-              getOptionLabel={getOptionLabel}
-              components={{ Option: ThumbailOption }}
-            ></AsyncSelect>
+            />
           </div>
           <div className={classes.grow} />
           <div className={classes.sectionDesktop}>
@@ -266,3 +349,5 @@ export default function PrimarySearchAppBar() {
     </div>
   );
 }
+
+export default withRouter(PrimarySearchAppBar);
