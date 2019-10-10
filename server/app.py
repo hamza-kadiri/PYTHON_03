@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, abort, g
 from flask_cors import CORS
 from form_validation import validate_add_serie_form, validate_user_registration_form
 from database import init_db, save_obj, delete_obj
-from models import User, Serie, Subscription
+from models import User, Serie
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPBasicAuth
@@ -97,9 +97,9 @@ def create_app():
                 serie_json = get_tv_serie(serie_id)
                 serie = Serie.from_json(serie_json)
                 save_obj(serie)
-            if Subscription.get_subscription_by_user_id_and_serie_id(user_id, serie_id) is not None :
+            if User.get_subscription_by_user_id_and_serie_id(user_id, serie_id) is not None :
                 abort(403)
-            subscription = Subscription(user_id, serie_id)
+            subscription = User.get_user_by_id(user_id).series.append(Serie.get_serie_by_id(serie_id)
             try:
                 save_obj(subscription)
             except IntegrityError:
@@ -108,10 +108,10 @@ def create_app():
 
         @app.route("/users/<int:user_id>/series/<int:serie_id>", methods=['DELETE'])
         @auth.login_required
-        def delete_serie_from_favorites(user_id,serie_id):
+        def delete_serie_from_favorites(user_id, serie_id):
             if user_id != g.user.id:
                 abort(403)
-            subscription = Subscription.get_subscription_by_user_id_and_serie_id(user_id, serie_id)
+            subscription = User.get_subscription_by_user_id_and_serie_id(user_id, serie_id)
             if subscription is None :
                 abort(404)
             try:

@@ -1,9 +1,21 @@
-from sqlalchemy import Column, Integer, Numeric, String, ForeignKey, UniqueConstraint
+from sqlalchemy import Table, Column, Integer, Numeric, String, ForeignKey, UniqueConstraint
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm.session import object_session
 from database import Base
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from flask import current_app as app
+
+subscriptions_table = Table('subscriptions', Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id')),
+    Column('tmdb_id_serie', Integer, ForeignKey('series.tmdb_id_serie'))
+)
+
+series_genres_table = Table('series_genres', Base.metadata,
+    Column('tmdb_id_genre', Integer, ForeignKey('genres.tmdb_id_genre')),
+    Column('tmdb_id_serie', Integer, ForeignKey('series.tmdb_id_serie'))
+)
 
 class Person():
     def __init__(self, id: int, credit_id: str, name: str):
@@ -44,15 +56,22 @@ class User(Base):
     username = Column(String(20), unique=True)
     email = Column(String(80))
     password_hash = Column(String(128))
+    series = relationship("User", secondary=subscriptions_table, back_populates="users")
 
     def __init__(self, username: str, email: str, password: str):
         self.username = username
         self.email = email
         self.password_hash = User.hash_password(password)
 
-    # TODO : Add subscriptions / favorites series
     def as_dict(self):
         return {'id': self.id, 'username': self.username, 'email': self.email}
+
+    def verify_password(self, password: str):
+        return pwd_context.verify(password, self.password_hash)
+
+    def generate_auth_token(self, expiration=600):
+        s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'id': self.id})
 
     @classmethod
     def get_user_by_id(cls, id: int):
@@ -66,13 +85,6 @@ class User(Base):
     def hash_password(cls, password: str):
         return pwd_context.encrypt(password)
 
-    def verify_password(self, password: str):
-        return pwd_context.verify(password, self.password_hash)
-
-    def generate_auth_token(self, expiration=600):
-        s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
-        return s.dumps({'id': self.id})
-
     @classmethod
     def verify_auth_token(cls, token):
         s = Serializer(app.config['SECRET_KEY'])
@@ -83,7 +95,11 @@ class User(Base):
         except BadSignature:
             return None  # invalid token
         user = User.get_user_by_id(data['id'])
-        return user
+        return user    \
+
+    @classmethod
+    def get_subscription_by_user_id_and_serie_id(cls, user_id: int, tmdb_id_serie: int):
+        return User.query.join(Serie, User.series).filter(User.id == user_id).filter(Serie.tmdb_id_serie == tmdb_id_serie).all()
 
 class Serie(Base):
     __tablename__ = 'series'
@@ -96,6 +112,8 @@ class Serie(Base):
     next_air_date = Column(String)
     vote_count = Column(Integer)
     vote_average = Column(Numeric(3, 1))
+    genres = relationship("Genre", secondary=series_genres_table, back_populates="series")
+    users = relationship("User", secondary=subscriptions_table, back_populates="series")
 
     def __init__(self, tmdb_id_serie, name, overview, backdrop_path, nb_seasons, nb_episodes, next_air_date, vote_count, vote_average):
         self.tmdb_id_serie = tmdb_id_serie
@@ -113,42 +131,22 @@ class Serie(Base):
         return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).first()
 
     @classmethod
-    def get_favorite_series_by_user_id(cls, db_session, userid):
-        return db_session.query(Serie).join(Subscription).filter(Subscription.user_id == userid).all()
+    def get_favorite_series_by_user_id(cls, userid):
+        return Serie.query.join(User).filter(User.id == userid).all()
 
     @classmethod
     def from_json(cls, json):
         if json['next_episode_to_air'] != None:
-            print(json['next_episode_to_air'])
             next_air_date = json['next_episode_to_air']['air_date']
         else:
             next_air_date = "null"
         return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'], json['number_of_episodes'], next_air_date, json['vote_count'], json['vote_average'])
 
-
-
-class Subscription(Base):
-    __tablename__ = 'subscriptions'
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    tmdb_id_serie = Column(Integer, ForeignKey('series.tmdb_id_serie'))
-
-    def __init__(self, user_id, tmdb_id_serie):
-        self.user_id = user_id
-        self.tmdb_id_serie = tmdb_id_serie
-
-    def as_dict(self):
-        return {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie}
-
-    @classmethod
-    def get_subscription_by_user_id_and_serie_id(cls, user_id: int, tmdb_id_serie: int):
-        return Subscription.query.filter_by(user_id=user_id).filter_by(tmdb_id_serie=tmdb_id_serie).first()
-
-
 class Genre(Base):
     __tablename__ = 'genres'
     tmdb_id_genre = Column(Integer, primary_key=True)
     name = Column(String)
+    series = relationship("Serie", secondary=subscriptions_table, back_populates="genres")
 
     def __init__(self, tmdb_id_genre, name):
         self.tmdb_id_genre = tmdb_id_genre
@@ -158,17 +156,3 @@ class Genre(Base):
     def get_genre_from_id(cls, ids):
         return Genre.query(name).filter_by(tmdb_id_genre.in_(ids))
 
-
-class Serie_Genre(Base):
-    __tablename__ = 'series_genres'
-    id = Column(Integer, primary_key=True)
-    tmdb_id_genre = Column(Integer, ForeignKey('genres.tmdb_id_genre'))
-    tmdb_id_serie = Column(Integer, ForeignKey('series.tmdb_id_serie'))
-
-    def __init__(self, tmdb_id_genre, tmdb_id_serie):
-        self.tmdb_id_genre = tmdb_id_genre
-        self.tmdb_id_serie = tmdb_id_serie
-
-    @classmethod
-    def get_id_genre_from_id_serie(cls, tmdb_id_serie):
-        return Serie_Genre(tmdb_id_genre).query.filter_by(tmdb_id_seriee=tmdb_id_serie)
