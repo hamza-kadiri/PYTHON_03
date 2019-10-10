@@ -99,7 +99,7 @@ def create_app():
                 save_obj(serie)
             if User.get_subscription_by_user_id_and_serie_id(user_id, serie_id) is not None :
                 abort(403)
-            subscription = User.get_user_by_id(user_id).series.append(Serie.get_serie_by_id(serie_id)
+            subscription = User.get_user_by_id(user_id).series.append(Serie.get_serie_by_id(serie_id))
             try:
                 save_obj(subscription)
             except IntegrityError:
