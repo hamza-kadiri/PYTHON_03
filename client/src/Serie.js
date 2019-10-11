@@ -1,11 +1,27 @@
 import React, { useEffect, useState } from "react";
+import { makeStyles } from '@material-ui/core/styles';
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import Typography from "@material-ui/core/Typography";
+import Button from "@material-ui/core/Button"
+import LikeIcon from '@material-ui/icons/Favorite';
+import OutlinedLikeIcon from '@material-ui/icons/FavoriteBorder';
 import ky from "ky";
 
+const useStyles = makeStyles(theme => ({
+LikeIcon: {
+  marginRight: theme.spacing(1),
+},
+}));
+
+
+
 const Serie = ({ match }) => {
+  const classes = useStyles();
   const [serie, setSerie] = useState({});
+  const [isLiked, setisLiked] = useState(false)
+
+  
 
   useEffect(() => {
     const getSerie = async id => {
@@ -16,6 +32,11 @@ const Serie = ({ match }) => {
     };
     getSerie(match.params.id);
   }, [match.params.id]);
+
+  const handleLike = () => {
+    const currentState = isLiked
+    setisLiked(!currentState)
+  }
   return (
     <React.Fragment>
       <div
@@ -60,6 +81,9 @@ const Serie = ({ match }) => {
             <Typography variant="body1" gutterBottom>
               {serie.overview}
             </Typography>
+            <Button variant={isLiked ? "contained" : "outlined"} color="primary" onClick={handleLike}>
+            {isLiked ? <LikeIcon className = {classes.LikeIcon}/> : <OutlinedLikeIcon className = {classes.LikeIcon}/>}
+            Add to Favorites</Button>
           </CardContent>
         </Card>
       </div>
