@@ -11,6 +11,7 @@ import {
   withRouter
 } from "react-router-dom";
 import Serie from "./Serie";
+import Login from "./Login"
 
 const theme = createMuiTheme({
   palette: {
@@ -29,6 +30,7 @@ function App() {
         <Header className="App-header"> </Header>
         <Switch>
           <Route path="/serie/:id" component={Serie}></Route>
+          <Route path="/login" component={Login}></Route>
           <Route path="/"></Route>
         </Switch>
       </Router>
