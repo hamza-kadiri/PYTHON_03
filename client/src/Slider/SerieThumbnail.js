@@ -26,20 +26,6 @@ const SerieThumbnail = ({ serie }) => (
           />
           <ShowDetailsButton onClick={() => onSelectSlide(serie)} />
           {isActive && <Mark />}
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: 1,
-              margin: "auto",
-              color: "black"
-            }}
-            variant="outlined"
-            color="primary"
-          >
-            Test
-          </div>
         </div>
       );
     }}

@@ -21,6 +21,7 @@ function suggestedSeries(
       return {
         ...state,
         isFetching: false,
+        query: action.query,
         suggestions: action.series,
         lastUpdated: action.receivedAt
       };

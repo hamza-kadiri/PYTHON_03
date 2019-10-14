@@ -5,8 +5,7 @@ import { connect } from "react-redux";
 import { fakeAuth } from "./App";
 import { Typography } from "@material-ui/core";
 
-const Home = ({ suggestions }) => {
-  console.log(suggestions);
+const Home = ({ suggestions, query }) => {
   return (
     <div
       style={{
@@ -18,15 +17,18 @@ const Home = ({ suggestions }) => {
     >
       {suggestions.length ? (
         <React.Fragment>
-          <Typography variant="h4" component="h4">
-            {" "}
-            Search results for:{" "}
+          <Typography
+            style={{ marginLeft: "10px" }}
+            variant="h4"
+            component="h4"
+          >
+            Search results for: <b>{query}</b>
           </Typography>
           <Slider>
             {suggestions.map(movie => (
               <Slider.Item serie={movie} key={movie.id}></Slider.Item>
             ))}
-          </Slider>{" "}
+          </Slider>
         </React.Fragment>
       ) : null}
     </div>
@@ -35,7 +37,8 @@ const Home = ({ suggestions }) => {
 
 const mapStateToProps = ({ suggestedSeries }) => {
   return {
-    suggestions: suggestedSeries.suggestions
+    suggestions: suggestedSeries.suggestions,
+    query: suggestedSeries.query
   };
 };
 export default connect(mapStateToProps)(Home);

@@ -139,6 +139,11 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
     history.push("/login");
   };
 
+  const handleFavorites = async () => {
+    handleMenuClose();
+    history.push("/favorites");
+  };
+
   const handleMenuClose = () => {
     setAnchorEl(null);
     handleMobileMenuClose();
@@ -159,7 +164,7 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
+      <MenuItem onClick={handleFavorites}>Favorites</MenuItem>
       <MenuItem onClick={handleSignout}>
         {isLoadingSignout ? (
           <ListItemIcon>

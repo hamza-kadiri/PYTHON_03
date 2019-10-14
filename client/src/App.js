@@ -14,6 +14,7 @@ import Serie from "./Serie";
 import Login from "./Login";
 import Signup from "./Signup";
 import Home from "./Home";
+import FavoriteSeries from "./FavoriteSeries";
 
 const fakeAuth = {
   isAuthenticated: false,
@@ -88,6 +89,10 @@ function App() {
         >
           <Switch>
             <PrivateRoute path="/serie/:id" component={Serie}></PrivateRoute>
+            <PrivateRoute
+              path="/favorites"
+              component={FavoriteSeries}
+            ></PrivateRoute>
             <Route path="/login" component={Login}></Route>
             <Route path="/signup" component={Signup}></Route>
             <GuestRoute path="/" component={Home}></GuestRoute>
