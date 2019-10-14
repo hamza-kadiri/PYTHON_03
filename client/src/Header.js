@@ -222,6 +222,7 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
 
   const onChange = (event, { newValue }) => {
     setValue(newValue);
+    history.push("/");
   };
 
   function renderInputComponent(inputProps) {

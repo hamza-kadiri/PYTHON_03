@@ -88,7 +88,7 @@ def search_tv_serie_by_title(query: str):
     results = json['results']
     for result in results:
         if result['backdrop_path'] is not None:
-            result['thumbnail_url'] = f"{app.config['THUMBNAIL_BASE_URL']}{result['backdrop_path']}"
+            result['thumbnail_url'] = f"{app.config['BACKDROP_BASE_URL']}{result['backdrop_path']}"
         if result['poster_path'] is not None:
             result['poster_url'] = f"{app.config['POSTER_BASE_URL']}{result['poster_path']}"
             filteredResults.append(result)

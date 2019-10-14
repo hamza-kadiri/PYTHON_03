@@ -25,12 +25,6 @@ const Serie = ({ match, serie, isLoading }) => {
     dispatch(fetchSelectedSerie(match.params.id));
   }, [match.params.id]);
 
-  useEffect(() => {
-    return () => {
-      dispatch({ type: RESET_SERIE });
-    };
-  }, []);
-
   const handleLike = () => {
     const currentState = isLiked;
     setisLiked(!currentState);

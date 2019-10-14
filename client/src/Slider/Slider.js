@@ -5,6 +5,8 @@ import SlideButton from "./SlideButton";
 import SliderWrapper from "./SliderWrapper";
 import useSliding from "./useSliding";
 import useSizeElement from "./useSizeElement";
+import IconArrowDown from "./IconArrowDown";
+import Content from "./Content";
 import "./Slider.scss";
 
 const Slider = ({ children, activeSlide }) => {
@@ -48,6 +50,8 @@ const Slider = ({ children, activeSlide }) => {
         {hasPrev && <SlideButton onClick={handlePrev} type="prev" />}
         {hasNext && <SlideButton onClick={handleNext} type="next" />}
       </SliderWrapper>
+      {currentSlide && console.log(currentSlide.thumbnail_url)}
+      {currentSlide && <Content serie={currentSlide} onClose={handleClose} />}
     </SliderContext.Provider>
   );
 };
