@@ -76,12 +76,23 @@ function App() {
     <MuiThemeProvider theme={theme}>
       <Router>
         <Header className="App-header"> </Header>
-        <Switch>
-          <PrivateRoute path="/serie/:id" component={Serie}></PrivateRoute>
-          <Route path="/login" component={Login}></Route>
-          <Route path="/signup" component={Signup}></Route>
-          <GuestRoute path="/" component={Home}></GuestRoute>
-        </Switch>
+        <div
+          style={{
+            position: "absolute",
+            display: "flex",
+            width: "100%",
+            height: "100%",
+            alignItems: "center",
+            zIndex: 2
+          }}
+        >
+          <Switch>
+            <PrivateRoute path="/serie/:id" component={Serie}></PrivateRoute>
+            <Route path="/login" component={Login}></Route>
+            <Route path="/signup" component={Signup}></Route>
+            <GuestRoute path="/" component={Home}></GuestRoute>
+          </Switch>
+        </div>
       </Router>
     </MuiThemeProvider>
   );

@@ -255,24 +255,7 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
   }
 
   function renderSuggestion(suggestion, { query, isHighlighted }) {
-    return (
-      <MenuItem
-        selected={isHighlighted}
-        component={Link}
-        to={`/serie/${suggestion.id}`}
-      >
-        <Grid container align="center" className={classes.root} spacing={1}>
-          <Grid item>
-            <img height="50" src={suggestion.thumbnail_url}></img>
-          </Grid>
-          <Grid item>
-            <Typography className={classes.title} variant="h6" noWrap>
-              {suggestion.name}
-            </Typography>
-          </Grid>
-        </Grid>
-      </MenuItem>
-    );
+    return null;
   }
 
   const onSuggestionSelected = (event, { suggestion }) => {
@@ -315,11 +298,6 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
                 renderInputComponent={renderInputComponent}
                 renderSuggestion={renderSuggestion}
                 inputProps={inputProps}
-                renderSuggestionsContainer={options => (
-                  <Paper {...options.containerProps} square>
-                    {options.children}
-                  </Paper>
-                )}
                 theme={{
                   container: classes.container,
                   suggestionsContainerOpen: classes.suggestionsContainerOpen,

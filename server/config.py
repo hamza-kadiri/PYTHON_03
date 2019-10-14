@@ -15,3 +15,4 @@ class Config(object):
     API_URL = "https://api.themoviedb.org/3"
     THUMBNAIL_BASE_URL = "https://image.tmdb.org/t/p/w300"
     BACKDROP_BASE_URL = "https://image.tmdb.org/t/p/w1280"
+    POSTER_BASE_URL = "https://image.tmdb.org/t/p/w185"
