@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { fade, makeStyles } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -17,10 +17,13 @@ import Autosuggest from "react-autosuggest";
 import Paper from "@material-ui/core/Paper";
 import TextField from "@material-ui/core/TextField";
 import InputAdornment from "@material-ui/core/InputAdornment";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ky from "ky";
-import { components } from "react-select";
-import { Link, withRouter } from "react-router-dom";
+import { fakeAuth } from "./App";
+import { Link, withRouter, useHistory } from "react-router-dom";
 import CircularProgress from "@material-ui/core/CircularProgress";
+import { connect, useSelector, useDispatch } from "react-redux";
+import { fetchSuggestedSeries } from "./redux/actions";
 
 const useStyles = makeStyles(theme => {
   return {
@@ -103,13 +106,19 @@ const useStyles = makeStyles(theme => {
   };
 });
 
-function PrimarySearchAppBar(props) {
+function PrimarySearchAppBar({ suggestions, selectedSerie }) {
+  const history = useHistory();
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const [value, setValue] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [isLoadingSignout, setIsLoadingSignout] = useState(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    setValue(selectedSerie.serie.name);
+  }, [selectedSerie]);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -120,6 +129,14 @@ function PrimarySearchAppBar(props) {
 
   const handleMobileMenuClose = () => {
     setMobileMoreAnchorEl(null);
+  };
+
+  const handleSignout = async () => {
+    setIsLoadingSignout(true);
+    await fakeAuth.signout();
+    setIsLoadingSignout(false);
+    handleMenuClose();
+    history.push("/login");
   };
 
   const handleMenuClose = () => {
@@ -143,7 +160,15 @@ function PrimarySearchAppBar(props) {
       onClose={handleMenuClose}
     >
       <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <MenuItem onClick={handleSignout}>
+        {isLoadingSignout ? (
+          <ListItemIcon>
+            <CircularProgress style={{ margin: "auto" }} size={24} />
+          </ListItemIcon>
+        ) : (
+          "Sign out"
+        )}
+      </MenuItem>
     </Menu>
   );
 
@@ -185,23 +210,15 @@ function PrimarySearchAppBar(props) {
   };
 
   const loadSuggestions = async inputValue => {
-    setIsLoading(true);
-    const response = await ky.get("//localhost:8001/search", {
-      searchParams: { query: inputValue }
-    });
-    const json = await response.json();
-    setIsLoading(false);
-    return json.results;
+    await dispatch(fetchSuggestedSeries(inputValue));
+    return suggestions;
   };
 
   const onSuggestionsFetchRequested = async ({ value }) => {
-    const results = await loadSuggestions(value);
-    setSuggestions(results);
+    await loadSuggestions(value);
   };
 
-  const onSuggestionsClearRequested = () => {
-    setSuggestions([]);
-  };
+  const onSuggestionsClearRequested = () => {};
 
   const onChange = (event, { newValue }) => {
     setValue(newValue);
@@ -220,7 +237,7 @@ function PrimarySearchAppBar(props) {
           className: classes.input,
           endAdornment: (
             <InputAdornment position="end">
-              {isLoading ? (
+              {isLoadingSuggestions ? (
                 <IconButton className={classes.input} aria-label="search">
                   <CircularProgress size={16} />
                 </IconButton>
@@ -243,9 +260,6 @@ function PrimarySearchAppBar(props) {
         selected={isHighlighted}
         component={Link}
         to={`/serie/${suggestion.id}`}
-        onKeyPress={e => {
-          console.log(e);
-        }}
       >
         <Grid container align="center" className={classes.root} spacing={1}>
           <Grid item>
@@ -264,7 +278,7 @@ function PrimarySearchAppBar(props) {
   const onSuggestionSelected = (event, { suggestion }) => {
     if (event.key === "Enter") {
       const path = `/serie/${suggestion.id}`;
-      props.history.push(path);
+      history.push(path);
     }
   };
 
@@ -277,72 +291,77 @@ function PrimarySearchAppBar(props) {
   return (
     <div className={classes.grow}>
       <AppBar className={classes.appBar}>
-        <Toolbar style={{ color: "white" }}>
-          <IconButton
-            edge="start"
-            className={classes.menuButton}
-            color="inherit"
-            aria-label="open drawer"
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography className={classes.title} variant="h6" noWrap>
-            Séries Préférées
-          </Typography>
-          <div className={classes.search}>
-            <Autosuggest
-              highlightFirstSuggestion
-              suggestions={suggestions}
-              onSuggestionsFetchRequested={onSuggestionsFetchRequested}
-              onSuggestionsClearRequested={onSuggestionsClearRequested}
-              onSuggestionSelected={onSuggestionSelected}
-              getSuggestionValue={getOptionValue}
-              renderInputComponent={renderInputComponent}
-              renderSuggestion={renderSuggestion}
-              inputProps={inputProps}
-              renderSuggestionsContainer={options => (
-                <Paper {...options.containerProps} square>
-                  {options.children}
-                </Paper>
-              )}
-              theme={{
-                container: classes.container,
-                suggestionsContainerOpen: classes.suggestionsContainerOpen,
-                suggestionsList: classes.suggestionsList,
-                suggestion: classes.suggestion
-              }}
-            />
-          </div>
-          <div className={classes.grow} />
-          <div className={classes.sectionDesktop}>
-            <IconButton aria-label="show 17 new notifications" color="inherit">
-              <Badge badgeContent={17} color="secondary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+        {fakeAuth.isAuthenticated && (
+          <Toolbar style={{ color: "white" }}>
             <IconButton
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
+              edge="start"
+              className={classes.menuButton}
               color="inherit"
+              aria-label="open drawer"
             >
-              <AccountCircle />
+              <MenuIcon />
             </IconButton>
-          </div>
-          <div className={classes.sectionMobile}>
-            <IconButton
-              aria-label="show more"
-              aria-controls={mobileMenuId}
-              aria-haspopup="true"
-              onClick={handleMobileMenuOpen}
-              color="inherit"
-            >
-              <MoreIcon />
-            </IconButton>
-          </div>
-        </Toolbar>
+            <Typography className={classes.title} variant="h6" noWrap>
+              Séries Préférées
+            </Typography>
+            <div className={classes.search}>
+              <Autosuggest
+                highlightFirstSuggestion
+                suggestions={suggestions}
+                onSuggestionsFetchRequested={onSuggestionsFetchRequested}
+                onSuggestionsClearRequested={onSuggestionsClearRequested}
+                onSuggestionSelected={onSuggestionSelected}
+                getSuggestionValue={getOptionValue}
+                renderInputComponent={renderInputComponent}
+                renderSuggestion={renderSuggestion}
+                inputProps={inputProps}
+                renderSuggestionsContainer={options => (
+                  <Paper {...options.containerProps} square>
+                    {options.children}
+                  </Paper>
+                )}
+                theme={{
+                  container: classes.container,
+                  suggestionsContainerOpen: classes.suggestionsContainerOpen,
+                  suggestionsList: classes.suggestionsList,
+                  suggestion: classes.suggestion
+                }}
+              />
+            </div>
+            <div className={classes.grow} />
+            <div className={classes.sectionDesktop}>
+              <IconButton
+                aria-label="show 17 new notifications"
+                color="inherit"
+              >
+                <Badge badgeContent={17} color="secondary">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+              <IconButton
+                edge="end"
+                aria-label="account of current user"
+                aria-controls={menuId}
+                aria-haspopup="true"
+                onClick={handleProfileMenuOpen}
+                color="inherit"
+              >
+                <AccountCircle />
+              </IconButton>
+            </div>
+            <div className={classes.sectionMobile}>
+              <IconButton
+                aria-label="show more"
+                aria-controls={mobileMenuId}
+                aria-haspopup="true"
+                onClick={handleMobileMenuOpen}
+                color="inherit"
+              >
+                <MoreIcon />
+              </IconButton>
+            </div>
+          </Toolbar>
+        )}
       </AppBar>
       {renderMobileMenu}
       {renderMenu}
@@ -350,4 +369,10 @@ function PrimarySearchAppBar(props) {
   );
 }
 
-export default withRouter(PrimarySearchAppBar);
+const mapStateToProps = ({ suggestedSeries, selectedSerie }) => {
+  return {
+    suggestions: suggestedSeries.suggestions,
+    selectedSerie: selectedSerie
+  };
+};
+export default connect(mapStateToProps)(withRouter(PrimarySearchAppBar));

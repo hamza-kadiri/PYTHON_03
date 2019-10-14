@@ -27,11 +27,11 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Login = ({ match }) => {
+const Signup = ({ match }) => {
   let history = useHistory();
   const classes = useStyles();
   const [isLoading, setisLoading] = useState(false);
-  const handleLogin = async () => {
+  const handleSignup = async () => {
     setisLoading(true);
     await fakeAuth.authenticate();
     setisLoading(false);
@@ -72,7 +72,7 @@ const Login = ({ match }) => {
         <Card style={{ background: "rgba(0,0,0,0.6)" }}>
           <CardContent style={{ color: "white" }}>
             <Typography component="h5" variant="h5">
-              Log In
+              Sign up
             </Typography>
             <Grid container direction="column" alignItems="center" spacing={1}>
               <Grid item></Grid>
@@ -124,23 +124,22 @@ const Login = ({ match }) => {
                 <Button
                   color="primary"
                   variant="outlined"
-                  onClick={handleLogin}
+                  onClick={handleSignup}
                   style={{ width: "100%", height: "35px" }}
                 >
                   {isLoading ? (
                     <CircularProgress size={20} color="primary" />
                   ) : (
-                    "Log In"
+                    "Sign up"
                   )}
                 </Button>
               </Grid>
               <Grid item style={{ width: "100%" }}>
                 <Typography variant="caption">
-                  Don't have an account ?{" "}
-                  <Link className={classes.link} to="/signup">
-                    Sign up
+                  Already have an account ?{" "}
+                  <Link className={classes.link} to="/login">
+                    Log In
                   </Link>
-                  {" first."}
                 </Typography>
               </Grid>
             </Grid>
@@ -151,4 +150,4 @@ const Login = ({ match }) => {
   );
 };
 
-export default Login;
+export default Signup;
