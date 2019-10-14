@@ -5,6 +5,7 @@ class Config(object):
     DB_PASSWORD = 'password'
     DB_NAME = 'series_app'
     DATABASE_URI = 'postgresql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_SERVER, DB_NAME)
+    DROP_ON_INIT = True
 
     """API Config"""
 

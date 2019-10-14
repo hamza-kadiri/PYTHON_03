@@ -1,4 +1,5 @@
 from sqlalchemy import Table, Column, Integer, Numeric, String, ForeignKey, UniqueConstraint
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import object_session
 from database import Base
@@ -23,7 +24,7 @@ class Person():
     name = Column(String)
     profile_path = Column(String)
 
-    def __init__(self, id: int, credit_id: str, name: str):
+    def __init__(self, id: int, credit_id: str, name: str, profile_path:str):
         self.id = id
         self.credit_id = credit_id
         self.name = name
@@ -50,7 +51,7 @@ class Productor(Person, Base):
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
-    username = Column(String(20))
+    username = Column(String(20), unique=True)
     email = Column(String(80))
     password_hash = Column(String(128))
     series = relationship("Serie", secondary=subscriptions_table, back_populates="users")
@@ -72,11 +73,22 @@ class User(Base):
 
     @classmethod
     def get_user_by_id(cls, id: int):
-        return User.query.filter_by(id=id).first()
+        try:
+            return User.query.filter_by(id=id).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
+
 
     @classmethod
     def get_user_by_username(cls, username: str):
-        return User.query.filter_by(username=username).first()
+        try:
+            return User.query.filter_by(username=username).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
 
     @classmethod
     def hash_password(cls, password: str):
@@ -94,9 +106,19 @@ class User(Base):
         user = User.get_user_by_id(data['id'])
         return user
 
-    @classmethod
-    def get_subscription_by_user_id_and_serie_id(cls, user_id: int, tmdb_id_serie: int):
-        return User.query.join(Serie, User.series).filter(User.id == user_id).filter(Serie.tmdb_id_serie == tmdb_id_serie).all()
+    def get_subscription_by_serie_id(self, tmdb_id_serie: int):
+        try:
+            return User.query.join(Serie, User.series).filter(User.id == self.id).filter(Serie.tmdb_id_serie == tmdb_id_serie).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
+
+    def get_favorite_series(self):
+        return Serie.query.join(User.series).filter(User.id == self.id).all()
+
+    def add_favorite_serie(self, serie_id):
+        self.series.append(Serie.get_serie_by_id(serie_id))
 
 class Serie(Base):
     __tablename__ = 'series'
@@ -125,11 +147,12 @@ class Serie(Base):
 
     @classmethod
     def get_serie_by_id(cls, tmdb_id_serie: int):
-        return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).first()
-
-    @classmethod
-    def get_favorite_series_by_user_id(cls, userid):
-        return Serie.query.join(User).filter(User.id == userid).all()
+        try:
+            return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
 
     @classmethod
     def from_json(cls, json):
