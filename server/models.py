@@ -18,6 +18,11 @@ series_genres_table = Table('series_genres', Base.metadata,
 )
 
 class Person():
+    id = Column(Integer, primary_key=True)
+    credit_id = Column(String)
+    name = Column(String)
+    profile_path = Column(String)
+
     def __init__(self, id: int, credit_id: str, name: str):
         self.id = id
         self.credit_id = credit_id
@@ -26,10 +31,6 @@ class Person():
 
 class Actor(Person, Base):
     __tablename__ = 'actors'
-    id = Column(Integer, primary_key=True)
-    credit_id = Column(String)
-    name = Column(String)
-    profile_path = Column(String)
     department = Column(String)
     job = Column(String)
 
@@ -40,10 +41,6 @@ class Actor(Person, Base):
 
 class Productor(Person, Base):
     __tablename__ = 'productors'
-    id = Column(Integer, primary_key=True)
-    credit_id = Column(String)
-    name = Column(String)
-    profile_path = Column(String)
     gender = Column(String)
 
     def __init__(self, id: int, credit_id: str, name: str, profile_path: str, gender: int):
@@ -56,7 +53,7 @@ class User(Base):
     username = Column(String(20), unique=True)
     email = Column(String(80))
     password_hash = Column(String(128))
-    series = relationship("User", secondary=subscriptions_table, back_populates="users")
+    series = relationship("Serie", secondary=subscriptions_table, back_populates="users")
 
     def __init__(self, username: str, email: str, password: str):
         self.username = username
@@ -95,7 +92,7 @@ class User(Base):
         except BadSignature:
             return None  # invalid token
         user = User.get_user_by_id(data['id'])
-        return user    \
+        return user
 
     @classmethod
     def get_subscription_by_user_id_and_serie_id(cls, user_id: int, tmdb_id_serie: int):
