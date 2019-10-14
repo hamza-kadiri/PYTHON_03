@@ -53,10 +53,10 @@ class Productor(Person, Base):
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
-    username = Column(String(20), unique=True)
+    username = Column(String(20))
     email = Column(String(80))
     password_hash = Column(String(128))
-    series = relationship("User", secondary=subscriptions_table, back_populates="users")
+    series = relationship("Serie", secondary=subscriptions_table, back_populates="users")
 
     def __init__(self, username: str, email: str, password: str):
         self.username = username
@@ -146,7 +146,7 @@ class Genre(Base):
     __tablename__ = 'genres'
     tmdb_id_genre = Column(Integer, primary_key=True)
     name = Column(String)
-    series = relationship("Serie", secondary=subscriptions_table, back_populates="genres")
+    series = relationship("Serie", secondary=series_genres_table, back_populates="genres")
 
     def __init__(self, tmdb_id_genre, name):
         self.tmdb_id_genre = tmdb_id_genre
