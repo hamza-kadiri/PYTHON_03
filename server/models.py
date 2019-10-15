@@ -191,7 +191,8 @@ class Serie(Base):
                 new_serie_json = get_tv_serie(serie.tmdb_id_serie)
                 serie.update_from_json(new_serie_json) #update serie information
                 if (old_last_diff != serie.next_air_date and serie.next_air_date != "null"):
-                    Notification.from_json(userid, new_serie_json) #create notification
+                    new_notif = Notification.from_json(userid, new_serie_json) #create notification
+                    save_obj(new_notif)
 
 class Genre(Base):
     __tablename__ = 'genres'
