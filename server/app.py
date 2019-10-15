@@ -108,6 +108,10 @@ def create_app():
             if user.get_subscription_by_serie_id(serie_id) is not None:
                 abort(403)
             try:
+                user.series.append(serie)
+                serie.users.append(user)
+                save_obj(user)
+                save_obj(serie)
                 subscription = user.series.append(serie)
                 return {"user_id":user_id,"serie_id":serie_id}
             except IntegrityError:
@@ -119,14 +123,19 @@ def create_app():
         def delete_serie_from_favorites(user_id, serie_id):
             if user_id != g.user.id:
                 abort(403)
-            subscription = User.get_subscription_by_user_id_and_serie_id(user_id, serie_id)
-            if subscription is None:
+            user = User.get_user_by_id(user_id)
+            serie = Serie.get_serie_by_id(serie_id)
+            save_obj(user)
+            save_obj(serie)
+            if not(serie in user.series):
                 abort(404)
             try:
-                delete_obj(subscription)
+                user.series.remove(serie)
+                serie.users.remove(user)
             except IntegrityError:
                 abort(403)
-            return subscription.as_dict()
+            return {'user_id' : user.id, 'serie_id' : serie.id}
+
 
         @app.errorhandler(403)
         def forbidden_error(error):
