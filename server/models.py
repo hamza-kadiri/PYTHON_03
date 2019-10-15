@@ -6,8 +6,9 @@ from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from flask import current_app as app
-import time
+from time import time
 from database import save_obj
+from tmdb_api import get_tv_serie
 
 subscriptions_table = Table('subscriptions', Base.metadata,
     Column('user_id', Integer, ForeignKey('users.id')),
@@ -60,7 +61,7 @@ class User(Base):
         self.username = username
         self.email = email
         self.password_hash = User.hash_password(password)
-        self.last_connexion = time.now()
+        self.last_connexion = time()
 
     def as_dict(self):
         return {'id': self.id, 'username': self.username, 'email': self.email}
@@ -137,8 +138,8 @@ class Serie(Base):
         self.next_air_date = next_air_date
         self.vote_count = vote_count
         self.vote_average = vote_average
-        self.creation = time.now()
-        self.last_update = time.now()
+        self.creation = time()
+        self.last_update = time()
 
     def update_info(self, name, overview, backdrop_path, nb_seasons, nb_episodes, next_air_date, vote_count, vote_average):
         self.name = name
@@ -149,10 +150,15 @@ class Serie(Base):
         self.next_air_date = next_air_date
         self.vote_count = vote_count
         self.vote_average = vote_average
-        self.last_update = time.now()
-        sae_obj(self)
+        self.last_update = time()
+        save_obj(self)
 
-
+    def update_from_json(self, json):
+        if json['next_episode_to_air'] != None:
+            next_air_date = json['next_episode_to_air']['air_date']
+        else:
+            next_air_date = "null"
+        return self.update_info(json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'], json['number_of_episodes'], next_air_date, json['vote_count'], json['vote_average'])
 
     @classmethod
     def get_serie_by_id(cls, tmdb_id_serie: int):
@@ -176,6 +182,17 @@ class Serie(Base):
             next_air_date = "null"
         return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'], json['number_of_episodes'], next_air_date, json['vote_count'], json['vote_average'])
 
+    @classmethod
+    def update_series(cls, userid):
+        series = Serie.get_favorite_series_by_user_id(userid)
+        for serie in series:
+            if (serie.last_update < time() - 24*3600):
+                old_last_diff = serie.next_air_date
+                new_serie_json = get_tv_serie(serie.tmdb_id_serie)
+                serie.update_from_json(new_serie_json) #update serie information
+                if (old_last_diff != serie.next_air_date and serie.next_air_date != "null"):
+                    Notification.from_json(userid, new_serie_json) #create notification
+
 class Genre(Base):
     __tablename__ = 'genres'
     tmdb_id_genre = Column(SmallInteger, primary_key=True)
@@ -193,23 +210,23 @@ class Genre(Base):
 class Notification(Base):
     __tablename__ = "notifications"
     id = Column(SmallInteger, primary_key=True)
-    user_id = Column(SmallInteger)
+    user_id = Column(SmallInteger, )
     tmdb_serie_id = Column(Integer)
-    backdrop_path = Column(String)
     name = Column(String)
     season = Column(SmallInteger)
     episode = Column(SmallInteger)
     next_date = Column(Integer)
+    creation_date = Column(Integer)
     read = Column(SmallInteger)
 
-    def __init__(self,user_id, tmdb_serie_id, backdrop_path, name, season, episode, next_date):
+    def __init__(self,user_id, tmdb_serie_id, name, season, episode, next_date):
         self.user_id = user_id
         self.tmdb_serie_id = tmdb_serie_id
-        self.back_drop_path = backdrop_path
         self.name = name
         self.season = season
         self.episode = episode
         self.next_date = next_date
+        self.creation_date = time()
         self.read = 0
 
     def mark_as_read(self):
@@ -217,5 +234,8 @@ class Notification(Base):
         save_obj(self)
 
     @classmethod
-    def get_notif_by_userid(cls, userid, limit=30):
-        return Notification.query.filter_by(user_id=userid, read=0).order_by(desc(next_date)).limit(limit).all()
+    def from_json(cls, user_id, json):
+        next_episode_json = json['next_episode_to_aire']
+        return Notification(user_id, json['id'], next_episode_json['name'], next_episode_json['season_number'], next_episode_json['episode_number'], next_episode_json['air_date'])
+
+
