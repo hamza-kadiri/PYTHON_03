@@ -7,6 +7,7 @@ from models import User, Serie
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
+from api_exceptions import InvalidForm
 
 
 def create_app():
@@ -25,7 +26,6 @@ def create_app():
 
         @auth.verify_token
         def verify_token(token):
-            app.logger.error(token)
             # try to authenticate by token
             user = User.verify_auth_token(token)
             if not user:
@@ -33,10 +33,9 @@ def create_app():
             g.user = user
             return True
 
-        @app.route('/token')
-        def get_auth_token():
-            if not validate_user_login_form(request.form):
-                abort(400)
+        @app.route('/token', methods=['POST'])
+        def generate_auth_token():
+            validate_user_login_form(request.form) # Might raise an InvalidForm exception
             username = request.form['username']
             password = request.form['password']
             # try to authenticate with username/password
@@ -45,7 +44,7 @@ def create_app():
                 abort(401)
             g.user = user
             token = g.user.generate_auth_token()
-            return jsonify({'token': token.decode('ascii')})
+            return jsonify({'token': token.decode('ascii'), "user":user.as_dict()})
 
         # Add some routes
         @app.route("/", methods=['GET'])
@@ -66,13 +65,10 @@ def create_app():
 
         @app.route("/users", methods=['POST'])
         def add_user():
-            if not validate_user_registration_form(request.form):
-                abort(400)
+            validate_user_registration_form(request.form) # Might raise an InvalidForm exception
             user = User(request.form['username'], request.form['email'], request.form['password'])
             try:
                 save_obj(user)
-            except IntegrityError:
-                abort(403)
             except IntegrityError:
                 abort(403)
             return jsonify(user.as_dict())
@@ -101,8 +97,7 @@ def create_app():
         def add_serie_to_favorites(user_id):
             if user_id != g.user.id:
                 abort(403)
-            if not validate_add_serie_form(request.form):
-                abort(400)
+            validate_add_serie_form(request.form) # Might raise an InvalidForm exception
             serie_id = request.form['serie_id']
             user = User.get_user_by_id(user_id)
             serie = Serie.get_serie_by_id(serie_id)
@@ -114,13 +109,9 @@ def create_app():
                 abort(403)
             try:
                 user.series.append(serie)
-                serie.users.append(user)
                 save_obj(user)
-                save_obj(serie)
-                subscription = user.series.append(serie)
                 return jsonify({"user_id":user_id,"serie_id":serie_id})
             except IntegrityError:
-                app.logger.error("2")
                 abort(403)
 
         @app.route("/users/<int:user_id>/series/<int:serie_id>", methods=['DELETE'])
@@ -130,16 +121,17 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             serie = Serie.get_serie_by_id(serie_id)
-            save_obj(user)
-            save_obj(serie)
             if not(serie in user.series):
                 abort(404)
             try:
                 user.series.remove(serie)
-                serie.users.remove(user)
+                save_obj(user)
             except IntegrityError:
                 abort(403)
-            return jsonify({'user_id' : user.id, 'serie_id' : serie.id})
+            except ValueError as err:
+                abort(404)
+            return jsonify({'user_id' : user_id, 'serie_id' : serie_id})
+
 
         @app.route("/users/<int:user_id>/notifications", methods=['GET'])
         @auth.login_required
@@ -147,7 +139,8 @@ def create_app():
             if user_id != g.user.id:
                 abort(403)
             user = User.get_user_by_id(user_id)
-            return jsonify({'message' : 'Not implemented'})
+            return jsonify({'message': 'Not implemented'})
+
 
         @app.route("/users/<int:user_id>/notifications", methods=['POST'])
         @auth.login_required
@@ -156,6 +149,13 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             return jsonify({'message': 'Not implemented'})
+
+        @app.errorhandler(InvalidForm)
+        def handle_invalid_usage(error):
+            response = jsonify(error.to_dict())
+            response.status_code = error.status_code
+            app.logger.error(response)
+            return response
 
 
         @app.errorhandler(403)
