@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-from sqlalchemy import Table, Column, Integer, SmallInteger, Numeric, String, ForeignKey, UniqueConstraint, desc
-=======
-from sqlalchemy import Table, Column, Integer, Numeric, String, ForeignKey, UniqueConstraint, inspect
->>>>>>> 4ce251e059f50470fc9f444c6da8ce266a08fcc9
+from sqlalchemy import Table, Column, Integer, SmallInteger, Numeric, String, ForeignKey, UniqueConstraint, desc, inspect
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.orm import relationship
 from database import Base
@@ -228,7 +224,6 @@ class Serie(Base, EqMixin):
             next_air_date = "null"
         return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'], json['number_of_episodes'], next_air_date, json['vote_count'], json['vote_average'])
 
-<<<<<<< HEAD
     @classmethod
     def update_series(cls, userid):
         series = Serie.get_favorite_series_by_user_id(userid)
@@ -240,12 +235,11 @@ class Serie(Base, EqMixin):
                 if (old_last_diff != serie.next_air_date and serie.next_air_date != "null"):
                     new_notif = Notification.from_json(userid, new_serie_json) #create notification
                     save_obj(new_notif)
-=======
+
     def as_dict(self):
         return {'tmdb_id_serie': self.tmdb_id_serie,'name': self.name,'overview': self.overview,'backdrop_path': self.backdrop_path,
                 'nb_seasons': self.nb_seasons,'nb_episodes': self.nb_episodes,'next_air_date': self.next_air_date,
                 'vote_count': self.vote_count,'genres': self.genres}
->>>>>>> 4ce251e059f50470fc9f444c6da8ce266a08fcc9
 
 class Genre(Base):
     __tablename__ = 'genres'
