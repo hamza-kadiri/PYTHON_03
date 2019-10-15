@@ -9,12 +9,12 @@ db_session = scoped_session(sessionmaker(autocommit=False,
                                          bind=engine))
 Base = declarative_base()
 Base.query = db_session.query_property()
-
-def init_db(drop_on_init):
+def creation_db():
     import models
-    if drop_on_init:
-        Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
+def init_models():
+    import models
 
 def save_obj(obj):
     db_session.add(obj)
