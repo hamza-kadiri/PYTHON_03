@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, abort, g
 from flask_cors import CORS
-from form_validation import validate_add_serie_form, validate_user_registration_form
+from form_validation import validate_add_serie_form, validate_user_registration_form, validate_user_login_form
 from database import init_db, save_obj, delete_obj, db_session
 from models import User, Serie
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
@@ -37,8 +37,16 @@ def create_app():
             return True
 
         @app.route('/token')
-        @auth.login_required
         def get_auth_token():
+            if not validate_user_login_form(request.form):
+                abort(400)
+            username = request.form['username']
+            password = request.form['password']
+            # try to authenticate with username/password
+            user = User.get_user_by_username(username)
+            if not user or not user.verify_password(password):
+                abort(403)
+            g.user = user
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii')})
 
