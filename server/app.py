@@ -33,8 +33,8 @@ def create_app():
             g.user = user
             return True
 
-        @app.route('/token')
-        def get_auth_token():
+        @app.route('/token', methods=['POST'])
+        def generate_auth_token():
             if not validate_user_login_form(request.form):
                 abort(400)
             username = request.form['username']
@@ -45,7 +45,7 @@ def create_app():
                 abort(403)
             g.user = user
             token = g.user.generate_auth_token()
-            return jsonify({'token': token.decode('ascii')})
+            return jsonify({'token': token.decode('ascii'), "user":user.as_dict()})
 
         # Add some routes
         @app.route("/", methods=['GET'])
