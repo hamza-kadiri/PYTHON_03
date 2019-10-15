@@ -3,14 +3,10 @@ import urllib.parse
 from requests import RequestException
 from flask import current_app as app
 
+
 # Documentation for the API available at : https://developers.themoviedb.org/3/getting-started/introduction
-from omdb_model import SerieEpisode, SerieSeason, Serie, SerieListResults, SerieListResult
 
-API_KEY = "84eae13884eb7a9e47fcc760ca08f593"
-API_URL = "https://api.themoviedb.org/3"
-THUMBNAIL_BASE_URL = "https://image.tmdb.org/t/p/w300"
-
-
+# TODO : Delete single pattern ?
 class RequestExceptionOMDB(RequestException):
     def __init__(self, method, url, http_status_code, api_status_message, api_status_code):
         RequestException.__init__(
@@ -43,6 +39,38 @@ class RequestExceptionOMDB(RequestException):
 
 
 class RequestOMDB:
+    class __RequestOMDB:
+        def __init__(self):
+            try:
+                self._base_url = app.config['API_URL']
+                self._api_key = app.config['API_KEY']
+            except RuntimeError:
+                raise AttributeError(
+                    "Cannot instantiate RequestOMDB without the app context")
+
+        @property
+        def base_url(self):
+            return self._base_url
+
+        @property
+        def api_key(self):
+            return self._api_key
+
+        def perform_request(self, endpoint: str, method='GET', query=None):
+            queryString=""
+            if query is not None:
+                queryString = f'&query={urllib.parse.quote(query)}'
+            url = f'{self.base_url}{endpoint}?api_key={self.api_key}{queryString}'
+            if (method == 'GET'):
+                print(url)
+                response = requests.get(url)
+                print(response)
+                if response.status_code != 200:
+                    raise create_request_exception(method, url, response)
+                return response
+
+    instance = None
+
     def __init__(self):
         try:
             self._base_url = app.config['API_URL']
@@ -106,17 +134,9 @@ def get_tv_serie(tv_id: int):
     return json
 
 
-def get_tv_serie_season(tv_id: int, season_number: int):
-    endpoint = f'/tv/{tv_id}/season/{season_number}'
-    request = RequestOMDB()
-    resp = request.perform_request(endpoint)
-    serie_season = SerieSeason.from_json(resp.json())
-    return serie_season
-
-
+# noinspection PyInterpreter
 def get_tv_serie_episode(tv_id: int, season_number: int, episode_number: int):
     endpoint = f'/tv/{tv_id}/season/{season_number}/episode/{episode_number}'
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
-    serie_episode = SerieEpisode.from_json(resp.json())
-    return serie_episode
+    return resp.json()

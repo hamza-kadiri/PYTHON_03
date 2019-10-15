@@ -1,6 +1,6 @@
 from sqlalchemy import Table, Column, Integer, Numeric, String, ForeignKey, UniqueConstraint
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm.session import object_session
 from database import Base
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import (TimedJSONWebSignatureSerializer
@@ -18,7 +18,11 @@ series_genres_table = Table('series_genres', Base.metadata,
 )
 
 class Person():
-    def __init__(self, id: int, credit_id: str, name: str):
+    id = Column(Integer, primary_key=True)
+    credit_id = Column(String)
+    name = Column(String)
+    profile_path = Column(String)
+    def __init__(self, id: int, credit_id: str, name: str, profile_path:str):
         self.id = id
         self.credit_id = credit_id
         self.name = name
@@ -26,10 +30,6 @@ class Person():
 
 class Actor(Person, Base):
     __tablename__ = 'actors'
-    id = Column(Integer, primary_key=True)
-    credit_id = Column(String)
-    name = Column(String)
-    profile_path = Column(String)
     department = Column(String)
     job = Column(String)
 
@@ -39,23 +39,7 @@ class Actor(Person, Base):
         self.job = job
 
 class Productor(Person, Base):
-    __tablename__ = 'productors'class Actor(Person, Base):
-    __tablename__ = 'actors'
-    id = Column(Integer, primary_key=True)
-    credit_id = Column(String)
-    name = Column(String)
-    profile_path = Column(String)
-    department = Column(String)
-    job = Column(String)
-
-    def __init__(self, id: int, credit_id: str, name: str, profile_path: str, department: str, job: str):
-        Person.__init__(self, id, credit_id, name, profile_path)
-        self.department = department
-        self.job = job
-    id = Column(Integer, primary_key=True)
-    credit_id = Column(String)
-    name = Column(String)
-    profile_path = Column(String)
+    __tablename__ = 'productors'
     gender = Column(String)
 
     def __init__(self, id: int, credit_id: str, name: str, profile_path: str, gender: int):
@@ -68,7 +52,7 @@ class User(Base):
     username = Column(String(20), unique=True)
     email = Column(String(80))
     password_hash = Column(String(128))
-    series = relationship("User", secondary=subscriptions_table, back_populates="users")
+    series = relationship("Serie", secondary=subscriptions_table, back_populates="users")
 
     def __init__(self, username: str, email: str, password: str):
         self.username = username
@@ -87,7 +71,22 @@ class User(Base):
 
     @classmethod
     def get_user_by_id(cls, id: int):
-        return User.query.filter_by(id=id).first()
+        try:
+            return User.query.filter_by(id=id).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
+
+
+    @classmethod
+    def get_user_by_username(cls, username: str):
+        try:
+            return User.query.filter_by(username=username).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
 
     @classmethod
     def get_user_by_username(cls, username: str):
@@ -107,11 +106,7 @@ class User(Base):
         except BadSignature:
             return None  # invalid token
         user = User.get_user_by_id(data['id'])
-        return user    \
-
-    @classmethod
-    def get_subscription_by_user_id_and_serie_id(cls, user_id: int, tmdb_id_serie: int):
-        return User.query.join(Serie, User.series).filter(User.id == user_id).filter(Serie.tmdb_id_serie == tmdb_id_serie).all()
+        return user
 
 class Serie(Base):
     __tablename__ = 'series'
@@ -140,7 +135,13 @@ class Serie(Base):
 
     @classmethod
     def get_serie_by_id(cls, tmdb_id_serie: int):
-        return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).first()
+
+        try:
+            return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
 
     @classmethod
     def get_favorite_series_by_user_id(cls, userid):
@@ -158,7 +159,7 @@ class Genre(Base):
     __tablename__ = 'genres'
     tmdb_id_genre = Column(Integer, primary_key=True)
     name = Column(String)
-    series = relationship("Serie", secondary=subscriptions_table, back_populates="genres")
+    series = relationship("Serie", secondary=series_genres_table, back_populates="genres")
 
     def __init__(self, tmdb_id_genre, name):
         self.tmdb_id_genre = tmdb_id_genre
