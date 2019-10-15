@@ -1,15 +1,12 @@
 from flask import Flask, request, jsonify, abort, g
 from flask_cors import CORS
 from form_validation import validate_add_serie_form, validate_user_registration_form, validate_user_login_form
-from database import init_db, save_obj, delete_obj, db_session
 from form_validation import validate_add_serie_form, validate_user_registration_form
 from database import init_models, save_obj, delete_obj, db_session
 from models import User, Serie
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
-from psycopg2.errors import UniqueViolation
-from config import Config
 
 
 def create_app():
