@@ -57,12 +57,12 @@ def create_app():
         @auth.login_required
         def search():
             query = request.args.get('query')
-            return search_tv_serie_by_title(query)
+            return jsonify(search_tv_serie_by_title(query))
 
         @app.route("/series/<int:serie_id>", methods=['GET'])
         @auth.login_required
         def get_serie_details(serie_id):
-            return get_tv_serie(serie_id)
+            return jsonify(get_tv_serie(serie_id))
 
         @app.route("/users", methods=['POST'])
         def add_user():
@@ -75,7 +75,7 @@ def create_app():
                 abort(403)
             except IntegrityError:
                 abort(403)
-            return user.as_dict()
+            return jsonify(user.as_dict())
 
         @app.route("/users/<int:user_id>", methods=['GET'])
         @auth.login_required
@@ -85,7 +85,7 @@ def create_app():
             user = User.get_user_by_id(user_id)
             if user is None:
                 abort(404)
-            return user.as_dict()
+            return jsonify(user.as_dict())
 
         @app.route("/users/<int:user_id>/series", methods=['GET'])
         @auth.login_required
@@ -94,7 +94,7 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             series = user.get_favorite_series()
-            return {"series": [serie.as_dict() for serie in series]}
+            return jsonify({"series": [serie.as_dict() for serie in series]})
 
         @app.route("/users/<int:user_id>/series", methods=['POST'])
         @auth.login_required
@@ -118,7 +118,7 @@ def create_app():
                 save_obj(user)
                 save_obj(serie)
                 subscription = user.series.append(serie)
-                return {"user_id":user_id,"serie_id":serie_id}
+                return jsonify({"user_id":user_id,"serie_id":serie_id})
             except IntegrityError:
                 app.logger.error("2")
                 abort(403)
@@ -139,27 +139,27 @@ def create_app():
                 serie.users.remove(user)
             except IntegrityError:
                 abort(403)
-            return {'user_id' : user.id, 'serie_id' : serie.id}
+            return jsonify({'user_id' : user.id, 'serie_id' : serie.id})
 
 
         @app.errorhandler(403)
         def forbidden_error(error):
-            return {'error_code': 403, 'error_message': 'This operation is forbidden'}
+            return jsonify({'error_code': 403, 'error_message': 'This operation is forbidden'})
 
         @app.errorhandler(404)
         def not_found_error(error):
             app.logger.error('404 Not Found Error: %s', (error))
-            return {'error_code': 404, 'error_message': 'The ressource you have requested could not be found'}
+            return jsonify({'error_code': 404, 'error_message': 'The ressource you have requested could not be found'})
 
         @app.errorhandler(500)
         def internal_server_error(error):
             app.logger.error('Server Error: %s', (error))
-            return {'error_code': 500, 'error_message': 'Internal Server Error'}
+            return jsonify({'error_code': 500, 'error_message': 'Internal Server Error'})
 
         @app.errorhandler(Exception)
         def unhandled_exception(error):
             app.logger.error('Unhandled Exception: %s \n Stack Trace: %s', (error, str(traceback.format_exc())))
-            return {'error_code': 500, 'error_message': 'Internal Server Error'}
+            return jsonify({'error_code': 500, 'error_message': 'Internal Server Error'})
 
         @app.route("/serie/<serie_id>")
         def get_serie(serie_id):
