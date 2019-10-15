@@ -5,7 +5,7 @@ from database import init_db, save_obj, delete_obj, db_session
 from models import User, Serie
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
-from flask_httpauth import HTTPBasicAuth
+from flask_httpauth import HTTPTokenAuth
 from psycopg2.errors import UniqueViolation
 from config import Config
 
@@ -17,22 +17,20 @@ def create_app():
     CORS(app)
     # Set globals
     init_db(Config.DROP_ON_INIT)
-    auth = HTTPBasicAuth()
+    auth = HTTPTokenAuth(scheme='Token')
     with app.app_context():
 
         @app.teardown_appcontext
         def shutdown_session(exception=None):
             db_session.remove()  # Teardown connexion after every request
 
-        @auth.verify_password
-        def verify_password(username_or_token, password):
-            # first try to authenticate by token
-            user = User.verify_auth_token(username_or_token)
+        @auth.verify_token
+        def verify_token(token):
+            app.logger.error(token)
+            # try to authenticate by token
+            user = User.verify_auth_token(token)
             if not user:
-                # try to authenticate with username/password
-                user = User.get_user_by_username(username_or_token)
-                if not user or not user.verify_password(password):
-                    return False
+                return False
             g.user = user
             return True
 
