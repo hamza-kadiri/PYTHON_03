@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { fade, makeStyles } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -13,11 +13,17 @@ import SearchIcon from "@material-ui/icons/SearchOutlined";
 import AccountCircle from "@material-ui/icons/AccountCircleOutlined";
 import NotificationsIcon from "@material-ui/icons/NotificationsOutlined";
 import MoreIcon from "@material-ui/icons/MoreVertOutlined";
-import AsyncSelect from "react-select/async";
+import Autosuggest from "react-autosuggest";
+import Paper from "@material-ui/core/Paper";
+import TextField from "@material-ui/core/TextField";
+import InputAdornment from "@material-ui/core/InputAdornment";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ky from "ky";
-import { components } from "react-select";
-import { Link } from "react-router-dom";
-const { Option } = components;
+import { fakeAuth } from "./App";
+import { Link, withRouter, useHistory } from "react-router-dom";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import { connect, useSelector, useDispatch } from "react-redux";
+import { fetchSuggestedSeries } from "./redux/actions";
 
 const useStyles = makeStyles(theme => {
   return {
@@ -55,26 +61,7 @@ const useStyles = makeStyles(theme => {
         marginLeft: theme.spacing(3)
       }
     },
-    searchIcon: {
-      width: theme.spacing(7),
-      height: "100%",
-      position: "absolute",
-      pointerEvents: "none",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    },
-    inputRoot: {
-      backgroundColor: theme.primary
-    },
-    inputInput: {
-      padding: theme.spacing(1, 1, 1, 7),
-      transition: theme.transitions.create("width"),
-      width: "100%",
-      [theme.breakpoints.up("md")]: {
-        width: 200
-      }
-    },
+
     sectionDesktop: {
       display: "none",
       [theme.breakpoints.up("md")]: {
@@ -86,14 +73,52 @@ const useStyles = makeStyles(theme => {
       [theme.breakpoints.up("md")]: {
         display: "none"
       }
+    },
+    container: {
+      position: "relative"
+    },
+    suggestionsContainerOpen: {
+      position: "absolute",
+      zIndex: 1,
+      marginTop: theme.spacing(1),
+      left: 0,
+      right: 0
+    },
+    suggestion: {
+      display: "block"
+    },
+    suggestionsList: {
+      margin: 0,
+      padding: 0,
+      listStyleType: "none"
+    },
+    divider: {
+      height: theme.spacing(2)
+    },
+    input: {
+      color: theme.palette.common.white
+    },
+    suggestions: {
+      root: {
+        color: theme.palette.common.white
+      }
     }
   };
 });
 
-export default function PrimarySearchAppBar() {
+function PrimarySearchAppBar({ suggestions, selectedSerie }) {
+  const history = useHistory();
   const classes = useStyles();
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
+  const [value, setValue] = useState("");
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [isLoadingSignout, setIsLoadingSignout] = useState(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    setValue(selectedSerie.serie.name);
+  }, [selectedSerie]);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -106,6 +131,19 @@ export default function PrimarySearchAppBar() {
     setMobileMoreAnchorEl(null);
   };
 
+  const handleSignout = async () => {
+    setIsLoadingSignout(true);
+    await fakeAuth.signout();
+    setIsLoadingSignout(false);
+    handleMenuClose();
+    history.push("/login");
+  };
+
+  const handleFavorites = async () => {
+    handleMenuClose();
+    history.push("/favorites");
+  };
+
   const handleMenuClose = () => {
     setAnchorEl(null);
     handleMobileMenuClose();
@@ -114,23 +152,6 @@ export default function PrimarySearchAppBar() {
   const handleMobileMenuOpen = event => {
     setMobileMoreAnchorEl(event.currentTarget);
   };
-
-  const ThumbailOption = props => (
-    <Option {...props}>
-      <Link to={`/serie/${props.data.id}`} style={{ textDecoration: "none" }}>
-        <Grid container align="center" className={classes.root} spacing={2}>
-          <Grid item>
-            <img height="50" src={props.data.thumbnail_url}></img>
-          </Grid>
-          <Grid item>
-            <Typography className={classes.title} variant="h6" noWrap>
-              {props.label}
-            </Typography>
-          </Grid>
-        </Grid>
-      </Link>
-    </Option>
-  );
 
   const menuId = "primary-search-account-menu";
   const renderMenu = (
@@ -143,8 +164,16 @@ export default function PrimarySearchAppBar() {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <MenuItem onClick={handleFavorites}>Favorites</MenuItem>
+      <MenuItem onClick={handleSignout}>
+        {isLoadingSignout ? (
+          <ListItemIcon>
+            <CircularProgress style={{ margin: "auto" }} size={24} />
+          </ListItemIcon>
+        ) : (
+          "Sign out"
+        )}
+      </MenuItem>
     </Menu>
   );
 
@@ -182,87 +211,152 @@ export default function PrimarySearchAppBar() {
   );
 
   const getOptionValue = option => {
-    return option.id;
-  };
-
-  const getOptionLabel = option => {
     return option.name;
   };
 
-  const promiseOptions = async inputValue => {
-    const response = await ky.get("//localhost:8001/search", {
-      searchParams: { query: inputValue }
-    });
-    const json = await response.json();
-    return json.results;
+  const loadSuggestions = async inputValue => {
+    await dispatch(fetchSuggestedSeries(inputValue));
+    return suggestions;
   };
 
+  const onSuggestionsFetchRequested = async ({ value }) => {
+    await loadSuggestions(value);
+  };
+
+  const onSuggestionsClearRequested = () => {};
+
+  const onChange = (event, { newValue }) => {
+    setValue(newValue);
+    history.push("/");
+  };
+
+  function renderInputComponent(inputProps) {
+    const { classes, inputRef = () => {}, ref, ...other } = inputProps;
+    return (
+      <TextField
+        fullWidth
+        InputProps={{
+          inputRef: node => {
+            ref(node);
+            inputRef(node);
+          },
+          className: classes.input,
+          endAdornment: (
+            <InputAdornment position="end">
+              {isLoadingSuggestions ? (
+                <IconButton className={classes.input} aria-label="search">
+                  <CircularProgress size={16} />
+                </IconButton>
+              ) : (
+                <IconButton className={classes.input} aria-label="search">
+                  <SearchIcon />
+                </IconButton>
+              )}
+            </InputAdornment>
+          )
+        }}
+        {...other}
+      />
+    );
+  }
+
+  function renderSuggestion(suggestion, { query, isHighlighted }) {
+    return null;
+  }
+
+  const onSuggestionSelected = (event, { suggestion }) => {
+    if (event.key === "Enter") {
+      const path = `/serie/${suggestion.id}`;
+      history.push(path);
+    }
+  };
+
+  const inputProps = {
+    placeholder: "Rechercher une série",
+    value,
+    onChange,
+    classes
+  };
   return (
     <div className={classes.grow}>
       <AppBar className={classes.appBar}>
-        <Toolbar style={{ color: "white" }}>
-          <IconButton
-            edge="start"
-            className={classes.menuButton}
-            color="inherit"
-            aria-label="open drawer"
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography className={classes.title} variant="h6" noWrap>
-            Series Préférées
-          </Typography>
-          <div className={classes.search}>
-            <div className={classes.searchIcon}>
-              <SearchIcon />
+        {fakeAuth.isAuthenticated && (
+          <Toolbar style={{ color: "white" }}>
+            <IconButton
+              edge="start"
+              className={classes.menuButton}
+              color="inherit"
+              aria-label="open drawer"
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography className={classes.title} variant="h6" noWrap>
+              Séries Préférées
+            </Typography>
+            <div className={classes.search}>
+              <Autosuggest
+                highlightFirstSuggestion
+                suggestions={suggestions}
+                onSuggestionsFetchRequested={onSuggestionsFetchRequested}
+                onSuggestionsClearRequested={onSuggestionsClearRequested}
+                onSuggestionSelected={onSuggestionSelected}
+                getSuggestionValue={getOptionValue}
+                renderInputComponent={renderInputComponent}
+                renderSuggestion={renderSuggestion}
+                inputProps={inputProps}
+                theme={{
+                  container: classes.container,
+                  suggestionsContainerOpen: classes.suggestionsContainerOpen,
+                  suggestionsList: classes.suggestionsList,
+                  suggestion: classes.suggestion
+                }}
+              />
             </div>
-            <AsyncSelect
-              cacheOptions
-              placeholder="Search…"
-              classes={{
-                root: classes.inputRoot,
-                input: classes.inputInput
-              }}
-              inputProps={{ "aria-label": "search" }}
-              loadOptions={promiseOptions}
-              getOptionValue={getOptionValue}
-              getOptionLabel={getOptionLabel}
-              components={{ Option: ThumbailOption }}
-            ></AsyncSelect>
-          </div>
-          <div className={classes.grow} />
-          <div className={classes.sectionDesktop}>
-            <IconButton aria-label="show 17 new notifications" color="inherit">
-              <Badge badgeContent={17} color="secondary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-            <IconButton
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
-          </div>
-          <div className={classes.sectionMobile}>
-            <IconButton
-              aria-label="show more"
-              aria-controls={mobileMenuId}
-              aria-haspopup="true"
-              onClick={handleMobileMenuOpen}
-              color="inherit"
-            >
-              <MoreIcon />
-            </IconButton>
-          </div>
-        </Toolbar>
+            <div className={classes.grow} />
+            <div className={classes.sectionDesktop}>
+              <IconButton
+                aria-label="show 17 new notifications"
+                color="inherit"
+              >
+                <Badge badgeContent={17} color="secondary">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+              <IconButton
+                edge="end"
+                aria-label="account of current user"
+                aria-controls={menuId}
+                aria-haspopup="true"
+                onClick={handleProfileMenuOpen}
+                color="inherit"
+              >
+                <AccountCircle />
+              </IconButton>
+            </div>
+            <div className={classes.sectionMobile}>
+              <IconButton
+                aria-label="show more"
+                aria-controls={mobileMenuId}
+                aria-haspopup="true"
+                onClick={handleMobileMenuOpen}
+                color="inherit"
+              >
+                <MoreIcon />
+              </IconButton>
+            </div>
+          </Toolbar>
+        )}
       </AppBar>
       {renderMobileMenu}
       {renderMenu}
     </div>
   );
 }
+
+const mapStateToProps = ({ suggestedSeries, selectedSerie }) => {
+  return {
+    suggestions: suggestedSeries.suggestions,
+    selectedSerie: selectedSerie
+  };
+};
+export default connect(mapStateToProps)(withRouter(PrimarySearchAppBar));

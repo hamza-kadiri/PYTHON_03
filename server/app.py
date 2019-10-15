@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, abort, g
 from flask_cors import CORS
 from form_validation import validate_add_serie_form, validate_user_registration_form
-from database import init_db, save_obj, delete_obj, db_session
+from database import init_models, save_obj, delete_obj, db_session
 from models import User, Serie
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
@@ -16,7 +16,7 @@ def create_app():
     app.config.from_object('config.Config')
     CORS(app)
     # Set globals
-    init_db(Config.DROP_ON_INIT)
+    init_models()
     auth = HTTPBasicAuth()
     with app.app_context():
 

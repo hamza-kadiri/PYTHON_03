@@ -112,10 +112,15 @@ def search_tv_serie_by_title(query: str):
     request = RequestOMDB()
     resp = request.perform_request(endpoint, query=query)
     json = resp.json()
+    filteredResults = []
     results = json['results']
     for result in results:
-        result['thumbnail_url'] = f"{app.config['THUMBNAIL_BASE_URL']}{result['backdrop_path']}"
-    json['results'] = results
+        if result['backdrop_path'] is not None:
+            result['thumbnail_url'] = f"{app.config['BACKDROP_BASE_URL']}{result['backdrop_path']}"
+        if result['poster_path'] is not None:
+            result['poster_url'] = f"{app.config['POSTER_BASE_URL']}{result['poster_path']}"
+            filteredResults.append(result)
+    json['results'] = filteredResults
     return json
 
 
@@ -124,7 +129,8 @@ def get_tv_serie(tv_id: int):
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
     json = resp.json()
-    json['backdrop_url'] = f"{app.config['BACKDROP_BASE_URL']}{json['backdrop_path']}"
+    if json['backdrop_path'] is not None:
+        json['backdrop_url'] = f"{app.config['BACKDROP_BASE_URL']}{json['backdrop_path']}"
     return json
 
 

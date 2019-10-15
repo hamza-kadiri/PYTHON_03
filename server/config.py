@@ -15,4 +15,4 @@ class Config(object):
     """Auth Config"""
     SECRET_KEY = "gjEq2dHoU3A45WhDQDGJTj3jF8MHa6oN"
     BACKDROP_BASE_URL = "https://image.tmdb.org/t/p/w1280"
-
+    POSTER_BASE_URL = "https://image.tmdb.org/t/p/w185"

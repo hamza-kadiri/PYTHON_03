@@ -1,22 +1,34 @@
 import React, { useEffect, useState } from "react";
+import { makeStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import Typography from "@material-ui/core/Typography";
-import ky from "ky";
+import Button from "@material-ui/core/Button";
+import LikeIcon from "@material-ui/icons/Favorite";
+import OutlinedLikeIcon from "@material-ui/icons/FavoriteBorder";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import { connect, useDispatch } from "react-redux";
+import { fetchSelectedSerie, RESET_SERIE } from "./redux/actions";
 
-const Serie = ({ match }) => {
-  const [serie, setSerie] = useState({});
+const useStyles = makeStyles(theme => ({
+  LikeIcon: {
+    marginRight: theme.spacing(1)
+  }
+}));
+
+const Serie = ({ match, serie, isLoading }) => {
+  const classes = useStyles();
+  const [isLiked, setisLiked] = useState(false);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    const getSerie = async id => {
-      const response = await ky.get(`//localhost:8001/serie/${id}`);
-      const json = await response.json();
-      setSerie(json);
-      console.log(json);
-      return json;
-    };
-    getSerie(match.params.id);
+    dispatch(fetchSelectedSerie(match.params.id));
   }, [match.params.id]);
+
+  const handleLike = () => {
+    const currentState = isLiked;
+    setisLiked(!currentState);
+  };
   return (
     <React.Fragment>
       <div
@@ -46,7 +58,7 @@ const Serie = ({ match }) => {
         }}
       >
         <Card
-          elevation="0"
+          elevation={0}
           style={{
             height: "80%",
             width: "25%",
@@ -55,12 +67,41 @@ const Serie = ({ match }) => {
           }}
         >
           <CardContent>
-            <Typography variant="h3" gutterBottom>
-              {serie.name}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              {serie.overview}
-            </Typography>
+            {isLoading ? (
+              <CircularProgress
+                style={{
+                  position: "absolute",
+                  margin: "auto",
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  bottom: 0
+                }}
+                size={50}
+                color="primary"
+              />
+            ) : (
+              <React.Fragment>
+                <Typography variant="h3" gutterBottom>
+                  {serie.name}
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {serie.overview}
+                </Typography>
+                <Button
+                  variant={isLiked ? "contained" : "outlined"}
+                  color="primary"
+                  onClick={handleLike}
+                >
+                  {isLiked ? (
+                    <LikeIcon className={classes.LikeIcon} />
+                  ) : (
+                    <OutlinedLikeIcon className={classes.LikeIcon} />
+                  )}
+                  Add to Favorites
+                </Button>
+              </React.Fragment>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -68,4 +109,9 @@ const Serie = ({ match }) => {
   );
 };
 
-export default Serie;
+const mapStateToProps = ({ selectedSerie }) => ({
+  serie: selectedSerie.serie,
+  isLoading: selectedSerie.isFetching
+});
+
+export default connect(mapStateToProps)(Serie);
