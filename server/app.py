@@ -114,10 +114,8 @@ def create_app():
                 abort(403)
             try:
                 user.series.append(serie)
-                serie.users.append(user)
+
                 save_obj(user)
-                save_obj(serie)
-                subscription = user.series.append(serie)
                 return jsonify({"user_id":user_id,"serie_id":serie_id})
             except IntegrityError:
                 app.logger.error("2")
@@ -130,16 +128,19 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             serie = Serie.get_serie_by_id(serie_id)
-            save_obj(user)
-            save_obj(serie)
             if not(serie in user.series):
                 abort(404)
             try:
+                app.logger.error("WTF")
                 user.series.remove(serie)
-                serie.users.remove(user)
+                app.logger.error("BLA")
+                save_obj(user)
+                app.logger.error("BLB")
             except IntegrityError:
                 abort(403)
-            return jsonify({'user_id' : user.id, 'serie_id' : serie.id})
+            except ValueError as err:
+                abort(404)
+            return jsonify({'user_id' : user_id, 'serie_id' : serie_id})
 
 
         @app.errorhandler(403)

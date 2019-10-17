@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, Numeric, String, ForeignKey, UniqueConstraint
+from sqlalchemy import Table, Column, Integer, Numeric, String, ForeignKey, UniqueConstraint, inspect
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.orm import relationship
 from database import Base
@@ -6,6 +6,31 @@ from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from flask import current_app as app
+
+class EqMixin(object):
+    def compare_value(self):
+        """Return a value or tuple of values to use for comparisons.
+        Return instance's primary key by default, which requires that it is persistent in the database.
+        Override this in subclasses to get other behavior.
+        """
+        return inspect(self).identity
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+
+        return self.compare_value() == other.compare_value()
+
+    def __ne__(self, other):
+        eq = self.__eq__(other)
+
+        if eq is NotImplemented:
+            return eq
+
+        return not eq
+
+    def __hash__(self):
+        return hash(self.__class__) ^ hash(self.compare_value())
 
 subscriptions_table = Table('subscriptions', Base.metadata,
     Column('user_id', Integer, ForeignKey('users.id')),
@@ -46,7 +71,7 @@ class Productor(Person, Base):
         Person.__init(self, id, credit_id, name, profile_path)
         self.gender = gender
 
-class User(Base):
+class User(Base, EqMixin):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     username = Column(String(20), unique=True)
@@ -58,6 +83,9 @@ class User(Base):
         self.username = username
         self.email = email
         self.password_hash = User.hash_password(password)
+
+    def compare_value(self):
+        return self.id
 
     def as_dict(self):
         return {'id': self.id, 'username': self.username, 'email': self.email}
@@ -108,7 +136,22 @@ class User(Base):
         user = User.get_user_by_id(data['id'])
         return user
 
-class Serie(Base):
+    def get_subscription_by_serie_id(self, tmdb_id_serie: int):
+        try:
+            return User.query.join(Serie, User.series).filter(User.id == self.id).filter(
+                Serie.tmdb_id_serie == tmdb_id_serie).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
+
+    def get_favorite_series(self):
+        return Serie.query.join(User.series).filter(User.id == self.id).all()
+
+    def add_favorite_serie(self, serie_id):
+        self.series.append(Serie.get_serie_by_id(serie_id))
+
+class Serie(Base, EqMixin):
     __tablename__ = 'series'
     tmdb_id_serie = Column(Integer, primary_key=True)
     name = Column(String)
@@ -133,6 +176,9 @@ class Serie(Base):
         self.vote_count = vote_count
         self.vote_average = vote_average
 
+    def compare_value(self):
+        return self.tmdb_id_serie
+
     @classmethod
     def get_serie_by_id(cls, tmdb_id_serie: int):
 
@@ -144,16 +190,17 @@ class Serie(Base):
             return None
 
     @classmethod
-    def get_favorite_series_by_user_id(cls, userid):
-        return Serie.query.join(User).filter(User.id == userid).all()
-
-    @classmethod
     def from_json(cls, json):
         if json['next_episode_to_air'] != None:
             next_air_date = json['next_episode_to_air']['air_date']
         else:
             next_air_date = "null"
         return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'], json['number_of_episodes'], next_air_date, json['vote_count'], json['vote_average'])
+
+    def as_dict(self):
+        return {'tmdb_id_serie': self.tmdb_id_serie,'name': self.name,'overview': self.overview,'backdrop_path': self.backdrop_path,
+                'nb_seasons': self.nb_seasons,'nb_episodes': self.nb_episodes,'next_air_date': self.next_air_date,
+                'vote_count': self.vote_count,'genres': self.genres}
 
 class Genre(Base):
     __tablename__ = 'genres'
