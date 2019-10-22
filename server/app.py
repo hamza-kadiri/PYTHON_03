@@ -153,7 +153,7 @@ def create_app():
             return jsonify({'error_code': 500, 'error_message': 'Internal Server Error'})
 
         @app.errorhandler(Exception)
-        def unhandled_exception(error):let
+        def unhandled_exception(error):
             app.logger.error('Unhandled Exception: %s \n Stack Trace: %s', (error, str(traceback.format_exc())))
             return jsonify({'error_code': 500, 'error_message': 'Internal Server Error'})
 
