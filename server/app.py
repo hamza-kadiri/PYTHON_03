@@ -25,7 +25,6 @@ def create_app():
 
         @auth.verify_token
         def verify_token(token):
-            app.logger.error(token)
             # try to authenticate by token
             user = User.verify_auth_token(token)
             if not user:
@@ -118,7 +117,6 @@ def create_app():
                 save_obj(user)
                 return jsonify({"user_id":user_id,"serie_id":serie_id})
             except IntegrityError:
-                app.logger.error("2")
                 abort(403)
 
         @app.route("/users/<int:user_id>/series/<int:serie_id>", methods=['DELETE'])
@@ -131,11 +129,8 @@ def create_app():
             if not(serie in user.series):
                 abort(404)
             try:
-                app.logger.error("WTF")
                 user.series.remove(serie)
-                app.logger.error("BLA")
                 save_obj(user)
-                app.logger.error("BLB")
             except IntegrityError:
                 abort(403)
             except ValueError as err:
@@ -158,7 +153,7 @@ def create_app():
             return jsonify({'error_code': 500, 'error_message': 'Internal Server Error'})
 
         @app.errorhandler(Exception)
-        def unhandled_exception(error):
+        def unhandled_exception(error):let
             app.logger.error('Unhandled Exception: %s \n Stack Trace: %s', (error, str(traceback.format_exc())))
             return jsonify({'error_code': 500, 'error_message': 'Internal Server Error'})
 
