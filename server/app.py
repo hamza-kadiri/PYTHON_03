@@ -42,7 +42,7 @@ def create_app():
             # try to authenticate with username/password
             user = User.get_user_by_username(username)
             if not user or not user.verify_password(password):
-                abort(403)
+                abort(401)
             g.user = user
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii')})
@@ -140,6 +140,22 @@ def create_app():
             except IntegrityError:
                 abort(403)
             return jsonify({'user_id' : user.id, 'serie_id' : serie.id})
+
+        @app.route("/users/<int:user_id>/notifications", methods=['GET'])
+        @auth.login_required
+        def get_notifications(user_id):
+            if user_id != g.user.id:
+                abort(403)
+            user = User.get_user_by_id(user_id)
+            return jsonify({'message' : 'Not implemented'})
+
+        @app.route("/users/<int:user_id>/notifications", methods=['POST'])
+        @auth.login_required
+        def mark_notifications_as_read(user_id):
+            if user_id != g.user.id:
+                abort(403)
+            user = User.get_user_by_id(user_id)
+            return jsonify({'message': 'Not implemented'})
 
 
         @app.errorhandler(403)
