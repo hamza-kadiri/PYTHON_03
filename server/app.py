@@ -3,7 +3,7 @@ from flask_cors import CORS
 from form_validation import validate_add_serie_form, validate_user_registration_form, validate_user_login_form
 from form_validation import validate_add_serie_form, validate_user_registration_form
 from database import init_models, save_obj, delete_obj, db_session
-from models import User, Serie
+from models import User, Serie, Notification
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
@@ -88,6 +88,7 @@ def create_app():
         def get_favorite_series(user_id):
             if user_id != g.user.id:
                 abort(403)
+            Serie.update_series(user_id)
             user = User.get_user_by_id(user_id)
             series = user.get_favorite_series()
             return jsonify({"series": [serie.as_dict() for serie in series]})
@@ -105,6 +106,8 @@ def create_app():
                 serie_json = get_tv_serie(serie_id)
                 serie = Serie.from_json(serie_json)
                 save_obj(serie)
+                notif = Notification.from_json(user_id, serie_json)
+                save_obj(notif)
             if user.get_subscription_by_serie_id(serie_id) is not None:
                 abort(403)
             try:
@@ -138,8 +141,8 @@ def create_app():
         def get_notifications(user_id):
             if user_id != g.user.id:
                 abort(403)
-            user = User.get_user_by_id(user_id)
-            return jsonify({'message': 'Not implemented'})
+            notifications = Notification.get_notification(user_id)
+            return jsonify(notifications)
 
 
         @app.route("/users/<int:user_id>/notifications", methods=['POST'])

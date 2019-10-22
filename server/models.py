@@ -263,7 +263,7 @@ class Notification(Base):
     name = Column(String)
     season = Column(SmallInteger)
     episode = Column(SmallInteger)
-    next_date = Column(Integer)
+    next_date = Column(String)
     creation_date = Column(Integer)
     read = Column(SmallInteger)
 
@@ -286,4 +286,7 @@ class Notification(Base):
         next_episode_json = json['next_episode_to_aire']
         return Notification(user_id, json['id'], next_episode_json['name'], next_episode_json['season_number'], next_episode_json['episode_number'], next_episode_json['air_date'])
 
+    @classmethod
+    def get_notification(cls, userid):
+        return Notification.query.filter_by(user_id=userid).order_by(desc(Notification.creation_date)).limit(15).all()
 
