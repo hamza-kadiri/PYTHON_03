@@ -35,7 +35,7 @@ def create_app():
 
         @app.route('/token', methods=['POST'])
         def generate_auth_token():
-            validate_user_login_form(request.form)
+            validate_user_login_form(request.form) # Might raise an InvalidForm exception
             username = request.form['username']
             password = request.form['password']
             # try to authenticate with username/password
@@ -97,7 +97,7 @@ def create_app():
         def add_serie_to_favorites(user_id):
             if user_id != g.user.id:
                 abort(403)
-            validate_add_serie_form(request.form)
+            validate_add_serie_form(request.form) # Might raise an InvalidForm exception
             serie_id = request.form['serie_id']
             user = User.get_user_by_id(user_id)
             serie = Serie.get_serie_by_id(serie_id)
