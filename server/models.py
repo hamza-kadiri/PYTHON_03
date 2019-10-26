@@ -206,15 +206,16 @@ class Serie(Base, EqMixin):
         save_obj(self)
 
     def update_from_json(self, json):
-        next_episode_name = 'null'
-        next_episode_air_date = 'null'
-        next_episode_season_number = 'null'
-        next_episode_episode_number = 'null'
-        if json['next_episode_to_air'] is not None:
-            next_episode_name = json['next_episode_to_air']['name']
-            next_episode_air_date = json['next_episode_to_air']['air_date']
-            next_episode_season_number = json['next_episode_to_air']['season_number']
-            next_episode_episode_number = json['next_episode_to_air']['episode_number']
+        next_episode_name = None
+        next_episode_air_date = None
+        next_episode_season_number = None
+        next_episode_episode_number = None
+        next_episode = json['next_episode_to_air']
+        if next_episode is not None:
+            next_episode_name = next_episode['name']
+            next_episode_air_date = next_episode['air_date']
+            next_episode_season_number = next_episode['season_number']
+            next_episode_episode_number = next_episode['episode_number']
         return self.update_info(json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'], json['number_of_episodes'], next_episode_name, next_episode_air_date, next_episode_season_number, next_episode_episode_number, json['vote_count'], json['vote_average'])
 
     def compare_value(self):
@@ -231,20 +232,22 @@ class Serie(Base, EqMixin):
 
     @classmethod
     def from_json(cls, json):
-        next_episode_name = 'null'
-        next_episode_air_date = 'null'
-        next_episode_season_number = 'null'
-        next_episode_episode_number = 'null'
-        if json['next_episode_to_air'] is not None:
-            next_episode_name = json['next_episode_to_air']['name']
-            next_episode_air_date = json['next_episode_to_air']['air_date']
-            next_episode_season_number = json['next_episode_to_air']['season_number']
-            next_episode_episode_number = json['next_episode_to_air']['episode_number']
+        next_episode_name = None
+        next_episode_air_date = None
+        next_episode_season_number = None
+        next_episode_episode_number = None
+        next_episode = json['next_episode_to_air']
+        if next_episode is not None:
+            next_episode_name = next_episode['name']
+            next_episode_air_date = next_episode['air_date']
+            next_episode_season_number = next_episode['season_number']
+            next_episode_episode_number = next_episode['episode_number']
         return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'], json['number_of_episodes'], next_episode_name, next_episode_air_date, next_episode_season_number, next_episode_episode_number, json['vote_count'], json['vote_average'])
 
     @classmethod
     def update_series(cls, userid):
-        series = Serie.get_favorite_series_by_user_id(userid)
+        user = User.get_user_by_id(userid)
+        series = user.get_favorite_series()
         current_time = time()
         for serie in series:
             if (serie.last_update < current_time - 24*3600):
@@ -253,12 +256,12 @@ class Serie(Base, EqMixin):
                 serie.update_from_json(new_serie_json) #update serie information
                 save_obj(serie)
                 if (old_last_diff != serie.next_air_date and serie.next_air_date != "null"):
-                    new_notif = Notification.from_json(userid, new_serie_json) #create notification
+                    new_notif = Notification.from_serie(userid, serie) #create notification
                     save_obj(new_notif)
 
     def as_dict(self):
         return {'tmdb_id_serie': self.tmdb_id_serie,'name': self.name,'overview': self.overview,'backdrop_path': self.backdrop_path,
-                'nb_seasons': self.nb_seasons,'nb_episodes': self.nb_episodes,'next_air_date': self.next_air_date,
+                'nb_seasons': self.nb_seasons,'nb_episodes': self.nb_episodes,'next_episode_name': self.next_episode_name,'next_episode_air_date': self.next_episode_air_date, 'next_episode_season_number': self.next_episode_season_number,'next_episode_episode_number': self.next_episode_episode_number,
                 'vote_count': self.vote_count,'genres': self.genres}
 
 class Genre(Base):
@@ -299,7 +302,7 @@ class Notification(Base):
 
     @classmethod
     def from_serie(cls, user_id, serie:Serie):
-        return Notification(user_id, serie.tmdb_id_serie, serie.next_episode_name, serie.next_episode_season_number, serie.next_episode_episode_number, serie.next_air_date)
+        return Notification(user_id, serie.tmdb_id_serie, serie.next_episode_name, serie.next_episode_season_number, serie.next_episode_episode_number, serie.next_episode_air_date)
 
     @classmethod
     def get_notification_by_user_id(cls, userid):
@@ -313,3 +316,6 @@ class Notification(Base):
             return None
         except MultipleResultsFound:
             return None
+
+    def as_dict(self):
+        return {'id':self.id, 'user_id':self.user_id, 'tmdb_serie_id':self.tmdb_serie_id, 'name':self.name, 'episode':self.episode,'season':self.season,'next_date':self.next_date}

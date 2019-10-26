@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, abort, g
 from flask_cors import CORS
-from form_validation import validate_add_serie_form, validate_user_registration_form, validate_user_login_form
-from form_validation import validate_add_serie_form, validate_user_registration_form
+from form_validation import validate_add_serie_form, validate_user_registration_form, validate_user_login_form, validate_notifications_list_form
 from database import init_models, save_obj, delete_obj, db_session
 from models import User, Serie, Notification
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
@@ -109,6 +108,7 @@ def create_app():
                 user.series.append(serie)
                 save_obj(user)
                 notif = Notification.from_serie(user_id, serie)
+                app.logger.error(serie.as_dict())
                 save_obj(notif)
                 return jsonify({"user_id":user_id,"serie_id":serie_id})
             except IntegrityError:
@@ -140,7 +140,7 @@ def create_app():
                 abort(403)
             Serie.update_series(user_id)
             notifications = Notification.get_notification_by_user_id(user_id)
-            return jsonify({"notifications":notifications})
+            return jsonify({"notifications":[notification.as_dict() for notification in notifications]})
 
 
         @app.route("/users/<int:user_id>/notifications", methods=['POST'])
