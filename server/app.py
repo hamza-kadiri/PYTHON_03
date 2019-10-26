@@ -101,6 +101,7 @@ def create_app():
             if serie is None:
                 serie_json = get_tv_serie(serie_id)
                 serie = Serie.from_json(serie_json)
+                app.logger.error(serie_json)
                 save_obj(serie)
             if user.get_subscription_by_serie_id(serie_id) is not None:
                 abort(403)
@@ -108,7 +109,6 @@ def create_app():
                 user.series.append(serie)
                 save_obj(user)
                 notif = Notification.from_serie(user_id, serie)
-                app.logger.error(serie.as_dict())
                 save_obj(notif)
                 return jsonify({"user_id":user_id,"serie_id":serie_id})
             except IntegrityError:
