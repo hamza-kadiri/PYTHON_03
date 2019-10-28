@@ -134,7 +134,6 @@ def get_tv_serie(tv_id: int):
     return json
 
 
-# noinspection PyInterpreter
 def get_tv_serie_episode(tv_id: int, season_number: int, episode_number: int):
     endpoint = f'/tv/{tv_id}/season/{season_number}/episode/{episode_number}'
     request = RequestOMDB()
