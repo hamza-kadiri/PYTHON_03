@@ -44,6 +44,9 @@ series_genres_table = Table('series_genres', Base.metadata,
     Column('tmdb_id_genre', Integer, ForeignKey('genres.tmdb_id_genre')),
     Column('tmdb_id_serie', Integer, ForeignKey('series.tmdb_id_serie'))
 )
+series_productors_table = Table('series_productors', Base.metadata,
+    Column('productor_id', Integer, ForeignKey('productors.id')),
+    Column('tmdb_id_serie', Integer, ForeignKey('series.tmdb_id_serie')))
 
 class Person():
     id = Column(Integer, primary_key=True)
@@ -69,6 +72,7 @@ class Actor(Person, Base):
 class Productor(Person, Base):
     __tablename__ = 'productors'
     gender = Column(String)
+    series = relationship("Serie", secondary=series_productors_table, back_populates="productors")
 
     def __init__(self, id: int, credit_id: str, name: str, profile_path: str, gender: int):
         Person.__init(self, id, credit_id, name, profile_path)
@@ -167,6 +171,7 @@ class Serie(Base, EqMixin):
     vote_average = Column(Numeric(3, 1))
     creation = Column(Integer)
     last_update = Column(Integer)
+    productors = relationship("Productor", secondary=series_productors_table, back_populates="series")
     genres = relationship("Genre", secondary=series_genres_table, back_populates="series")
     users = relationship("User", secondary=subscriptions_table, back_populates="series")
 
