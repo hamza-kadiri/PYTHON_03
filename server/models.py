@@ -121,10 +121,6 @@ class User(Base, EqMixin):
             return None
 
     @classmethod
-    def get_user_by_username(cls, username: str):
-        return User.query.filter_by(username=username).first()
-
-    @classmethod
     def hash_password(cls, password: str):
         return pwd_context.encrypt(password)
 
@@ -255,7 +251,7 @@ class Serie(Base, EqMixin):
                 new_serie_json = get_tv_serie(serie.tmdb_id_serie)
                 serie.update_from_json(new_serie_json) #update serie information
                 save_obj(serie)
-                if (old_last_diff != serie.next_air_date and serie.next_air_date != "null"):
+                if (old_last_diff != serie.next_episode_air_date and serie.next_episode_air_date != "null"):
                     new_notif = Notification.from_serie(userid, serie) #create notification
                     save_obj(new_notif)
 
@@ -279,6 +275,7 @@ class Notification(Base):
     id = Column(SmallInteger, primary_key=True)
     user_id = Column(SmallInteger, )
     tmdb_serie_id = Column(Integer)
+    serie_name = Column(String)
     name = Column(String)
     season = Column(SmallInteger)
     episode = Column(SmallInteger)
@@ -286,9 +283,10 @@ class Notification(Base):
     creation_date = Column(Integer)
     read = Column(SmallInteger)
 
-    def __init__(self,user_id, tmdb_serie_id, name, season, episode, next_date):
+    def __init__(self,user_id, tmdb_serie_id, serie_name, name, season, episode, next_date):
         self.user_id = user_id
         self.tmdb_serie_id = tmdb_serie_id
+        self.serie_name = serie_name
         self.name = name
         self.season = season
         self.episode = episode
@@ -302,7 +300,7 @@ class Notification(Base):
 
     @classmethod
     def from_serie(cls, user_id, serie:Serie):
-        return Notification(user_id, serie.tmdb_id_serie, serie.next_episode_name, serie.next_episode_season_number, serie.next_episode_episode_number, serie.next_episode_air_date)
+        return Notification(user_id, serie.tmdb_id_serie, serie.name, serie.next_episode_name, serie.next_episode_season_number, serie.next_episode_episode_number, serie.next_episode_air_date)
 
     @classmethod
     def get_notification_by_user_id(cls, userid):
@@ -318,4 +316,4 @@ class Notification(Base):
             return None
 
     def as_dict(self):
-        return {'id':self.id, 'user_id':self.user_id, 'tmdb_serie_id':self.tmdb_serie_id, 'name':self.name, 'episode':self.episode,'season':self.season,'next_date':self.next_date}
+        return {'id':self.id, 'user_id':self.user_id, 'tmdb_serie_id':self.tmdb_serie_id, 'serie_name': self.serie_name, 'name':self.name, 'episode':self.episode,'season':self.season,'next_date':self.next_date, 'read': self.read}
