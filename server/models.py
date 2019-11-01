@@ -77,7 +77,7 @@ class Actor(Person, Base):
 
     def as_dict(self):
         d = {'department':self.department,'job':self.job}
-        d.update(super(Person,self).as_dict())
+        d.update(super().as_dict())
         return d
 
 class Productor(Person, Base):
@@ -86,16 +86,21 @@ class Productor(Person, Base):
     series = relationship("Serie", secondary=series_productors_table, back_populates="productors")
 
     def __init__(self, tmdb_id: int, credit_id: str, name: str, profile_path: str, gender: int):
-        Person.__init(self, tmdb_id, credit_id, name, profile_path)
+        Person.__init__(self, tmdb_id, credit_id, name, profile_path)
         self.gender = gender
 
     @classmethod
     def get_productor_by_id(cls, tmdb_id):
-        return Productor.query.filter_by(tmdb_id=tmdb_id).one()
+        try:
+            return Productor.query.filter_by(tmdb_id=tmdb_id).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
 
     def as_dict(self):
         d = {'gender':self.gender}
-        d.update(super(Person,self).as_dict())
+        d.update(super().as_dict())
         return d
 
 class Serie(Base, EqMixin):
@@ -235,7 +240,7 @@ class Serie(Base, EqMixin):
     def as_dict(self):
         return {'tmdb_id_serie': self.tmdb_id_serie,'name': self.name,'overview': self.overview,'backdrop_path': self.backdrop_path,
                 'nb_seasons': self.nb_seasons,'nb_episodes': self.nb_episodes,'next_episode_name': self.next_episode_name,'next_episode_air_date': self.next_episode_air_date, 'next_episode_season_number': self.next_episode_season_number,'next_episode_episode_number': self.next_episode_episode_number,
-                'vote_count': self.vote_count,'genres': self.genres}
+                'vote_count': self.vote_count,'genres': [genre.as_dict() for genre in self.genres], 'productors': [productor.as_dict() for productor in self.productors]}
 
 class User(Base, EqMixin):
     __tablename__ = 'users'
@@ -348,7 +353,12 @@ class Genre(Base, EqMixin):
 
     @classmethod
     def get_genre_by_id(cls, id):
-        return Genre.query.filter_by(tmdb_id_genre=id).one()
+        try :
+            return Genre.query.filter_by(tmdb_id_genre=id).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
 
     def as_dict(self):
         return {'tmdb_id_genre':self.tmdb_id_genre,'name':self.name}
