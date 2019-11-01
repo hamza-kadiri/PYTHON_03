@@ -48,7 +48,7 @@ series_productors_table = Table('series_productors', Base.metadata,
     Column('tmdb_id_productor', Integer, ForeignKey('productors.tmdb_id')),
     Column('tmdb_id_serie', Integer, ForeignKey('series.tmdb_id_serie')))
 
-class Person():
+class Person(EqMixin):
     tmdb_id = Column(Integer, primary_key=True)
     credit_id = Column(String)
     name = Column(String)
@@ -58,6 +58,9 @@ class Person():
         self.credit_id = credit_id
         self.name = name
         self.profile_path = profile_path
+
+    def compare_value(self):
+        return self.tmdb_id
 
     def as_dict(self):
         return {'tmdb_id':self.tmdb_id, 'credit_id':self.credit_id,'name':self.name,'profile_path':self.profile_path}
@@ -135,55 +138,8 @@ class Serie(Base, EqMixin):
     def save_in_db(self):
         save_obj(self)
 
-    def update_info(self, name, overview, backdrop_path, nb_seasons, nb_episodes, next_episode_name,next_episode_air_date, next_episode_season_number,next_episode_episode_number,  vote_count, vote_average, genres):
-        self.name = name
-        self.overview = overview
-        self.backdrop_path = backdrop_path
-        self.nb_seasons = nb_seasons
-        self.nb_episodes = nb_episodes
-        self.next_episode_name = next_episode_name
-        self.next_episode_air_date = next_episode_air_date
-        self.next_episode_season_number = next_episode_season_number
-        self.next_episode_episode_number = next_episode_episode_number
-        self.vote_count = vote_count
-        self.vote_average = vote_average
-        self.last_update = time()
-        self.genres = genres
-        save_obj(self)
-
-    def update_from_json(self, json):
-        next_episode_name = None
-        next_episode_air_date = None
-        next_episode_season_number = None
-        next_episode_episode_number = None
-        next_episode = json['next_episode_to_air']
-        if next_episode is not None:
-            next_episode_name = next_episode['name']
-            next_episode_air_date = next_episode['air_date']
-            next_episode_season_number = next_episode['season_number']
-            next_episode_episode_number = next_episode['episode_number']
-        serie_genres = []
-        for genre in json['genres']:
-            new_genre = Genre.get_genre_by_id(genre['id'])
-            if new_genre is None:
-                new_genre = Genre(genre['id'], genre['name'])
-            serie_genres.append(new_genre)
-        return self.update_info(json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'], json['number_of_episodes'], next_episode_name, next_episode_air_date, next_episode_season_number, next_episode_episode_number, json['vote_count'], json['vote_average'], serie_genres)
-
-    def compare_value(self):
-        return self.tmdb_id_serie
-
     @classmethod
-    def get_serie_by_id(cls, tmdb_id_serie: int):
-        try:
-            return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).one()
-        except NoResultFound:
-            return None
-        except MultipleResultsFound:
-            return None
-
-    @classmethod
-    def from_json(cls, json):
+    def create_from_json(cls, json):
         next_episode_name = None
         next_episode_air_date = None
         next_episode_season_number = None
@@ -201,7 +157,58 @@ class Serie(Base, EqMixin):
                 new_genre = Genre(genre['id'], genre['name'])
                 save_obj(new_genre)
             serie_genres.append(new_genre)
-        return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'], json['number_of_episodes'], next_episode_name, next_episode_air_date, next_episode_season_number, next_episode_episode_number, json['vote_count'], json['vote_average'], serie_genres)
+        return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'],
+                     json['number_of_episodes'], next_episode_name, next_episode_air_date, next_episode_season_number,
+                     next_episode_episode_number, json['vote_count'], json['vote_average'], serie_genres)
+
+    def update_from_json(self, json):
+        self.last_update = time()
+        # Basic informations
+        self.name = json['name']
+        self.overview = json['overview']
+        self.backdrop_path = json['backdrop_path']
+        self.nb_seasons = json['number_of_seasons']
+        self.nb_episodes = json['number_of_episodes']
+        self.vote_count = json['vote_count']
+        self.vote_average = json['vote_average']
+        # Next episode informations
+        next_episode_name = None
+        next_episode_air_date = None
+        next_episode_season_number = None
+        next_episode_episode_number = None
+        next_episode = json['next_episode_to_air']
+        if next_episode is not None:
+            next_episode_name = next_episode['name']
+            next_episode_air_date = next_episode['air_date']
+            next_episode_season_number = next_episode['season_number']
+            next_episode_episode_number = next_episode['episode_number']
+        self.next_episode_name = next_episode_name
+        self.next_episode_air_date = next_episode_air_date
+        self.next_episode_season_number = next_episode_season_number
+        self.next_episode_episode_number = next_episode_episode_number
+        # Genres informations
+        serie_genres = []
+        for genre in json['genres']:
+            new_genre = Genre.get_genre_by_id(genre['id'])
+            if new_genre is None:
+                new_genre = Genre(genre['id'], genre['name'])
+            serie_genres.append(new_genre)
+        self.genres = serie_genres
+        # Saving changes
+        save_obj(self)
+
+    def compare_value(self):
+        return self.tmdb_id_serie
+
+    @classmethod
+    def get_serie_by_id(cls, tmdb_id_serie: int):
+        try:
+            return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
+
 
     def as_dict(self):
         return {'tmdb_id_serie': self.tmdb_id_serie,'name': self.name,'overview': self.overview,'backdrop_path': self.backdrop_path,
@@ -305,7 +312,7 @@ class User(Base, EqMixin):
                     new_notif = Notification.from_serie(self.user_id, serie)  # create notification
                     save_obj(new_notif)
 
-class Genre(Base):
+class Genre(Base, EqMixin):
     __tablename__ = 'genres'
     tmdb_id_genre = Column(SmallInteger, primary_key=True)
     name = Column(String)
@@ -315,6 +322,9 @@ class Genre(Base):
         self.tmdb_id_genre = tmdb_id_genre
         self.name = name
 
+    def compare_value(self):
+        return self.tmdb_id_genre
+
     @classmethod
     def get_genre_by_id(cls, id):
         return Genre.query.filter_by(tmdb_id_genre=id).one()
@@ -322,7 +332,7 @@ class Genre(Base):
     def as_dict(self):
         return {'tmdb_id_genre':self.tmdb_id_genre,'name':self.name}
 
-class Notification(Base):
+class Notification(Base, EqMixin):
     __tablename__ = "notifications"
     id = Column(SmallInteger, primary_key=True)
     user_id = Column(SmallInteger, )
@@ -346,6 +356,9 @@ class Notification(Base):
         self.creation_date = time()
         self.read = 0
 
+    def compare_value(self):
+        return self.id
+
     def mark_as_read(self):
         self.read = 1
         save_obj(self)
@@ -354,7 +367,7 @@ class Notification(Base):
         save_obj(self)
 
     @classmethod
-    def from_serie(cls, user_id, serie:Serie):
+    def create_from_serie(cls, user_id, serie:Serie):
         return Notification(user_id, serie.tmdb_id_serie, serie.name, serie.next_episode_name, serie.next_episode_season_number, serie.next_episode_episode_number, serie.next_episode_air_date)
 
     @classmethod

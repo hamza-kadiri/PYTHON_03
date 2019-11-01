@@ -96,12 +96,12 @@ def create_app():
             user = User.get_user_by_id(user_id)
             serie = Serie.get_serie_by_id(serie_id)
             if serie is None:
-                serie = Serie.from_json(get_tv_serie(serie_id))
+                serie = Serie.create_from_json(get_tv_serie(serie_id))
                 serie.save_in_db()
             if user.get_subscription_by_serie_id(serie_id) is not None:
                 abort(403)
             user.add_favorite_serie(serie) # Might raise an IntegrityError
-            notif = Notification.from_serie(user_id, serie)
+            notif = Notification.create_from_serie(user_id, serie)
             notif.save_in_db()
             return jsonify({"user_id":user_id,"serie_id":serie_id})
 
