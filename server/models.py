@@ -118,7 +118,7 @@ class Serie(Base, EqMixin):
     genres = relationship("Genre", secondary=series_genres_table, back_populates="series")
     users = relationship("User", secondary=subscriptions_table, back_populates="series")
 
-    def __init__(self, tmdb_id_serie, name, overview, backdrop_path, nb_seasons, nb_episodes, next_episode_name, next_episode_air_date, next_episode_season_number, next_episode_episode_number, vote_count, vote_average, genres):
+    def __init__(self, tmdb_id_serie, name, overview, backdrop_path, nb_seasons, nb_episodes, next_episode_name, next_episode_air_date, next_episode_season_number, next_episode_episode_number, vote_count, vote_average, genres, productors):
         self.tmdb_id_serie = tmdb_id_serie
         self.name = name
         self.overview = overview
@@ -134,12 +134,14 @@ class Serie(Base, EqMixin):
         self.creation = time()
         self.last_update = time()
         self.genres = genres
+        self.productors = productors
 
     def save_in_db(self):
         save_obj(self)
 
     @classmethod
     def create_from_json(cls, json):
+        # Next episode information
         next_episode_name = None
         next_episode_air_date = None
         next_episode_season_number = None
@@ -150,16 +152,26 @@ class Serie(Base, EqMixin):
             next_episode_air_date = next_episode['air_date']
             next_episode_season_number = next_episode['season_number']
             next_episode_episode_number = next_episode['episode_number']
+        # Genres informations
         serie_genres = []
         for genre in json['genres']:
             new_genre = Genre.get_genre_by_id(genre['id'])
             if new_genre is None:
                 new_genre = Genre(genre['id'], genre['name'])
                 save_obj(new_genre)
+                save_obj(new_genre)
             serie_genres.append(new_genre)
+        # Productors informations
+        serie_productors = []
+        for productor in json['created_by']:
+            new_productor = Productor.get_productor_by_id(productor['id'])
+            if new_productor is None:
+                new_productor = Productor(productor['id'],productor['credit_id'],productor['name'],productor['profile_path'],productor['gender'])
+                save_obj(new_productor)
+            serie_productors.append(new_productor)
         return Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'],
                      json['number_of_episodes'], next_episode_name, next_episode_air_date, next_episode_season_number,
-                     next_episode_episode_number, json['vote_count'], json['vote_average'], serie_genres)
+                     next_episode_episode_number, json['vote_count'], json['vote_average'], serie_genres, serie_productors)
 
     def update_from_json(self, json):
         self.last_update = time()
@@ -192,8 +204,18 @@ class Serie(Base, EqMixin):
             new_genre = Genre.get_genre_by_id(genre['id'])
             if new_genre is None:
                 new_genre = Genre(genre['id'], genre['name'])
+                save_obj(new_genre)
             serie_genres.append(new_genre)
         self.genres = serie_genres
+        # Productors informations
+        serie_productors = []
+        for productor in json['created_by']:
+            new_productor = Productor.get_productor_by_id(productor['id'])
+            if new_productor is None:
+                new_productor = Productor(productor['id'],productor['credit_id'],productor['name'],productor['profile_path'],productor['gender'])
+                save_obj(new_productor)
+            serie_productors.append(new_productor)
+        self.productors = serie_productors
         # Saving changes
         save_obj(self)
 
@@ -307,7 +329,6 @@ class User(Base, EqMixin):
                 old_last_diff = serie.next_episode_air_date
                 new_serie_json = get_tv_serie(serie.tmdb_id_serie)
                 serie.update_from_json(new_serie_json)  # update serie information
-                save_obj(serie)
                 if (old_last_diff != serie.next_episode_air_date and serie.next_episode_air_date != "null"):
                     new_notif = Notification.from_serie(self.user_id, serie)  # create notification
                     save_obj(new_notif)
