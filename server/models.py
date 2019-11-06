@@ -53,7 +53,6 @@ class Person():
     credit_id = Column(String)
     name = Column(String)
     profile_path = Column(String)
-
     def __init__(self, id: int, credit_id: str, name: str, profile_path:str):
         self.id = id
         self.credit_id = credit_id
@@ -106,18 +105,6 @@ class User(Base, EqMixin):
         s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
-    def get_subscription_by_serie_id(self, tmdb_id_serie: int):
-        try:
-            return User.query.join(Serie, User.series).filter(User.id == self.id).filter(
-                Serie.tmdb_id_serie == tmdb_id_serie).one()
-        except NoResultFound:
-            return None
-        except MultipleResultsFound:
-            return None
-
-    def add_favorite_serie(self, serie_id):
-        self.series.append(Serie.get_serie_by_id(serie_id))
-
     @classmethod
     def get_user_by_id(cls, id: int):
         try:
@@ -126,6 +113,7 @@ class User(Base, EqMixin):
             return None
         except MultipleResultsFound:
             return None
+
 
     @classmethod
     def get_user_by_username(cls, username: str):
@@ -151,6 +139,21 @@ class User(Base, EqMixin):
             return None  # invalid token
         user = User.get_user_by_id(data['id'])
         return user
+
+    def get_subscription_by_serie_id(self, tmdb_id_serie: int):
+        try:
+            return User.query.join(Serie, User.series).filter(User.id == self.id).filter(
+                Serie.tmdb_id_serie == tmdb_id_serie).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
+
+    def get_favorite_series(self):
+        return Serie.query.join(User.series).filter(User.id == self.id).all()
+
+    def add_favorite_serie(self, serie_id):
+        self.series.append(Serie.get_serie_by_id(serie_id))
 
 class Serie(Base, EqMixin):
     __tablename__ = 'series'
@@ -219,11 +222,6 @@ class Serie(Base, EqMixin):
     def compare_value(self):
         return self.tmdb_id_serie
 
-    def as_dict(self):
-        return {'tmdb_id_serie': self.tmdb_id_serie,'name': self.name,'overview': self.overview,'backdrop_path': self.backdrop_path,
-                'nb_seasons': self.nb_seasons,'nb_episodes': self.nb_episodes,'next_episode_name': self.next_episode_name,'next_episode_air_date': self.next_episode_air_date, 'next_episode_season_number': self.next_episode_season_number,'next_episode_episode_number': self.next_episode_episode_number,
-                'vote_count': self.vote_count,'genres': self.genres}
-
     @classmethod
     def get_serie_by_id(cls, tmdb_id_serie: int):
         try:
@@ -250,7 +248,7 @@ class Serie(Base, EqMixin):
     @classmethod
     def update_series(cls, userid):
         user = User.get_user_by_id(userid)
-        series = user.series
+        series = user.get_favorite_series()
         current_time = time()
         for serie in series:
             if (serie.last_update < current_time - 24*3600):
@@ -261,6 +259,11 @@ class Serie(Base, EqMixin):
                 if (old_last_diff != serie.next_episode_air_date and serie.next_episode_air_date != "null"):
                     new_notif = Notification.from_serie(userid, serie) #create notification
                     save_obj(new_notif)
+
+    def as_dict(self):
+        return {'tmdb_id_serie': self.tmdb_id_serie,'name': self.name,'overview': self.overview,'backdrop_path': self.backdrop_path,
+                'nb_seasons': self.nb_seasons,'nb_episodes': self.nb_episodes,'next_episode_name': self.next_episode_name,'next_episode_air_date': self.next_episode_air_date, 'next_episode_season_number': self.next_episode_season_number,'next_episode_episode_number': self.next_episode_episode_number,
+                'vote_count': self.vote_count,'genres': self.genres}
 
 class Genre(Base):
     __tablename__ = 'genres'
@@ -300,9 +303,6 @@ class Notification(Base):
         self.read = 1
         save_obj(self)
 
-    def as_dict(self):
-        return {'id':self.id, 'user_id':self.user_id, 'tmdb_serie_id':self.tmdb_serie_id, 'serie_name': self.serie_name, 'name':self.name, 'episode':self.episode,'season':self.season,'next_date':self.next_date, 'read': self.read}
-
     @classmethod
     def from_serie(cls, user_id, serie:Serie):
         return Notification(user_id, serie.tmdb_id_serie, serie.name, serie.next_episode_name, serie.next_episode_season_number, serie.next_episode_episode_number, serie.next_episode_air_date)
@@ -319,3 +319,6 @@ class Notification(Base):
             return None
         except MultipleResultsFound:
             return None
+
+    def as_dict(self):
+        return {'id':self.id, 'user_id':self.user_id, 'tmdb_serie_id':self.tmdb_serie_id, 'serie_name': self.serie_name, 'name':self.name, 'episode':self.episode,'season':self.season,'next_date':self.next_date, 'read': self.read}
