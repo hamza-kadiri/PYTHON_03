@@ -84,7 +84,7 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             user.update_series()
-            series = user.get_favorite_series()
+            series = user.series
             return jsonify({"series": [serie.as_dict() for serie in series]})
 
         @app.route("/users/<int:user_id>/series", methods=['POST'])
@@ -112,7 +112,7 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             serie = Serie.get_serie_by_id(serie_id)
-            if not(serie in user.get_favorite_series()):
+            if not(serie in user.series):
                 abort(404)
             user.delete_favorite_serie(serie) # Might raise an IntegrityError
             return jsonify({'user_id' : user_id, 'serie_id' : serie_id})
