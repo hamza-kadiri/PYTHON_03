@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, abort, g
 from flask_cors import CORS
 from form_validation import validate_add_serie_form, validate_user_registration_form, validate_user_login_form, validate_notifications_list_form
-from database import init_models, save_obj, delete_obj, db_session
+from database import init_models, db_session
 from models import User, Serie, Notification
 from tmdb_api import search_tv_serie_by_title, get_tv_serie
 from sqlalchemy.exc import IntegrityError
@@ -38,7 +38,7 @@ def create_app():
             # try to authenticate with username/password
             user = User.get_user_by_username(username)
             if not user or not user.verify_password(password):
-                abort(401)
+                abort(403)
             g.user = user
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii'), "user":user.as_dict()})
@@ -64,10 +64,7 @@ def create_app():
         def add_user():
             username, email, password = validate_user_registration_form(request.form) # Might raise an InvalidForm exception
             user = User(username, email, password)
-            try:
-                save_obj(user)
-            except IntegrityError:
-                abort(403)
+            user.save_in_db() # Might raise an IntegrityError if user already exist
             return jsonify(user.as_dict())
 
         @app.route("/users/<int:user_id>", methods=['GET'])
@@ -85,9 +82,9 @@ def create_app():
         def get_favorite_series(user_id):
             if user_id != g.user.id:
                 abort(403)
-            Serie.update_series(user_id)
             user = User.get_user_by_id(user_id)
-            series = user.get_favorite_series()
+            user.update_series()
+            series = user.series
             return jsonify({"series": [serie.as_dict() for serie in series]})
 
         @app.route("/users/<int:user_id>/series", methods=['POST'])
@@ -99,20 +96,14 @@ def create_app():
             user = User.get_user_by_id(user_id)
             serie = Serie.get_serie_by_id(serie_id)
             if serie is None:
-                serie_json = get_tv_serie(serie_id)
-                serie = Serie.from_json(serie_json)
-                app.logger.error(serie_json)
-                save_obj(serie)
+                serie = Serie.create_from_json(get_tv_serie(serie_id))
+                serie.save_in_db()
             if user.get_subscription_by_serie_id(serie_id) is not None:
                 abort(403)
-            try:
-                user.series.append(serie)
-                save_obj(user)
-                notif = Notification.from_serie(user_id, serie)
-                save_obj(notif)
-                return jsonify({"user_id":user_id,"serie_id":serie_id})
-            except IntegrityError:
-                abort(403)
+            user.add_favorite_serie(serie) # Might raise an IntegrityError
+            notif = Notification.create_from_serie(user_id, serie)
+            notif.save_in_db()
+            return jsonify({"user_id":user_id,"serie_id":serie_id})
 
         @app.route("/users/<int:user_id>/series/<int:serie_id>", methods=['DELETE'])
         @auth.login_required
@@ -123,13 +114,7 @@ def create_app():
             serie = Serie.get_serie_by_id(serie_id)
             if not(serie in user.series):
                 abort(404)
-            try:
-                user.series.remove(serie)
-                save_obj(user)
-            except IntegrityError:
-                abort(403)
-            except ValueError as err:
-                abort(404)
+            user.delete_favorite_serie(serie) # Might raise an IntegrityError
             return jsonify({'user_id' : user_id, 'serie_id' : serie_id})
 
 
@@ -138,8 +123,9 @@ def create_app():
         def get_notifications(user_id):
             if user_id != g.user.id:
                 abort(403)
-            Serie.update_series(user_id)
-            notifications = Notification.get_notification_by_user_id(user_id)
+            User.get_user_by_id(user_id)
+            user.update_series()
+            notifications = Notification.get_notifications_by_user(user_id)
             return jsonify({"notifications":[notification.as_dict() for notification in notifications]})
 
 
@@ -169,30 +155,34 @@ def create_app():
             app.logger.error(response)
             return response
 
+        @app.errorhandler(IntegrityError)
+        def handle_invalid_usage(error):
+            response = jsonify({'error_message': 'This operation is forbidden'})
+            response.status_code = 403
+            app.logger.error(response)
+            return response
+
 
         @app.errorhandler(403)
         def forbidden_error(error):
-            return jsonify({'error_code': 403, 'error_message': 'This operation is forbidden'})
+            return jsonify({'status_code': 403, 'error_message': 'This operation is forbidden'})
 
         @app.errorhandler(404)
         def not_found_error(error):
             app.logger.error('404 Not Found Error: %s', (error))
-            return jsonify({'error_code': 404, 'error_message': 'The ressource you have requested could not be found'})
+            return jsonify({'status_code': 404, 'error_message': 'The ressource you have requested could not be found'})
 
         @app.errorhandler(500)
         def internal_server_error(error):
             app.logger.error('Server Error: %s', (error))
-            return jsonify({'error_code': 500, 'error_message': 'Internal Server Error'})
+            return jsonify({'status_code': 500, 'error_message': 'Internal Server Error'})
 
         @app.errorhandler(Exception)
         def unhandled_exception(error):
             app.logger.error('Unhandled Exception: %s \n Stack Trace: %s', (error, str(traceback.format_exc())))
-            return jsonify({'error_code': 500, 'error_message': 'Internal Server Error'})
+            return jsonify({'status_code': 500, 'error_message': 'Internal Server Error'})
 
-        @app.route("/serie/<serie_id>")
-        def get_serie(serie_id):
-            serie_id = int(serie_id)
-            return jsonify(get_tv_serie(serie_id))
+
     return app
 
 
