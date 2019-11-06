@@ -164,7 +164,6 @@ class Serie(Base, EqMixin):
             if new_genre is None:
                 new_genre = Genre(genre['id'], genre['name'])
                 save_obj(new_genre)
-                save_obj(new_genre)
             serie_genres.append(new_genre)
         # Productors informations
         serie_productors = []
