@@ -87,7 +87,7 @@ def create_app():
                 abort(403)
             Serie.update_series(user_id)
             user = User.get_user_by_id(user_id)
-            series = user.get_favorite_series()
+            series = user.series
             return jsonify({"series": [serie.as_dict() for serie in series]})
 
         @app.route("/users/<int:user_id>/series", methods=['POST'])
