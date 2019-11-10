@@ -1,3 +1,5 @@
+import logging
+import atexit
 from flask import Flask, request, jsonify, abort, g
 from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -12,20 +14,34 @@ from api_exceptions import InvalidForm
 from mail import update_all_series
 
 
+def init_jobs(app):
+    app.logger.info("Initializing CRON Jobs")
+    # Set CRON jobs
+    scheduler = BackgroundScheduler()
+
+    def update_series_and_notify():
+        app.logger.info("Starting updating series...")
+        update_all_series()
+        app.logger.info("Updating series finished !")
+
+    scheduler.add_job(update_series_and_notify, 'cron', second=0)
+    scheduler.start()
+    # Shut down the scheduler when exiting the app
+    atexit.register(lambda: scheduler.shutdown())
+
 def create_app():
     """Construct the core application."""
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
+    app.logger.setLevel(logging.INFO)
     # Set CORS
     CORS(app)
     # Set globals
     init_models()
-    # Set CRON jobs
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(update_all_series, trigger='interval', hours=10)
-    scheduler.start()
     # Set auth
     auth = HTTPTokenAuth(scheme='Token')
+    #Init CRON
+    init_jobs(app)
     with app.app_context():
 
         @app.teardown_appcontext
@@ -191,4 +207,4 @@ def create_app():
 application = create_app()
 
 if __name__ == "__main__":
-    application.run(host="0.0.0.0", port=80)
+    application.run(host="0.0.0.0", port=80, use_reloader=False) #use_reloader set to false to prevent CRON Jobs to be run twice

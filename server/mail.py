@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from time import time
 from tmdb_api import get_tv_serie
 from models import User, Serie, Notification
+from flask import current_app as app
 
 DEFAULT_HOST = 'smtp.gmail.com'
 DEFAULT_PORT = 465
