@@ -1,7 +1,7 @@
 import requests
 import urllib.parse
 from requests import RequestException
-from flask import current_app as app
+from config import Config
 
 
 # Documentation for the API available at : https://developers.themoviedb.org/3/getting-started/introduction
@@ -42,8 +42,9 @@ class RequestOMDB:
 
     def __init__(self):
         try:
-            self._base_url = app.config['API_URL']
-            self._api_key = app.config['API_KEY']
+            self._base_url = Config.API_URL
+            self._api_key = Config.API_KEY
+            #app.config['API_KEY']
         except RuntimeError:
             raise AttributeError(
                 "Cannot instantiate RequestOMDB without the app context")
@@ -85,9 +86,9 @@ def search_tv_serie_by_title(query: str):
     results = json['results']
     for result in results:
         if result['backdrop_path'] is not None:
-            result['thumbnail_url'] = f"{app.config['BACKDROP_BASE_URL']}{result['backdrop_path']}"
+            result['thumbnail_url'] = f"{Config.BACKDROP_BASE_URL}{result['backdrop_path']}"
         if result['poster_path'] is not None:
-            result['poster_url'] = f"{app.config['POSTER_BASE_URL']}{result['poster_path']}"
+            result['poster_url'] = f"{Config.POSTER_BASE_URL}{result['poster_path']}"
             filteredResults.append(result)
     json['results'] = filteredResults
     return json
@@ -99,7 +100,7 @@ def get_tv_serie(tv_id: int):
     resp = request.perform_request(endpoint)
     json = resp.json()
     if json['backdrop_path'] is not None:
-        json['backdrop_url'] = f"{app.config['BACKDROP_BASE_URL']}{json['backdrop_path']}"
+        json['backdrop_url'] = f"{Config.BACKDROP_BASE_URL}{json['backdrop_path']}"
     return json
 
 

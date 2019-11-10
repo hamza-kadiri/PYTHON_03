@@ -4,7 +4,6 @@ from email.mime.text import MIMEText
 from time import time
 from tmdb_api import get_tv_serie
 from models import User, Serie, Notification
-from flask import current_app as app
 
 DEFAULT_HOST = 'smtp.gmail.com'
 DEFAULT_PORT = 465
@@ -44,11 +43,10 @@ def update_all_series():
     series = Serie.get_all_series()
     current_time = time()
     for serie in series:
-        if serie.last_update < current_time - 24 * 3600:
-            old_last_diff = serie.next_episode_air_date
-            new_serie_json = get_tv_serie(serie.tmdb_id_serie)
-            serie.update_from_json(new_serie_json)  # update serie information
-            if old_last_diff != serie.next_episode_air_date and serie.next_episode_air_date != "null":
-                for user in serie.users:
-                    notif = Notification.create_from_serie(user.id, serie)  # create notification
-                    send_notifications(smtp_server, notif)
+        old_last_diff = serie.next_episode_air_date
+        new_serie_json = get_tv_serie(serie.tmdb_id_serie)
+        serie.update_from_json(new_serie_json)  # update serie information
+        if old_last_diff != serie.next_episode_air_date and serie.next_episode_air_date != "null":
+            for user in serie.users:
+                notif = Notification.create_from_serie(user.id, serie)  # create notification
+                send_notifications(smtp_server, notif)
