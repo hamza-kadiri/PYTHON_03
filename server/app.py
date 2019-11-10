@@ -91,7 +91,6 @@ def create_app():
         @auth.login_required
         def add_serie_to_favorites(user_id):
             if user_id != g.user.id:
-                app.logger.error("BLA")
                 abort(403)
             serie_id = validate_add_serie_form(request.form) # Might raise an InvalidForm exception
             user = User.get_user_by_id(user_id)
