@@ -24,7 +24,7 @@ def create_app():
             db_session.remove()  # Teardown connexion after every request
 
         @auth.verify_token
-        def verify_token(token):
+        def verify_token(token:str):
             # try to authenticate by token
             user = User.verify_auth_token(token)
             if not user:
@@ -57,7 +57,7 @@ def create_app():
 
         @app.route("/series/<int:serie_id>", methods=['GET'])
         @auth.login_required
-        def get_serie_details(serie_id):
+        def get_serie_details(serie_id:int):
             return jsonify(get_tv_serie(serie_id))
 
         @app.route("/users", methods=['POST'])
@@ -69,7 +69,7 @@ def create_app():
 
         @app.route("/users/<int:user_id>", methods=['GET'])
         @auth.login_required
-        def get_user_details(user_id):
+        def get_user_details(user_id:int):
             if user_id != g.user.id:
                 abort(403)
             user = User.get_user_by_id(user_id)
@@ -79,7 +79,7 @@ def create_app():
 
         @app.route("/users/<int:user_id>/series", methods=['GET'])
         @auth.login_required
-        def get_favorite_series(user_id):
+        def get_favorite_series(user_id:int):
             if user_id != g.user.id:
                 abort(403)
             user = User.get_user_by_id(user_id)
@@ -89,7 +89,7 @@ def create_app():
 
         @app.route("/users/<int:user_id>/series", methods=['POST'])
         @auth.login_required
-        def add_serie_to_favorites(user_id):
+        def add_serie_to_favorites(user_id:int):
             if user_id != g.user.id:
                 abort(403)
             serie_id = validate_add_serie_form(request.form) # Might raise an InvalidForm exception
@@ -105,7 +105,7 @@ def create_app():
 
         @app.route("/users/<int:user_id>/series/<int:serie_id>", methods=['DELETE'])
         @auth.login_required
-        def delete_serie_from_favorites(user_id, serie_id):
+        def delete_serie_from_favorites(user_id:int, serie_id:int):
             if user_id != g.user.id:
                 abort(403)
             user = User.get_user_by_id(user_id)
@@ -118,7 +118,7 @@ def create_app():
 
         @app.route("/users/<int:user_id>/notifications", methods=['GET'])
         @auth.login_required
-        def get_notifications(user_id):
+        def get_notifications(user_id:int):
             if user_id != g.user.id:
                 abort(403)
             User.get_user_by_id(user_id)
@@ -129,7 +129,7 @@ def create_app():
 
         @app.route("/users/<int:user_id>/notifications", methods=['POST'])
         @auth.login_required
-        def mark_notifications_as_read(user_id):
+        def mark_notifications_as_read(user_id:int):
             if user_id != g.user.id:
                 abort(403)
             user = User.get_user_by_id(user_id)
@@ -147,14 +147,14 @@ def create_app():
             return jsonify({'responses':response_array})
 
         @app.errorhandler(InvalidForm)
-        def handle_invalid_usage(error):
+        def handle_invalid_usage(error:InvalidForm):
             response = jsonify(error.to_dict())
             response.status_code = error.status_code
             app.logger.error(response)
             return response
 
         @app.errorhandler(IntegrityError)
-        def handle_invalid_usage(error):
+        def handle_invalid_usage(error:IntegrityError):
             app.logger.error(error)
             response = jsonify({'error_message': 'This operation is forbidden'})
             response.status_code = 403
@@ -176,7 +176,7 @@ def create_app():
             return jsonify({'status_code': 500, 'error_message': 'Internal Server Error'})
 
         @app.errorhandler(Exception)
-        def unhandled_exception(error):
+        def unhandled_exception(error:Exception):
             app.logger.error('Unhandled Exception: %s \n Stack Trace: %s', (error, str(traceback.format_exc())))
             return jsonify({'status_code': 500, 'error_message': 'Internal Server Error'})
 

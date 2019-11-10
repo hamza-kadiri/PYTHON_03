@@ -1,7 +1,12 @@
 from smtplib import SMTP, SMTP_SSL
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from models import User, Serie, Notification
 
+DEFAULT_HOST = 'smtp.gmail.com'
+DEFAULT_PORT = 465
+DEFAULT_ADDRESS = "my.series.no.reply@gmail.com"
+DEFAULT_PASSWORD = "test1234@"
 
 def create_smtp_server(host: str, port: int, address: str, password: str):
     s = SMTP_SSL(host=host, port=port)
@@ -21,15 +26,12 @@ def create_message(sender: str, recipient: str, subject: str, message: str, is_h
 def send_message(message: MIMEMultipart, server: SMTP):
     server.send_message(message)
 
+def send_notifications(server: SMTP, notification:Notification):
+    user = User.get_user_by_id(notification.user_id)
 
-host = 'smtp.gmail.com'
-port = 465
-address = "my.series.no.reply@gmail.com"
-password = "test1234@"
+    msg = create_message(sender, recipient, subject, message)
+    send_message(msg, server)
+
+
 server = create_smtp_server(host, port, address, password)
-sender = address
-recipient = "edouard.benauw@student.ecp.fr"
-subject = "TEST"
-message = "BLABLABLA"
-msg = create_message(sender, recipient, subject, message)
-send_message(msg, server)
+

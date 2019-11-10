@@ -8,7 +8,7 @@ from flask import current_app as app
 
 # TODO : Delete single pattern ?
 class RequestExceptionOMDB(RequestException):
-    def __init__(self, method, url, http_status_code, api_status_message, api_status_code):
+    def __init__(self, method:str, url:str, http_status_code:int, api_status_message:str, api_status_code:int):
         RequestException.__init__(
             self, '{} {} {}'.format(method, url, http_status_code))
         self.__method = method
@@ -39,37 +39,6 @@ class RequestExceptionOMDB(RequestException):
 
 
 class RequestOMDB:
-    class __RequestOMDB:
-        def __init__(self):
-            try:
-                self._base_url = app.config['API_URL']
-                self._api_key = app.config['API_KEY']
-            except RuntimeError:
-                raise AttributeError(
-                    "Cannot instantiate RequestOMDB without the app context")
-
-        @property
-        def base_url(self):
-            return self._base_url
-
-        @property
-        def api_key(self):
-            return self._api_key
-
-        def perform_request(self, endpoint: str, method='GET', query=None):
-            queryString=""
-            if query is not None:
-                queryString = f'&query={urllib.parse.quote(query)}'
-            url = f'{self.base_url}{endpoint}?api_key={self.api_key}{queryString}'
-            if (method == 'GET'):
-                print(url)
-                response = requests.get(url)
-                print(response)
-                if response.status_code != 200:
-                    raise create_request_exception(method, url, response)
-                return response
-
-    instance = None
 
     def __init__(self):
         try:
@@ -87,7 +56,7 @@ class RequestOMDB:
     def api_key(self):
         return self._api_key
 
-    def perform_request(self, endpoint: str, method='GET', query=None):
+    def perform_request(self, endpoint: str, method:str='GET', query:str=None):
         if query is not None:
             query_string = f'&query={urllib.parse.quote(query)}'
             print(query_string)
@@ -102,7 +71,7 @@ class RequestOMDB:
             return response
 
 
-def create_request_exception(method, url, resp):
+def create_request_exception(method:str, url:str, resp:any):
     resp2 = resp.json()
     return RequestExceptionOMDB(method, url, resp.status_code, resp2['status_message'], resp2['status_code'])
 
