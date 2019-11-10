@@ -139,9 +139,9 @@ class Genre(Base, EqMixin):
         return {'tmdb_id_genre': self.tmdb_id_genre, 'name': self.name}
 
     @classmethod
-    def get_genre_by_id(cls, id: int):
+    def get_genre_by_id(cls, genre_id: int):
         try:
-            return Genre.query.filter_by(tmdb_id_genre=id).one()
+            return Genre.query.filter_by(tmdb_id_genre=genre_id).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -388,6 +388,10 @@ class Serie(Base, EqMixin):
             return None
 
     @classmethod
+    def get_all_series(cls):
+            return Serie.query.all()
+
+    @classmethod
     def create_from_json(cls, json: dict):
         # Next episode information
         next_episode_name = None
@@ -477,20 +481,10 @@ class User(Base, EqMixin):
         self.series.remove(serie)
         self.save_in_db()
 
-    def update_series(self):
-        current_time = time()
-        for serie in self.series:
-            if (serie.last_update < current_time - 24 * 3600):
-                old_last_diff = serie.next_episode_air_date
-                new_serie_json = get_tv_serie(serie.tmdb_id_serie)
-                serie.update_from_json(new_serie_json)  # update serie information
-                if (old_last_diff != serie.next_episode_air_date and serie.next_episode_air_date != "null"):
-                    new_notif = Notification.create_from_serie(self.user_id, serie)  # create notification
-
     @classmethod
-    def get_user_by_id(cls, id: int):
+    def get_user_by_id(cls, user_id: int):
         try:
-            return User.query.filter_by(id=id).one()
+            return User.query.filter_by(id=user_id).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -575,9 +569,9 @@ class Notification(Base, EqMixin):
         return Notification.query.filter_by(user_id=user.id).order_by(desc(Notification.creation_date)).limit(15).all()
 
     @classmethod
-    def get_notification_by_id(cls, id: int):
+    def get_notification_by_id(cls, notification_id: int):
         try:
-            return Notification.query.filter_by(id=id).one()
+            return Notification.query.filter_by(id=notification_id).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
