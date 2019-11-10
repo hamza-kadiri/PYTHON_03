@@ -7,11 +7,11 @@ from form_validation import validate_add_serie_form, validate_user_registration_
     validate_notifications_list_form
 from database import init_models, db_session
 from models import User, Serie, Notification
-from tmdb_api import search_tv_serie_by_title, get_tv_serie
+from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
 from api_exceptions import InvalidForm
-from mail import update_all_series
+from mail import update_all_series, init_mailing_context
 
 
 def init_jobs(app):
@@ -42,6 +42,9 @@ def create_app():
     auth = HTTPTokenAuth(scheme='Token')
     #Init CRON
     init_jobs(app)
+    #Init contexts
+    init_tmdb_context(app)
+    init_mailing_context(app)
     with app.app_context():
 
         @app.teardown_appcontext

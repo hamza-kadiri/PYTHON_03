@@ -13,6 +13,13 @@ class Config(object):
     THUMBNAIL_BASE_URL = "https://image.tmdb.org/t/p/w300"
     BACKDROP_BASE_URL = "https://image.tmdb.org/t/p/w1280"
     POSTER_BASE_URL = "https://image.tmdb.org/t/p/w185"
+
     """Auth Config"""
     SECRET_KEY = "gjEq2dHoU3A45WhDQDGJTj3jF8MHa6oN"
+
+    """Mail Config"""
+    MAILING_HOST = 'smtp.gmail.com'
+    MAILING_PORT = 465
+    MAILING_ADDRESS = "my.series.no.reply@gmail.com"
+    MAILING_PASSWORD = "test1234@"
     
