@@ -97,12 +97,10 @@ def create_app():
             serie = Serie.get_serie_by_id(serie_id)
             if serie is None:
                 serie = Serie.create_from_json(get_tv_serie(serie_id))
-                serie.save_in_db()
             if user.get_subscription_by_serie_id(serie_id) is not None:
                 abort(403)
             user.add_favorite_serie(serie) # Might raise an IntegrityError
             notif = Notification.create_from_serie(user_id, serie)
-            notif.save_in_db()
             return jsonify({"user_id":user_id,"serie_id":serie_id})
 
         @app.route("/users/<int:user_id>/series/<int:serie_id>", methods=['DELETE'])
@@ -157,9 +155,9 @@ def create_app():
 
         @app.errorhandler(IntegrityError)
         def handle_invalid_usage(error):
+            app.logger.error(error)
             response = jsonify({'error_message': 'This operation is forbidden'})
             response.status_code = 403
-            app.logger.error(response)
             return response
 
 
