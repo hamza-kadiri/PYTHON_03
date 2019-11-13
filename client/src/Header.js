@@ -23,7 +23,7 @@ import { fakeAuth } from "./App";
 import { Link, withRouter, useHistory } from "react-router-dom";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { connect, useSelector, useDispatch } from "react-redux";
-import { fetchSuggestedSeries } from "./redux/actions";
+import { fetchSuggestedSeries } from "./actions/series.actions";
 
 const useStyles = makeStyles(theme => {
   return {

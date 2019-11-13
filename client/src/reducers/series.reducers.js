@@ -1,7 +1,6 @@
-import { combineReducers } from "redux";
-import { actions } from "./actions";
+import { actions } from "../actions/series.actions";
 
-function suggestedSeries(
+export function suggestedSeries(
   state = {
     isFetching: false,
     suggestions: []
@@ -24,7 +23,7 @@ function suggestedSeries(
   }
 }
 
-function selectedSerie(
+export function selectedSerie(
   state = {
     isFetching: false,
     serie: { name: "" }
@@ -50,38 +49,3 @@ function selectedSerie(
       return state;
   }
 }
-
-function user(
-  state = {
-    user: {},
-    token: ""
-  },
-  action
-) {
-  switch (action.type) {
-    case actions.USER_SIGNUP_ERROR:
-      return { ...state, isFetching: false, error: action.error };
-    case actions.REQUEST_USER_TOKEN:
-      return { ...state, isFetching: true };
-    case actions.RECEIVE_USER_TOKEN:
-      return {
-        ...state,
-        isFetching: false,
-        token: action.response.token,
-        user: action.response.user,
-        lastUpdated: action.receivedAt
-      };
-    case actions.USER_TOKEN_ERROR:
-      return { ...state, isFetching: false, error: action.error };
-    default:
-      return state;
-  }
-}
-
-const rootReducer = combineReducers({
-  suggestedSeries,
-  selectedSerie,
-  user
-});
-
-export default rootReducer;

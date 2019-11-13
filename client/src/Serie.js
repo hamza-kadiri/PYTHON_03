@@ -8,7 +8,7 @@ import LikeIcon from "@material-ui/icons/Favorite";
 import OutlinedLikeIcon from "@material-ui/icons/FavoriteBorder";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { connect, useDispatch } from "react-redux";
-import { fetchSelectedSerie, RESET_SERIE } from "./redux/actions";
+import { fetchSelectedSerie, RESET_SERIE } from "./actions/series.actions";
 
 const useStyles = makeStyles(theme => ({
   LikeIcon: {

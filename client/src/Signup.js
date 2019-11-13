@@ -18,7 +18,7 @@ import ky from "ky";
 import { Link, Redirect, useHistory } from "react-router-dom";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { fakeAuth } from "./App";
-import { userSignup } from "./redux/actions";
+import { userSignup } from "./actions/user.actions";
 import { connect, useDispatch } from "react-redux";
 
 const useStyles = makeStyles(theme => ({
