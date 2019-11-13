@@ -1,14 +1,68 @@
 import requests
 import urllib.parse
 from requests import RequestException
-from flask import current_app as app
 
 
 # Documentation for the API available at : https://developers.themoviedb.org/3/getting-started/introduction
 
-# TODO : Delete single pattern ?
+def init_tmdb_context(app):
+    RequestContext.init_request_context(app)
+
+
+class RequestContext:
+    _has_been_initialized = False
+    _api_url = None
+    _api_key = None
+    _thumbnail_base_url = None
+    _backdrop_base_url = None
+    _poster_base_url = None
+
+    @classmethod
+    def init_request_context(cls, app):
+        try:
+            cls._has_been_initialized = True
+            cls._api_url = app.config['API_URL']
+            cls._api_key = app.config['API_KEY']
+            cls._thumbnail_base_url = app.config['THUMBNAIL_BASE_URL']
+            cls._backdrop_base_url = app.config['BACKDROP_BASE_URL']
+            cls._poster_base_url = app.config['POSTER_BASE_URL']
+        except RuntimeError:
+            raise AttributeError(
+                "Cannot initialize RequestContext without a proper app configuration")
+
+    @classmethod
+    def get_api_url(cls):
+        if not cls._has_been_initialized:
+            raise AttributeError("Request Context not initialized")
+        return cls._api_url
+
+    @classmethod
+    def get_api_key(cls):
+        if not cls._has_been_initialized:
+            raise AttributeError("Request Context not initialized")
+        return cls._api_key
+
+    @classmethod
+    def get_thumbnail_base_url(cls):
+        if not cls._has_been_initialized:
+            raise AttributeError("Request Context not initialized")
+        return cls._thumbnail_base_url
+
+    @classmethod
+    def get_backdrop_base_url(cls):
+        if not cls._has_been_initialized:
+            raise AttributeError("Request Context not initialized")
+        return cls._backdrop_base_url
+
+    @classmethod
+    def get_poster_base_url(cls):
+        if not cls._has_been_initialized:
+            raise AttributeError("Request Context not initialized")
+        return cls._poster_base_url
+
+
 class RequestExceptionOMDB(RequestException):
-    def __init__(self, method, url, http_status_code, api_status_message, api_status_code):
+    def __init__(self, method: str, url: str, http_status_code: int, api_status_message: str, api_status_code: int):
         RequestException.__init__(
             self, '{} {} {}'.format(method, url, http_status_code))
         self.__method = method
@@ -39,61 +93,13 @@ class RequestExceptionOMDB(RequestException):
 
 
 class RequestOMDB:
-    class __RequestOMDB:
-        def __init__(self):
-            try:
-                self._base_url = app.config['API_URL']
-                self._api_key = app.config['API_KEY']
-            except RuntimeError:
-                raise AttributeError(
-                    "Cannot instantiate RequestOMDB without the app context")
-
-        @property
-        def base_url(self):
-            return self._base_url
-
-        @property
-        def api_key(self):
-            return self._api_key
-
-        def perform_request(self, endpoint: str, method='GET', query=None):
-            queryString=""
-            if query is not None:
-                queryString = f'&query={urllib.parse.quote(query)}'
-            url = f'{self.base_url}{endpoint}?api_key={self.api_key}{queryString}'
-            if (method == 'GET'):
-                print(url)
-                response = requests.get(url)
-                print(response)
-                if response.status_code != 200:
-                    raise create_request_exception(method, url, response)
-                return response
-
-    instance = None
-
-    def __init__(self):
-        try:
-            self._base_url = app.config['API_URL']
-            self._api_key = app.config['API_KEY']
-        except RuntimeError:
-            raise AttributeError(
-                "Cannot instantiate RequestOMDB without the app context")
-
-    @property
-    def base_url(self):
-        return self._base_url
-
-    @property
-    def api_key(self):
-        return self._api_key
-
-    def perform_request(self, endpoint: str, method='GET', query=None):
+    def perform_request(self, endpoint: str, method: str = 'GET', query: str = None):
         if query is not None:
             query_string = f'&query={urllib.parse.quote(query)}'
             print(query_string)
         else:
             query_string = False
-        url = f'{self.base_url}{endpoint}?api_key={self.api_key}{query_string  or ""}'
+        url = f'{RequestContext.get_api_url()}{endpoint}?api_key={RequestContext.get_api_key()}{query_string or ""}'
         print(url)
         if (method == 'GET'):
             response = requests.get(url)
@@ -102,7 +108,7 @@ class RequestOMDB:
             return response
 
 
-def create_request_exception(method, url, resp):
+def create_request_exception(method: str, url: str, resp: any):
     resp2 = resp.json()
     return RequestExceptionOMDB(method, url, resp.status_code, resp2['status_message'], resp2['status_code'])
 
@@ -116,9 +122,9 @@ def search_tv_serie_by_title(query: str):
     results = json['results']
     for result in results:
         if result['backdrop_path'] is not None:
-            result['thumbnail_url'] = f"{app.config['BACKDROP_BASE_URL']}{result['backdrop_path']}"
+            result['thumbnail_url'] = f"{RequestContext.get_backdrop_base_url()}{result['backdrop_path']}"
         if result['poster_path'] is not None:
-            result['poster_url'] = f"{app.config['POSTER_BASE_URL']}{result['poster_path']}"
+            result['poster_url'] = f"{RequestContext.get_poster_base_url()}{result['poster_path']}"
             filteredResults.append(result)
     json['results'] = filteredResults
     return json
@@ -130,7 +136,7 @@ def get_tv_serie(tv_id: int):
     resp = request.perform_request(endpoint)
     json = resp.json()
     if json['backdrop_path'] is not None:
-        json['backdrop_url'] = f"{app.config['BACKDROP_BASE_URL']}{json['backdrop_path']}"
+        json['backdrop_url'] = f"{RequestContext.get_backdrop_base_url()}{json['backdrop_path']}"
     return json
 
 
@@ -139,6 +145,7 @@ def get_tv_serie_season(tv_id: int, season_number: int):
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
     return resp.json()
+
 
 def get_tv_serie_episode(tv_id: int, season_number: int, episode_number: int):
     endpoint = f'/tv/{tv_id}/season/{season_number}/episode/{episode_number}'

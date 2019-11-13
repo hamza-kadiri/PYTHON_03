@@ -16,10 +16,10 @@ def creation_db():
 def init_models():
     import models
 
-def save_obj(obj):
+def save_obj(obj:Base):
     db_session.add(obj)
     db_session.commit()
 
-def delete_obj(obj):
+def delete_obj(obj:Base):
     db_session.delete(obj)
     db_session.commit()
