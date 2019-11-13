@@ -36,7 +36,7 @@ def validate_user_login_form(json):
     return username, password
 
 
-def validate_add_serie_form(form):
+def validate_add_serie_form(form:dict):
     serie_id = form.get('serie_id')
     serie_id_valid = checkers.is_integer(serie_id)
     invalid_fields = []
@@ -46,7 +46,7 @@ def validate_add_serie_form(form):
     return serie_id
 
 
-def validate_notifications_list_form(form):
+def validate_notifications_list_form(form:dict):
     array_ids = form.get('notifications')
     array_ids_valid = checkers.is_iterable(array_ids)
     invalid_fields = []
