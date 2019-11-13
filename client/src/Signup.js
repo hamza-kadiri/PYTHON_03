@@ -11,12 +11,15 @@ import FormControl from "@material-ui/core/FormControl";
 import TextField from "@material-ui/core/TextField";
 import Grid from "@material-ui/core/Grid";
 import AccountCircle from "@material-ui/icons/AccountCircle";
+import Mail from "@material-ui/icons/Mail";
 import Lock from "@material-ui/icons/Lock";
 import Typography from "@material-ui/core/Typography";
 import ky from "ky";
 import { Link, Redirect, useHistory } from "react-router-dom";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { fakeAuth } from "./App";
+import { userSignup } from "./redux/actions";
+import { connect, useDispatch } from "react-redux";
 
 const useStyles = makeStyles(theme => ({
   margin: {
@@ -28,14 +31,16 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const Signup = ({ match }) => {
-  let history = useHistory();
   const classes = useStyles();
   const [isLoading, setisLoading] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const dispatch = useDispatch();
   const handleSignup = async () => {
     setisLoading(true);
-    await fakeAuth.authenticate();
+    await dispatch(userSignup({ username, password, email }));
     setisLoading(false);
-    history.push("/");
   };
   return (
     <React.Fragment>
@@ -91,9 +96,36 @@ const Signup = ({ match }) => {
                     style={{ color: "white", fontSize: "20px" }}
                     id="input-login"
                     placehoder="Login"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
                     startAdornment={
                       <InputAdornment position="start">
                         <AccountCircle />
+                      </InputAdornment>
+                    }
+                  />
+                </FormControl>
+              </Grid>
+              <Grid item>
+                <FormControl
+                  style={{ color: "white" }}
+                  className={classes.margin}
+                >
+                  <InputLabel
+                    style={{ color: "white", fontSize: "20px" }}
+                    htmlFor="input-email"
+                  >
+                    Email
+                  </InputLabel>
+                  <Input
+                    style={{ color: "white", fontSize: "20px" }}
+                    id="input-email"
+                    placehoder="Email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <Mail />
                       </InputAdornment>
                     }
                   />
@@ -112,6 +144,8 @@ const Signup = ({ match }) => {
                     id="input-password"
                     type="password"
                     placehoder="Password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
                     startAdornment={
                       <InputAdornment position="start">
                         <Lock />

@@ -34,13 +34,15 @@ def create_app():
 
         @app.route('/token', methods=['POST'])
         def generate_auth_token():
-            username, password = validate_user_login_form(request.form) # Might raise an InvalidForm exception
+            print(request.json)
+            username, password = validate_user_login_form(request.json) # Might raise an InvalidForm exception
             # try to authenticate with username/password
             user = User.get_user_by_username(username)
             if not user or not user.verify_password(password):
-                abort(403)
+                abort(401)
             g.user = user
             token = g.user.generate_auth_token()
+            print(token)
             return jsonify({'token': token.decode('ascii'), "user":user.as_dict()})
 
         # Add some routes
@@ -50,7 +52,7 @@ def create_app():
 
         # TODO Handle multiple pages results
         @app.route("/search", methods=['GET'])
-        @auth.login_required
+        ##@auth.login_required
         def search():
             query = request.args.get('query')
             return jsonify(search_tv_serie_by_title(query))
@@ -62,7 +64,7 @@ def create_app():
 
         @app.route("/users", methods=['POST'])
         def add_user():
-            username, email, password = validate_user_registration_form(request.form) # Might raise an InvalidForm exception
+            username, email, password = validate_user_registration_form(request.json) # Might raise an InvalidForm exception
             user = User(username, email, password)
             user.save_in_db() # Might raise an IntegrityError if user already exist
             return jsonify(user.as_dict())
@@ -160,25 +162,28 @@ def create_app():
             response.status_code = 403
             return response
 
+        @app.errorhandler(401)
+        def forbidden_error(error):
+            return jsonify({'status_code': 401, 'error_message': 'Bad credentials'}), 401
 
         @app.errorhandler(403)
         def forbidden_error(error):
-            return jsonify({'status_code': 403, 'error_message': 'This operation is forbidden'})
+            return jsonify({'status_code': 403, 'error_message': 'This operation is forbidden'}), 403
 
         @app.errorhandler(404)
         def not_found_error(error):
             app.logger.error('404 Not Found Error: %s', (error))
-            return jsonify({'status_code': 404, 'error_message': 'The ressource you have requested could not be found'})
+            return jsonify({'status_code': 404, 'error_message': 'The ressource you have requested could not be found'}), 403
 
         @app.errorhandler(500)
         def internal_server_error(error):
             app.logger.error('Server Error: %s', (error))
-            return jsonify({'status_code': 500, 'error_message': 'Internal Server Error'})
+            return jsonify({'status_code': 500, 'error_message': 'Internal Server Error'}), 500
 
         @app.errorhandler(Exception)
         def unhandled_exception(error):
             app.logger.error('Unhandled Exception: %s \n Stack Trace: %s', (error, str(traceback.format_exc())))
-            return jsonify({'status_code': 500, 'error_message': 'Internal Server Error'})
+            return jsonify({'status_code': 500, 'error_message': 'Internal Server Error'}), 500
 
 
     return app

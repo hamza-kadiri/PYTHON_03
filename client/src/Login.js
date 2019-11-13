@@ -17,6 +17,8 @@ import ky from "ky";
 import { Link, Redirect, useHistory } from "react-router-dom";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { fakeAuth } from "./App";
+import { userLogin } from "./redux/actions";
+import { connect, useDispatch } from "react-redux";
 
 const useStyles = makeStyles(theme => ({
   margin: {
@@ -31,11 +33,13 @@ const Login = ({ match }) => {
   let history = useHistory();
   const classes = useStyles();
   const [isLoading, setisLoading] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const dispatch = useDispatch();
   const handleLogin = async () => {
     setisLoading(true);
-    await fakeAuth.authenticate();
+    await dispatch(userLogin({ username, password }));
     setisLoading(false);
-    history.push("/");
   };
   return (
     <React.Fragment>
@@ -91,6 +95,7 @@ const Login = ({ match }) => {
                     style={{ color: "white", fontSize: "20px" }}
                     id="input-login"
                     placehoder="Login"
+                    onChange={e => setUsername(e.target.value)}
                     startAdornment={
                       <InputAdornment position="start">
                         <AccountCircle />
@@ -112,6 +117,7 @@ const Login = ({ match }) => {
                     id="input-password"
                     type="password"
                     placehoder="Password"
+                    onChange={e => setPassword(e.target.value)}
                     startAdornment={
                       <InputAdornment position="start">
                         <Lock />

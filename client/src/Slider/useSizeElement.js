@@ -6,6 +6,7 @@ const useSizeElement = () => {
 
   useEffect(() => {
     if (elementRef.current != null) {
+      console.log("sizelement:" + elementRef.current.clientWidth);
       setWidth(elementRef.current.clientWidth);
     }
   }, [elementRef.current]);

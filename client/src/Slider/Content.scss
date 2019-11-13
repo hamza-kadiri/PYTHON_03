@@ -1,16 +1,13 @@
 .content {
-  position: relative;
-  height: 50vh;
   overflow: hidden;
   margin-top: -40px;
+  flex: 1;
+  display: flex;
+  width: 100%;
 
-  &__background,
   &__background__shadow,
-  &__background__image,
-  &__area {
-    position: absolute;
-    top: 0;
-    bottom: 0;
+  &__background__image {
+    position: fixed;
   }
 
   &__background {
@@ -22,6 +19,7 @@
       background: #000;
       width: 35%;
       z-index: 2;
+      height: 100%;
 
       &:before {
         content: "";
@@ -49,10 +47,11 @@
     left: 0;
     right: 0;
     height: 100%;
+    width: 100%;
     z-index: 3;
 
     &__container {
-      padding: 30px 70px;
+      padding: 20px 10px 0px 30px;
       color: wheat;
     }
   }
@@ -80,8 +79,5 @@
     background: transparent;
     outline: none;
     border: none;
-    position: absolute;
-    top: 30px;
-    right: 30px;
   }
 }

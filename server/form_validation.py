@@ -2,12 +2,12 @@ from validator_collection import checkers, validators, errors
 from api_exceptions import InvalidForm, InvalidField
 
 
-def validate_user_registration_form(form):
-    username = form.get('username')
+def validate_user_registration_form(json):
+    username = json['username']
     username_valid = checkers.is_string(username)
-    password = form.get('password')
+    password = json['password']
     password_valid = checkers.is_string(password)
-    email = form.get('email')
+    email = json['email']
     email_valid = checkers.is_email(email)
     invalid_fields = []
     if not username_valid:
@@ -21,10 +21,10 @@ def validate_user_registration_form(form):
     return username, email, password
 
 
-def validate_user_login_form(form):
-    username = form.get('username')
+def validate_user_login_form(json):
+    username = json['username']
     username_valid = checkers.is_string(username)
-    password = form.get('password')
+    password = json['password']
     password_valid = checkers.is_string(password)
     invalid_fields = []
     if not username_valid:

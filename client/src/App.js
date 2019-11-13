@@ -16,6 +16,24 @@ import Signup from "./Signup";
 import Home from "./Home";
 import FavoriteSeries from "./FavoriteSeries";
 
+import ky from "ky";
+
+(async () => {
+  try {
+    const parsed = await ky
+      .get(
+        "https://api.themoviedb.org/3/movie/550?api_key=84eae13884eb7a9e47fcc760ca08f59"
+      )
+      .json();
+
+    console.log(parsed);
+  } catch (error) {
+    const serverMessage = await error.response.text();
+    console.log("Server error: " + serverMessage);
+  }
+  //=> `{data: '🦄'}`
+})();
+
 const fakeAuth = {
   isAuthenticated: false,
   authenticate: function() {

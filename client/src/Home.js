@@ -12,7 +12,9 @@ const Home = ({ suggestions, query }) => {
         alignItems: "flex-start",
         paddingTop: "4rem",
         height: "calc(100vh - 4rem)",
-        width: "100%"
+        width: "100%",
+        display: "flex",
+        flexDirection: "column"
       }}
     >
       {suggestions.length ? (

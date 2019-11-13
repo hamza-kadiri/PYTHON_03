@@ -11,8 +11,8 @@ import "./Slider.scss";
 
 const Slider = ({ children, activeSlide }) => {
   const [currentSlide, setCurrentSlide] = useState(activeSlide);
-  const { width, elementRef } = useSizeElement();
-  const {
+  let { width, elementRef } = useSizeElement();
+  let {
     handlePrev,
     handleNext,
     slideProps,
@@ -50,7 +50,6 @@ const Slider = ({ children, activeSlide }) => {
         {hasPrev && <SlideButton onClick={handlePrev} type="prev" />}
         {hasNext && <SlideButton onClick={handleNext} type="next" />}
       </SliderWrapper>
-      {currentSlide && console.log(currentSlide.thumbnail_url)}
       {currentSlide && <Content serie={currentSlide} onClose={handleClose} />}
     </SliderContext.Provider>
   );

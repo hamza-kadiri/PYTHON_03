@@ -22,28 +22,40 @@ const Content = ({ serie, onClose }) => (
     </div>
     <div className="content__area">
       <div className="content__area__container">
-        <Grid container alignItems="center" sm={4} justify="space-between">
-          <Grid item>
-            <div className="content__title">{serie.name}</div>
+        <Grid container justify="space-between">
+          <Grid
+            container
+            item
+            alignItems="center"
+            sm={4}
+            justify="space-between"
+          >
+            <Grid item>
+              <div className="content__title">{serie.name}</div>
+            </Grid>
+            <Grid item>
+              <div className="content__details">
+                <Button
+                  component={Link}
+                  to={`/serie/${serie.id}`}
+                  variant="outlined"
+                  color="primary"
+                >
+                  More Details
+                </Button>
+              </div>
+            </Grid>
+            <Grid item>
+              <div className="content__description">{serie.overview}</div>
+            </Grid>
           </Grid>
           <Grid item>
-            <div className="content__details">
-              <Button
-                component={Link}
-                to={`/serie/${serie.id}`}
-                variant="outlined"
-                color="primary"
-              >
-                More Details
-              </Button>
-            </div>
+            <button className="content__close" onClick={onClose}>
+              <IconCross />
+            </button>
           </Grid>
         </Grid>
-        <div className="content__description">{serie.overview}</div>
       </div>
-      <button className="content__close" onClick={onClose}>
-        <IconCross />
-      </button>
     </div>
   </div>
 );

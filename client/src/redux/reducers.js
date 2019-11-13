@@ -1,11 +1,5 @@
 import { combineReducers } from "redux";
-import {
-  REQUEST_SUGGESTED_SERIES,
-  RECEIVE_SUGGESTED_SERIES,
-  REQUEST_SERIE,
-  RECEIVE_SERIE,
-  RESET_SERIE
-} from "./actions";
+import { actions } from "./actions";
 
 function suggestedSeries(
   state = {
@@ -15,9 +9,9 @@ function suggestedSeries(
   action
 ) {
   switch (action.type) {
-    case REQUEST_SUGGESTED_SERIES:
+    case actions.REQUEST_SUGGESTED_SERIES:
       return { ...state, isFetching: true };
-    case RECEIVE_SUGGESTED_SERIES:
+    case actions.RECEIVE_SUGGESTED_SERIES:
       return {
         ...state,
         isFetching: false,
@@ -38,16 +32,16 @@ function selectedSerie(
   action
 ) {
   switch (action.type) {
-    case REQUEST_SERIE:
+    case actions.REQUEST_SERIE:
       return { ...state, isFetching: true };
-    case RECEIVE_SERIE:
+    case actions.RECEIVE_SERIE:
       return {
         ...state,
         isFetching: false,
         serie: action.serie,
         lastUpdated: action.receivedAt
       };
-    case RESET_SERIE:
+    case actions.RESET_SERIE:
       return {
         isFetching: false,
         serie: { name: "" }
@@ -57,9 +51,37 @@ function selectedSerie(
   }
 }
 
+function user(
+  state = {
+    user: {},
+    token: ""
+  },
+  action
+) {
+  switch (action.type) {
+    case actions.USER_SIGNUP_ERROR:
+      return { ...state, isFetching: false, error: action.error };
+    case actions.REQUEST_USER_TOKEN:
+      return { ...state, isFetching: true };
+    case actions.RECEIVE_USER_TOKEN:
+      return {
+        ...state,
+        isFetching: false,
+        token: action.response.token,
+        user: action.response.user,
+        lastUpdated: action.receivedAt
+      };
+    case actions.USER_TOKEN_ERROR:
+      return { ...state, isFetching: false, error: action.error };
+    default:
+      return state;
+  }
+}
+
 const rootReducer = combineReducers({
   suggestedSeries,
-  selectedSerie
+  selectedSerie,
+  user
 });
 
 export default rootReducer;

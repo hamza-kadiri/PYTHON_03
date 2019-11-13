@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { width } from "@material-ui/system";
 
 const useSliding = (elementWidth, countElements) => {
   const containerRef = useRef(null);
@@ -11,10 +12,11 @@ const useSliding = (elementWidth, countElements) => {
     if (containerRef.current != null) {
       const containerWidth = containerRef.current.clientWidth;
 
+      console.log("sliding:" + containerRef.current.clientWidth);
       setContainerWidth(containerWidth);
       setTotalInViewport(Math.floor(containerWidth / elementWidth));
     }
-  }, [containerRef.current]);
+  }, [containerRef.current, elementWidth]);
 
   const handlePrev = () => {
     setViewed(viewed - totalInViewport);
