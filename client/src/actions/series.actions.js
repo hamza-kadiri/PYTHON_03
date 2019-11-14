@@ -1,5 +1,4 @@
-import ky from "ky";
-
+import clientWeb from "../helpers/clientWeb";
 export const actions = {
   REQUEST_SUGGESTED_SERIES: "REQUEST_SUGGESTED_SERIES",
   RECEIVE_SUGGESTED_SERIES: "RECEIVE_SUGGESTED_SERIES",
@@ -27,7 +26,7 @@ const receiveSuggestedSeries = (query, series) => {
 export const fetchSuggestedSeries = query => {
   return async dispatch => {
     dispatch(requestSuggestedSeries(query));
-    const response = await ky.get("//localhost:8001/search", {
+    const response = await clientWeb("search", {
       searchParams: { query }
     });
     const json = await response.json();
@@ -55,7 +54,7 @@ export const fetchSelectedSerie = id_serie => {
   return async dispatch => {
     dispatch(requestSerie(id_serie));
     try {
-      const response = await ky.get(`//localhost:8001/serie/${id_serie}`);
+      const response = await clientWeb(`series/${id_serie}`);
       const json = await response.json();
       dispatch(receiveSelectedSerie(id_serie, json));
     } catch (err) {

@@ -1,29 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { fade, makeStyles } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
-import Toolbar from "@material-ui/core/Toolbar";
-import IconButton from "@material-ui/core/IconButton";
-import Typography from "@material-ui/core/Typography";
-import Grid from "@material-ui/core/Grid";
 import Badge from "@material-ui/core/Badge";
-import MenuItem from "@material-ui/core/MenuItem";
-import Menu from "@material-ui/core/Menu";
-import MenuIcon from "@material-ui/icons/MenuOutlined";
-import SearchIcon from "@material-ui/icons/SearchOutlined";
-import AccountCircle from "@material-ui/icons/AccountCircleOutlined";
-import NotificationsIcon from "@material-ui/icons/NotificationsOutlined";
-import MoreIcon from "@material-ui/icons/MoreVertOutlined";
-import Autosuggest from "react-autosuggest";
-import Paper from "@material-ui/core/Paper";
-import TextField from "@material-ui/core/TextField";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import IconButton from "@material-ui/core/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ky from "ky";
-import { fakeAuth } from "./App";
-import { Link, withRouter, useHistory } from "react-router-dom";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import { connect, useSelector, useDispatch } from "react-redux";
+import Menu from "@material-ui/core/Menu";
+import MenuItem from "@material-ui/core/MenuItem";
+import { fade, makeStyles } from "@material-ui/core/styles";
+import TextField from "@material-ui/core/TextField";
+import Toolbar from "@material-ui/core/Toolbar";
+import Typography from "@material-ui/core/Typography";
+import AccountCircle from "@material-ui/icons/AccountCircleOutlined";
+import MenuIcon from "@material-ui/icons/MenuOutlined";
+import MoreIcon from "@material-ui/icons/MoreVertOutlined";
+import NotificationsIcon from "@material-ui/icons/NotificationsOutlined";
+import SearchIcon from "@material-ui/icons/SearchOutlined";
+import React, { useEffect, useState } from "react";
+import Autosuggest from "react-autosuggest";
+import { connect, useDispatch } from "react-redux";
+import { history } from "./helpers/history";
+import { withRouter } from "react-router-dom";
 import { fetchSuggestedSeries } from "./actions/series.actions";
+import { userLogout } from "./actions/user.actions";
 
 const useStyles = makeStyles(theme => {
   return {
@@ -107,7 +105,6 @@ const useStyles = makeStyles(theme => {
 });
 
 function PrimarySearchAppBar({ suggestions, selectedSerie }) {
-  const history = useHistory();
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
@@ -133,7 +130,7 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
 
   const handleSignout = async () => {
     setIsLoadingSignout(true);
-    await fakeAuth.signout();
+    dispatch(userLogout());
     setIsLoadingSignout(false);
     handleMenuClose();
     history.push("/login");
@@ -280,7 +277,7 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
   return (
     <div className={classes.grow}>
       <AppBar className={classes.appBar}>
-        {fakeAuth.isAuthenticated && (
+        {localStorage.getItem("user") && (
           <Toolbar style={{ color: "white" }}>
             <IconButton
               edge="start"

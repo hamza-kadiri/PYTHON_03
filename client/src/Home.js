@@ -1,9 +1,7 @@
-import React from "react";
-import Slider from "./Slider";
-import { connect } from "react-redux";
-
-import { fakeAuth } from "./App";
 import { Typography } from "@material-ui/core";
+import React from "react";
+import { connect } from "react-redux";
+import Slider from "./Slider";
 
 const Home = ({ suggestions, query }) => {
   return (

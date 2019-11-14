@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { makeStyles } from "@material-ui/core/styles";
+import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
-import Button from "@material-ui/core/Button";
 import LikeIcon from "@material-ui/icons/Favorite";
 import OutlinedLikeIcon from "@material-ui/icons/FavoriteBorder";
-import CircularProgress from "@material-ui/core/CircularProgress";
+import React, { useEffect, useState } from "react";
 import { connect, useDispatch } from "react-redux";
-import { fetchSelectedSerie, RESET_SERIE } from "./actions/series.actions";
+import { fetchSelectedSerie } from "./actions/series.actions";
 
 const useStyles = makeStyles(theme => ({
   LikeIcon: {

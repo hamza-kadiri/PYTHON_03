@@ -1,24 +1,20 @@
-import React, { useEffect, useState } from "react";
 import Button from "@material-ui/core/Button";
-import { makeStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import CardHeader from "@material-ui/core/CardHeader";
-import Input from "@material-ui/core/Input";
-import InputLabel from "@material-ui/core/InputLabel";
-import InputAdornment from "@material-ui/core/InputAdornment";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import FormControl from "@material-ui/core/FormControl";
-import TextField from "@material-ui/core/TextField";
 import Grid from "@material-ui/core/Grid";
+import Input from "@material-ui/core/Input";
+import InputAdornment from "@material-ui/core/InputAdornment";
+import InputLabel from "@material-ui/core/InputLabel";
+import { makeStyles } from "@material-ui/core/styles";
+import Typography from "@material-ui/core/Typography";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import Lock from "@material-ui/icons/Lock";
-import Typography from "@material-ui/core/Typography";
-import ky from "ky";
-import { Link, Redirect, useHistory } from "react-router-dom";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import { fakeAuth } from "./App";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
 import { userLogin } from "./actions/user.actions";
-import { connect, useDispatch } from "react-redux";
 
 const useStyles = makeStyles(theme => ({
   margin: {
@@ -30,7 +26,6 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const Login = ({ match }) => {
-  let history = useHistory();
   const classes = useStyles();
   const [isLoading, setisLoading] = useState(false);
   const [username, setUsername] = useState("");

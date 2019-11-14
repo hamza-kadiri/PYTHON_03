@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
+import React from "react";
 import Content from "./Slider/Content";
-import { fakeAuth } from "./App";
 
 const useStyles = makeStyles(theme => ({
   margin: {

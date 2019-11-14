@@ -1,64 +1,22 @@
-import React from "react";
-import Header from "./Header";
-import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import "./App.css";
 import orange from "@material-ui/core/colors/orange";
 import red from "@material-ui/core/colors/red";
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Redirect
-} from "react-router-dom";
-import Serie from "./Serie";
-import Login from "./Login";
-import Signup from "./Signup";
-import Home from "./Home";
+import { createMuiTheme, MuiThemeProvider } from "@material-ui/core/styles";
+import React from "react";
+import { Router, Redirect, Route, Switch } from "react-router-dom";
+import "./App.css";
 import FavoriteSeries from "./FavoriteSeries";
-
-import ky from "ky";
-
-(async () => {
-  try {
-    const parsed = await ky
-      .get(
-        "https://api.themoviedb.org/3/movie/550?api_key=84eae13884eb7a9e47fcc760ca08f59"
-      )
-      .json();
-
-    console.log(parsed);
-  } catch (error) {
-    const serverMessage = await error.response.text();
-    console.log("Server error: " + serverMessage);
-  }
-  //=> `{data: '🦄'}`
-})();
-
-const fakeAuth = {
-  isAuthenticated: false,
-  authenticate: function() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        this.isAuthenticated = true;
-        resolve(this.isAuthenticated);
-      }, 1000);
-    });
-  },
-  signout: function() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        this.isAuthenticated = false;
-        resolve(this.isAuthenticated);
-      }, 1000);
-    });
-  }
-};
+import Header from "./Header";
+import { history } from "./helpers/history";
+import Home from "./Home";
+import Login from "./Login";
+import Serie from "./Serie";
+import Signup from "./Signup";
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route
     {...rest}
     render={props =>
-      fakeAuth.isAuthenticated === true ? (
+      localStorage.getItem("user") ? (
         <Component {...props} />
       ) : (
         <Redirect to="/login" />
@@ -71,7 +29,7 @@ const GuestRoute = ({ component: Component, ...rest }) => (
   <Route
     {...rest}
     render={props =>
-      fakeAuth.isAuthenticated === false ? (
+      !localStorage.getItem("user") ? (
         <Redirect to="/login" />
       ) : (
         <Component {...props} />
@@ -93,7 +51,7 @@ const theme = createMuiTheme({
 function App() {
   return (
     <MuiThemeProvider theme={theme}>
-      <Router>
+      <Router history={history}>
         <Header className="App-header"> </Header>
         <div
           style={{
@@ -121,4 +79,4 @@ function App() {
   );
 }
 
-export { App, fakeAuth };
+export { App };

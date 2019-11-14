@@ -11,8 +11,6 @@ services:
       - "/app/node_modules"
     ports:
       - "3001:3000"
-    environment:
-      - NODE_ENV=development
   server:
     restart: always
     container_name: server
@@ -23,8 +21,6 @@ services:
       - "./server:/app"
     ports:
       - "8001:8000"
-    environment:
-      - NODE_ENV=development
   db:
     restart: always
     image: sameersbn/postgresql:10-2

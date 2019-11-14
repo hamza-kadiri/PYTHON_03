@@ -62,7 +62,6 @@ def create_app():
 
         @app.route('/token', methods=['POST'])
         def generate_auth_token():
-            print(request.json)
             username, password = validate_user_login_form(request.json) # Might raise an InvalidForm exception
             # try to authenticate with username/password
             user = User.get_user_by_username(username)
@@ -79,7 +78,7 @@ def create_app():
 
         # TODO Handle multiple pages results
         @app.route("/search", methods=['GET'])
-        ##@auth.login_required
+        @auth.login_required
         def search():
             query = request.args.get('query')
             return jsonify(search_tv_serie_by_title(query))

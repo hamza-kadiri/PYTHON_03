@@ -96,11 +96,9 @@ class RequestOMDB:
     def perform_request(self, endpoint: str, method: str = 'GET', query: str = None):
         if query is not None:
             query_string = f'&query={urllib.parse.quote(query)}'
-            print(query_string)
         else:
             query_string = False
         url = f'{RequestContext.get_api_url()}{endpoint}?api_key={RequestContext.get_api_key()}{query_string or ""}'
-        print(url)
         if (method == 'GET'):
             response = requests.get(url)
             if response.status_code != 200:

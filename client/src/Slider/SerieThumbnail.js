@@ -1,10 +1,9 @@
-import React from "react";
 import cx from "classnames";
+import React from "react";
 import SliderContext from "./context";
-import "./SerieThumbnail.scss";
 import Mark from "./Mark";
+import "./SerieThumbnail.scss";
 import ShowDetailsButton from "./ShowDetailsButton";
-import { Button } from "@material-ui/core";
 
 const SerieThumbnail = ({ serie }) => (
   <SliderContext.Consumer>

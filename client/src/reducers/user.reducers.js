@@ -1,15 +1,14 @@
 import { actions } from "../actions/user.actions";
 
-export function user(
-  state = {
-    user: {},
-    token: ""
-  },
-  action
-) {
+const initialState = {
+  user: {},
+  token: "",
+  isFetching: false
+};
+export function user(state = initialState, action) {
   switch (action.type) {
     case actions.USER_SIGNUP_ERROR:
-      return { ...state, isFetching: false, error: action.error };
+      return { ...initialState, error: action.error };
     case actions.REQUEST_USER_TOKEN:
       return { ...state, isFetching: true };
     case actions.RECEIVE_USER_TOKEN:
@@ -21,7 +20,9 @@ export function user(
         lastUpdated: action.receivedAt
       };
     case actions.USER_TOKEN_ERROR:
-      return { ...state, isFetching: false, error: action.error };
+      return { ...initialState, error: action.error };
+    case actions.USER_LOGOUT:
+      return initialState;
     default:
       return state;
   }

@@ -1,12 +1,11 @@
 import { actions } from "../actions/series.actions";
 
-export function suggestedSeries(
-  state = {
-    isFetching: false,
-    suggestions: []
-  },
-  action
-) {
+const suggestedSeriesInitialState = {
+  isFetching: false,
+  suggestions: []
+};
+
+export function suggestedSeries(state = suggestedSeriesInitialState, action) {
   switch (action.type) {
     case actions.REQUEST_SUGGESTED_SERIES:
       return { ...state, isFetching: true };
@@ -23,13 +22,12 @@ export function suggestedSeries(
   }
 }
 
-export function selectedSerie(
-  state = {
-    isFetching: false,
-    serie: { name: "" }
-  },
-  action
-) {
+const selectedSerieInitialState = {
+  isFetching: false,
+  serie: { name: "" }
+};
+
+export function selectedSerie(state = selectedSerieInitialState, action) {
   switch (action.type) {
     case actions.REQUEST_SERIE:
       return { ...state, isFetching: true };
@@ -41,10 +39,7 @@ export function selectedSerie(
         lastUpdated: action.receivedAt
       };
     case actions.RESET_SERIE:
-      return {
-        isFetching: false,
-        serie: { name: "" }
-      };
+      return selectedSerieInitialState;
     default:
       return state;
   }
