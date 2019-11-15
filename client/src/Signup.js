@@ -70,7 +70,10 @@ const Signup = ({ match }) => {
           zIndex: 2
         }}
       >
-        <Card style={{ background: "rgba(0,0,0,0.6)" }}>
+        <Card
+          onKeyPress={e => e.key === "Enter" && handleSignup()}
+          style={{ background: "rgba(0,0,0,0.6)" }}
+        >
           <CardContent style={{ color: "white" }}>
             <Typography component="h5" variant="h5">
               Sign up
