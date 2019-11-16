@@ -533,10 +533,11 @@ class Notification(Base, EqMixin):
     episode_number = Column(SmallInteger)
     next_air_date = Column(String)
     creation_date = Column(Integer)
+    backdrop_path = Column(String)
     read = Column(SmallInteger)
 
     def __init__(self, user_id: int, tmdb_id_serie: int, serie_name: str, name: str, season_number: int,
-                 episode_number: int, next_air_date: str):
+                 episode_number: int, next_air_date: str, backdrop_path: str):
         self.user_id = user_id
         self.tmdb_id_serie = tmdb_id_serie
         self.serie_name = serie_name
@@ -544,6 +545,7 @@ class Notification(Base, EqMixin):
         self.season_number = season_number
         self.episode_number = episode_number
         self.next_air_date = next_air_date
+        self.backdrop_path = backdrop_path
         self.creation_date = time()
         self.read = 0
 
@@ -560,13 +562,13 @@ class Notification(Base, EqMixin):
     def as_dict(self):
         return {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie,
                 'serie_name': self.serie_name, 'name': self.name, 'episode_number': self.episode_number,
-                'season_number': self.season_number, 'next_air_date': self.next_air_date, 'read': self.read}
+                'season_number': self.season_number, 'next_air_date': self.next_air_date, 'backdrop_path': self.backdrop_path, 'read': self.read}
 
     @classmethod
     def create_from_serie(cls, user_id: int, serie: Serie):
         notif = Notification(user_id, serie.tmdb_id_serie, serie.name, serie.next_episode_name,
                              serie.next_episode_season_number, serie.next_episode_episode_number,
-                             serie.next_episode_air_date)
+                             serie.next_episode_air_date, serie.backdrop_path)
         if notif.next_air_date == "null":
             raise ValueError("No air date for the notification")
         else:
