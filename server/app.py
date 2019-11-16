@@ -7,7 +7,7 @@ from form_validation import validate_add_serie_form, validate_user_registration_
     validate_notifications_list_form
 from database import init_models, db_session
 from models import User, Serie, Notification
-from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context
+from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, get_tv_series_discover_by_genre
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
 from api_exceptions import InvalidForm
@@ -82,6 +82,11 @@ def create_app():
         def search():
             query = request.args.get('query')
             return jsonify(search_tv_serie_by_title(query))
+
+        @app.route("/discover", methods=['GET'])
+        @auth.login_required
+        def discover():
+            return jsonify(get_tv_series_discover_by_genre())
 
         @app.route("/series/<int:serie_id>", methods=['GET'])
         @auth.login_required

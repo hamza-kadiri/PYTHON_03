@@ -150,3 +150,31 @@ def get_tv_serie_episode(tv_id: int, season_number: int, episode_number: int):
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
     return resp.json()
+
+def get_tv_genres():
+    endpoint = f'/genre/tv/list'
+    request = RequestOMDB()
+    resp = request.perform_request(endpoint)
+    return resp.json()
+
+def get_tv_series_discover():
+    endpoint = f'/discover/tv'
+    request = RequestOMDB()
+    resp = request.perform_request(endpoint)
+    return resp.json()
+
+def get_tv_series_discover_by_genre():
+    series = get_tv_series_discover()['results']
+    genres = get_tv_genres()['genres']
+    result = []
+    for genre in genres:
+        series_concerned = []
+        for serie in series:
+            try:
+                serie['genre_ids'].index(genre['id']) # Raise value error if element not in list
+                series_concerned.append({"id":serie['id'],"name":serie['name'],"poster_path":serie['poster_path']})
+            except ValueError:
+                pass
+        if len(series_concerned) > 0:
+            result.append({"id":genre['id'],"name":genre['name'],"series":series_concerned})
+    return result
