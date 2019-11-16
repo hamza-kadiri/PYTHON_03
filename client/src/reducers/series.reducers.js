@@ -51,3 +51,75 @@ export function selectedSerie(state = selectedSerieInitialState, action) {
       return state;
   }
 }
+
+const favoriteSeriesInitialState = {
+  isFetching: false,
+  subscriptions: {},
+  series: []
+};
+
+export function favoriteSeries(state = favoriteSeriesInitialState, action) {
+  switch (action.type) {
+    case actions.REQUEST_GET_IS_FAVORITE:
+      return { ...state, isFetching: true };
+    case actions.SUCCESS_GET_IS_FAVORITE:
+      return {
+        ...state,
+        isFetching: false,
+        subscriptions: {
+          ...state.subscriptions,
+          [action.subscription.serie_id]: action.subscription.is_favorite
+        }
+      };
+    case actions.ERROR_GET_IS_FAVORITE:
+      return {
+        ...state,
+        isFetching: false,
+        subscriptions: {
+          ...state.subscriptions,
+          [action.error.serie_id]: action.error
+        }
+      };
+    case actions.REQUEST_TOGGLE_FAVORITE:
+      return { ...state, isFetching: true };
+    case actions.SUCCESS_TOGGLE_FAVORITE:
+      return {
+        ...state,
+        isFetching: false,
+        subscriptions: {
+          ...state.subscriptions,
+          [action.subscription.serie_id]: action.subscription.is_favorite
+        }
+      };
+    case actions.ERROR_TOGGLE_FAVORITE:
+      return {
+        ...state,
+        isFetching: false,
+        subscriptions: {
+          ...state.subscriptions,
+          [action.error.serie_id]: action.error
+        }
+      };
+    case actions.REQUEST_GET_ALL_FAVORITE:
+      return { ...state, isFetching: true };
+    case actions.SUCCESS_GET_ALL_FAVORITE:
+      return {
+        ...state,
+        isFetching: false,
+        series: action.series,
+        subscriptions: {
+          ...state.subscriptions,
+          ...action.series
+            .map(serie => serie.tmdb_id_serie)
+            .reduce((acc, id_serie) => ((acc[id_serie] = true), acc), {})
+        }
+      };
+    case actions.ERROR_GET_ALL_FAVORITE:
+      return {
+        ...state,
+        isFetching: false
+      };
+    default:
+      return state;
+  }
+}

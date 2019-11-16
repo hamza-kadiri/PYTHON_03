@@ -49,7 +49,6 @@ const Login = ({ match, isLoading, error }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const dispatch = useDispatch();
-  console.log(error && error.invalid_fields && error.invalid_fields.username);
   const handleLogin = async () => {
     await dispatch(userLogin({ username, password }));
   };

@@ -1,7 +1,7 @@
 import { actions } from "../actions/auth.actions";
 
 const initialState = {
-  user: {},
+  user: JSON.parse(localStorage.getItem("user")) || {},
   token: "",
   isFetching: false
 };

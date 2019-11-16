@@ -113,7 +113,9 @@ def create_app():
         @app.route("/favorite", methods=['GET'])
         @auth.login_required
         def check_favorite_serie():
-            user_id, serie_id = validate_favorite_form(request.args)  # Might raise an InvalidForm exception
+            args = request.args;
+            json = {"user_id" : int(request.args.get("user_id")), "serie_id" : request.args.get("serie_id")}
+            user_id, serie_id = validate_favorite_form(json)  # Might raise an InvalidForm exception
             if user_id != g.user.id:
                 abort(403)
             user = User.get_user_by_id(user_id)
@@ -190,8 +192,8 @@ def create_app():
         def get_notifications(user_id: int):
             if user_id != g.user.id:
                 abort(403)
-            User.get_user_by_id(user_id)
-            notifications = Notification.get_notifications_by_user(user_id)
+            user = User.get_user_by_id(user_id)
+            notifications = Notification.get_notifications_by_user(user)
             return jsonify({"notifications": [notification.as_dict() for notification in notifications]})
 
         @app.route("/users/<int:user_id>/notifications", methods=['POST'])
