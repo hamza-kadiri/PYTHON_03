@@ -9,9 +9,18 @@ db_session = scoped_session(sessionmaker(autocommit=False,
                                          bind=engine))
 Base = declarative_base()
 Base.query = db_session.query_property()
+
+def deletion_db():
+    for tbl in reversed(Base.metadata.sorted_tables):
+        tbl.drop(engine, checkfirst=True)
+
 def creation_db():
     import models
     Base.metadata.create_all(bind=engine)
+
+def initiation_db():
+    deletion_db()
+    creation_db()
 
 def init_models():
     import models

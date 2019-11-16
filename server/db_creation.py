@@ -1,5 +1,5 @@
 import database
 
 if __name__ == "__main__":
-    database.creation_db()
+    database.initiation_db()
     print("DB Created")
