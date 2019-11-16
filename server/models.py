@@ -139,6 +139,12 @@ class Genre(Base, EqMixin):
         return {'tmdb_id_genre': self.tmdb_id_genre, 'name': self.name}
 
     @classmethod
+    def create_from_json(cls, json: dict):
+        genre = Genre(json['id'],json['name'])
+        genre.save_in_db()
+        return genre
+
+    @classmethod
     def get_genre_by_id(cls, genre_id: int):
         try:
             return Genre.query.filter_by(tmdb_id_genre=genre_id).one()

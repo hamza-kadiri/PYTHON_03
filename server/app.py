@@ -7,7 +7,7 @@ from form_validation import validate_add_serie_form, validate_user_registration_
     validate_notifications_list_form, validate_favorite_form
 from database import init_models, db_session
 from models import User, Serie, Notification
-from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context
+from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, get_tv_series_discover_by_genre
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
 from api_exceptions import InvalidForm
@@ -66,7 +66,7 @@ def create_app():
             # try to authenticate with username/password
             user = User.get_user_by_username(username)
             if not user or not user.verify_password(password):
-                abort(400)
+                abort(400, {"error_message" : "Invalid username or password", "invalid_fields" : {"username": "", "password": ""}})
             g.user = user
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii'), "user": user.as_dict()})
@@ -82,6 +82,11 @@ def create_app():
         def search():
             query = request.args.get('query')
             return jsonify(search_tv_serie_by_title(query))
+
+        @app.route("/discover", methods=['GET'])
+        @auth.login_required
+        def discover():
+            return jsonify(get_tv_series_discover_by_genre())
 
         @app.route("/series/<int:serie_id>", methods=['GET'])
         @auth.login_required
@@ -216,7 +221,8 @@ def create_app():
 
         @app.errorhandler(400)
         def forbidden_error(error):
-            return jsonify({'status_code': 400, 'error_message': 'Bad Request'}), 400
+            error_message = error.description or {"error_message": error}
+            return jsonify({'status_code': 400, **error_message}), 400
         @app.errorhandler(401)
         def forbidden_error(error):
             return jsonify({'status_code': 401, 'error_message': 'Bad credentials'}), 401
