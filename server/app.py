@@ -193,19 +193,26 @@ def create_app():
         def mark_notifications_as_read(user_id: int):
             if user_id != g.user.id:
                 abort(403)
-            user = User.get_user_by_id(user_id)
             array_ids = validate_notifications_list_form(request.form)
-            response_array = []
+            responses_array = []
+            response_status = None
             for notification_id in array_ids:
                 notification = Notification.get_notification_by_id(notification_id)
                 if notification is None:
-                    response_array.append({'id': notification_id, 'status': 404})
+                    notif_status = 404
                 elif notification.user_id != user_id:
-                    response_array.append({'id': notification_id, 'status': 403})
+                    notif_status = 403
                 else:
                     notification.mark_as_read()
-                    response_array.append({'id': notification_id, 'status': 200})
-            return jsonify({'responses': response_array})
+                    notif_status = 200
+                responses_array.append({'id': notification_id, 'status': notif_status})
+                if response_status == 207 or response_status == notif_status:
+                    pass
+                elif response_status is None:
+                    response_status = notif_status
+                else:
+                    response_status = 207
+            return jsonify({'responses': responses_array}), response_status
 
         @app.errorhandler(InvalidForm)
         def handle_invalid_usage(error: InvalidForm):
