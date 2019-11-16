@@ -172,7 +172,11 @@ def get_tv_series_discover_by_genre():
         for serie in series:
             try:
                 serie['genre_ids'].index(genre['id']) # Raise value error if element not in list
-                series_concerned.append({"id":serie['id'],"name":serie['name'],"poster_path":serie['poster_path']})
+                if serie['backdrop_path'] is not None:
+                    serie['thumbnail_url'] = f"{RequestContext.get_backdrop_base_url()}{serie['backdrop_path']}"
+                if serie['poster_path'] is not None:
+                    serie['poster_url'] = f"{RequestContext.get_poster_base_url()}{serie['poster_path']}"
+                series_concerned.append(serie)
             except ValueError:
                 pass
         if len(series_concerned) > 0:

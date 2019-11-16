@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, abort, g
 from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 from form_validation import validate_add_serie_form, validate_user_registration_form, validate_user_login_form, \
-    validate_notifications_list_form
+    validate_notifications_list_form, validate_favorite_form
 from database import init_models, db_session
 from models import User, Serie, Notification
 from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, get_tv_series_discover_by_genre
@@ -110,6 +110,38 @@ def create_app():
                 abort(404)
             return jsonify(user.as_dict())
 
+        @app.route("/favorite", methods=['GET'])
+        @auth.login_required
+        def check_favorite_serie():
+            user_id, serie_id = validate_favorite_form(request.json)  # Might raise an InvalidForm exception
+            if user_id != g.user.id:
+                abort(403)
+            user = User.get_user_by_id(user_id)
+            if user.get_subscription_by_serie_id(serie_id) is None:
+                is_favorite = False
+            else:
+                is_favorite = True
+            return jsonify({'user_id': user_id, 'serie_id': serie_id, "is_favorite": is_favorite})
+
+        @app.route("/favorite", methods=['POST'])
+        @auth.login_required
+        def toggle_favorite_serie():
+            user_id, serie_id = validate_favorite_form(request.json) # Might raise an InvalidForm exception
+            if user_id != g.user.id:
+                abort(403)
+            user = User.get_user_by_id(user_id)
+            serie = Serie.get_serie_by_id(serie_id)
+            if serie is None:
+                serie = Serie.create_from_json(get_tv_serie(serie_id))
+            if user.get_subscription_by_serie_id(serie_id) is None:
+                user.add_favorite_serie(serie)  # Might raise an IntegrityError
+                Notification.create_from_serie(user_id, serie)
+                is_favorite = True
+            else:
+                user.delete_favorite_serie(serie)
+                is_favorite = False
+            return jsonify({'user_id': user_id, 'serie_id': serie_id, "is_favorite":is_favorite})
+
         @app.route("/users/<int:user_id>/series", methods=['GET'])
         @auth.login_required
         def get_favorite_series(user_id: int):
@@ -161,19 +193,26 @@ def create_app():
         def mark_notifications_as_read(user_id: int):
             if user_id != g.user.id:
                 abort(403)
-            user = User.get_user_by_id(user_id)
             array_ids = validate_notifications_list_form(request.form)
-            response_array = []
+            responses_array = []
+            response_status = None
             for notification_id in array_ids:
                 notification = Notification.get_notification_by_id(notification_id)
                 if notification is None:
-                    response_array.append({'id': notification_id, 'status': 404})
+                    notif_status = 404
                 elif notification.user_id != user_id:
-                    response_array.append({'id': notification_id, 'status': 403})
+                    notif_status = 403
                 else:
                     notification.mark_as_read()
-                    response_array.append({'id': notification_id, 'status': 200})
-            return jsonify({'responses': response_array})
+                    notif_status = 200
+                responses_array.append({'id': notification_id, 'status': notif_status})
+                if response_status == 207 or response_status == notif_status:
+                    pass
+                elif response_status is None:
+                    response_status = notif_status
+                else:
+                    response_status = 207
+            return jsonify({'responses': responses_array}), response_status
 
         @app.errorhandler(InvalidForm)
         def handle_invalid_usage(error: InvalidForm):
