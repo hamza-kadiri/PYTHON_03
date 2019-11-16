@@ -9,7 +9,7 @@ from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from flask import current_app as app
 from time import time
-from database import save_obj
+from database import save_obj, delete_obj
 from tmdb_api import get_tv_serie, get_tv_serie_season
 
 
@@ -486,6 +486,8 @@ class User(Base, EqMixin):
     def delete_favorite_serie(self, serie: Serie):
         self.series.remove(serie)
         self.save_in_db()
+        for notif in Notification.get_notifications_by_user_and_serie(self,serie):
+            notif.delete_in_db()
 
     @classmethod
     def get_user_by_id(cls, user_id: int):
@@ -553,6 +555,9 @@ class Notification(Base, EqMixin):
     def save_in_db(self):
         save_obj(self)
 
+    def delete_in_db(self):
+        delete_obj(self)
+
     def mark_as_read(self):
         self.read = 1
         self.save_in_db()
@@ -576,6 +581,10 @@ class Notification(Base, EqMixin):
     @classmethod
     def get_notifications_by_user(cls, user: User):
         return Notification.query.filter_by(user_id=user.id).order_by(desc(Notification.creation_date)).limit(15).all()
+
+    @classmethod
+    def get_notifications_by_user_and_serie(cls, user: User, serie:Serie):
+        return Notification.query.filter_by(user_id=user.id, tmdb_id_serie=serie.tmdb_id_serie).order_by(desc(Notification.creation_date)).all()
 
     @classmethod
     def get_notification_by_id(cls, notification_id: int):
