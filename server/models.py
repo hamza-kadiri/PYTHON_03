@@ -558,9 +558,9 @@ class Notification(Base, EqMixin):
         self.save_in_db()
 
     def as_dict(self):
-        return {'id': self.id, 'user_id': self.user_id, ' tmdb_id_serie': self.tmdb_id_serie,
+        return {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie,
                 'serie_name': self.serie_name, 'name': self.name, 'episode_number': self.episode_number,
-                'season_number': self.season_number, 'next_date': self.next_air_date, 'read': self.read}
+                'season_number': self.season_number, 'next_air_date': self.next_air_date, 'read': self.read}
 
     @classmethod
     def create_from_serie(cls, user_id: int, serie: Serie):
