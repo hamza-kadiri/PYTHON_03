@@ -15,13 +15,17 @@ import MenuIcon from "@material-ui/icons/MenuOutlined";
 import MoreIcon from "@material-ui/icons/MoreVertOutlined";
 import NotificationsIcon from "@material-ui/icons/NotificationsOutlined";
 import SearchIcon from "@material-ui/icons/SearchOutlined";
+import ClearIcon from "@material-ui/icons/ClearOutlined";
 import React, { useEffect, useState } from "react";
 import Autosuggest from "react-autosuggest";
 import { connect, useDispatch } from "react-redux";
 import { history } from "./helpers/history";
 import { withRouter } from "react-router-dom";
-import { fetchSuggestedSeries } from "./actions/series.actions";
-import { userLogout } from "./actions/user.actions";
+import {
+  fetchSuggestedSeries,
+  actions as seriesActions
+} from "./actions/series.actions";
+import { userLogout } from "./actions/auth.actions";
 
 const useStyles = makeStyles(theme => {
   return {
@@ -104,7 +108,7 @@ const useStyles = makeStyles(theme => {
   };
 });
 
-function PrimarySearchAppBar({ suggestions, selectedSerie }) {
+function PrimarySearchAppBar({ suggestions, selectedSerie, suggestionQuery }) {
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
@@ -133,7 +137,6 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
     dispatch(userLogout());
     setIsLoadingSignout(false);
     handleMenuClose();
-    history.push("/login");
   };
 
   const handleFavorites = async () => {
@@ -220,7 +223,12 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
     await loadSuggestions(value);
   };
 
-  const onSuggestionsClearRequested = () => {};
+  const clearSuggestions = () => {
+    dispatch({
+      type: seriesActions.RESET_SUGGESTED_SERIES
+    });
+    setValue("");
+  };
 
   const onChange = (event, { newValue }) => {
     setValue(newValue);
@@ -244,9 +252,17 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
                 <IconButton className={classes.input} aria-label="search">
                   <CircularProgress size={16} />
                 </IconButton>
-              ) : (
+              ) : value == "" ? (
                 <IconButton className={classes.input} aria-label="search">
                   <SearchIcon />
+                </IconButton>
+              ) : (
+                <IconButton
+                  onClick={clearSuggestions}
+                  className={classes.input}
+                  aria-label="search"
+                >
+                  <ClearIcon />
                 </IconButton>
               )}
             </InputAdornment>
@@ -292,10 +308,9 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
             </Typography>
             <div className={classes.search}>
               <Autosuggest
-                highlightFirstSuggestion
                 suggestions={suggestions}
+                alwaysRenderSuggestions={true}
                 onSuggestionsFetchRequested={onSuggestionsFetchRequested}
-                onSuggestionsClearRequested={onSuggestionsClearRequested}
                 onSuggestionSelected={onSuggestionSelected}
                 getSuggestionValue={getOptionValue}
                 renderInputComponent={renderInputComponent}
@@ -353,6 +368,7 @@ function PrimarySearchAppBar({ suggestions, selectedSerie }) {
 const mapStateToProps = ({ suggestedSeries, selectedSerie }) => {
   return {
     suggestions: suggestedSeries.suggestions,
+    suggestionQuery: suggestedSeries.query,
     selectedSerie: selectedSerie
   };
 };

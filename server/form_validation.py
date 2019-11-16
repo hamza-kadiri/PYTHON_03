@@ -4,18 +4,18 @@ from api_exceptions import InvalidForm, InvalidField
 
 def validate_user_registration_form(json):
     username = json['username']
-    username_valid = checkers.is_string(username)
+    username_valid = checkers.is_not_empty(username) and checkers.is_string(username)
     password = json['password']
-    password_valid = checkers.is_string(password)
+    password_valid = checkers.is_not_empty(password) and checkers.is_string(password)
     email = json['email']
     email_valid = checkers.is_email(email)
     invalid_fields = []
     if not username_valid:
-        invalid_fields.append(InvalidField('username', f'Invalid value : {username}'))
+        invalid_fields.append(InvalidField('username', 'Invalid username'))
     if not password_valid:
-        invalid_fields.append(InvalidField('password', f'Invalid value : {password}'))
+        invalid_fields.append(InvalidField('password', 'Invalid password'))
     if not email_valid:
-        invalid_fields.append(InvalidField('email', f'Invalid value : {email}'))
+        invalid_fields.append(InvalidField('email', 'Invalid email'))
     if not (username_valid & password_valid & email_valid):
         raise InvalidForm(invalid_fields)
     return username, email, password
@@ -23,14 +23,14 @@ def validate_user_registration_form(json):
 
 def validate_user_login_form(json):
     username = json['username']
-    username_valid = checkers.is_string(username)
+    username_valid = checkers.is_not_empty(username) and checkers.is_string(username)
     password = json['password']
-    password_valid = checkers.is_string(password)
+    password_valid = checkers.is_not_empty(password) and checkers.is_string(password)
     invalid_fields = []
     if not username_valid:
-        invalid_fields.append(InvalidField('username', f'Invalid value : {username}'))
+        invalid_fields.append(InvalidField('username', 'Invalid username'))
     if not password_valid:
-        invalid_fields.append(InvalidField('password', f'Invalid value : {password}'))
+        invalid_fields.append(InvalidField('password', 'Invalid password'))
     if not (username_valid & password_valid):
         raise InvalidForm(invalid_fields)
     return username, password

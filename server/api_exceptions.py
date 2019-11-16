@@ -4,7 +4,7 @@ class InvalidField:
         self.error = error
 
     def to_dict(self):
-        return {"field": self.field, "error": self.error}
+        return {self.field: self.error}
 
 
 class InvalidForm(Exception):
@@ -15,4 +15,7 @@ class InvalidForm(Exception):
         self.invalid_fields = invalid_fields
 
     def to_dict(self):
-        return {"invalid_fields":[invalid_field.to_dict() for invalid_field in self.invalid_fields]}
+        final = {}
+        for invalid_field in self.invalid_fields: 
+            final = {**final,**invalid_field.to_dict()}
+        return final

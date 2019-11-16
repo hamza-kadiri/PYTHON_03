@@ -2,7 +2,8 @@ import { actions } from "../actions/series.actions";
 
 const suggestedSeriesInitialState = {
   isFetching: false,
-  suggestions: []
+  suggestions: [],
+  query: ""
 };
 
 export function suggestedSeries(state = suggestedSeriesInitialState, action) {
@@ -17,6 +18,10 @@ export function suggestedSeries(state = suggestedSeriesInitialState, action) {
         suggestions: action.series,
         lastUpdated: action.receivedAt
       };
+    case actions.RESET_SUGGESTED_SERIES:
+      return suggestedSeriesInitialState;
+    case actions.SUGGESTED_SERIES_ERROR:
+      return { ...selectedSerieInitialState, error: action.error };
     default:
       return state;
   }
@@ -38,8 +43,10 @@ export function selectedSerie(state = selectedSerieInitialState, action) {
         serie: action.serie,
         lastUpdated: action.receivedAt
       };
-    case actions.RESET_SERIE:
+    case actions.RESET_SELECTED_SERIE:
       return selectedSerieInitialState;
+    case actions.SELECTED_SERIE_ERROR:
+      return { ...selectedSerieInitialState, error: action.error };
     default:
       return state;
   }

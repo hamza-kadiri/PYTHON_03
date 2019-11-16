@@ -26,8 +26,9 @@ const Content = ({ serie, onClose }) => (
           <Grid
             container
             item
-            alignItems="center"
+            alignItems="flex-start"
             sm={4}
+            direction="column"
             justify="space-between"
           >
             <Grid item>

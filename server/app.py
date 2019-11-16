@@ -66,7 +66,7 @@ def create_app():
             # try to authenticate with username/password
             user = User.get_user_by_username(username)
             if not user or not user.verify_password(password):
-                abort(401)
+                abort(400)
             g.user = user
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii'), "user": user.as_dict()})
@@ -172,18 +172,19 @@ def create_app():
 
         @app.errorhandler(InvalidForm)
         def handle_invalid_usage(error: InvalidForm):
-            response = jsonify(error.to_dict())
-            response.status_code = error.status_code
+            response = jsonify({"status_code" : error.status_code, "error_message": "Invalid Fields", "invalid_fields" : error.to_dict()}), error.status_code
             app.logger.error(response)
             return response
 
         @app.errorhandler(IntegrityError)
         def handle_invalid_usage(error: IntegrityError):
-            app.logger.error(error)
-            response = jsonify({'error_message': 'This operation is forbidden'})
-            response.status_code = 403
+            response = jsonify({'status_code': 403, 'error_message': 'Integrity Error'}), 403
+            app.logger.error(response)
             return response
 
+        @app.errorhandler(400)
+        def forbidden_error(error):
+            return jsonify({'status_code': 400, 'error_message': 'Bad Request'}), 400
         @app.errorhandler(401)
         def forbidden_error(error):
             return jsonify({'status_code': 401, 'error_message': 'Bad credentials'}), 401

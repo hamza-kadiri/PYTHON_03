@@ -1,9 +1,8 @@
 import clientWeb from "../helpers/clientWeb";
 import { history } from "../helpers/history";
+import { handleError } from "./common.actions";
 
 export const actions = {
-  REQUEST_USER_SIGNUP: "REQUEST_USER_SIGNUP",
-  USER_SIGNUP_ERROR: "USER_SIGNUP_ERROR",
   REQUEST_USER_TOKEN: "REQUEST_USER_TOKEN",
   RECEIVE_USER_TOKEN: "RECEIVE_USER_TOKEN",
   USER_TOKEN_ERROR: "USER_TOKEN_ERROR",
@@ -27,38 +26,25 @@ const receiveUserToken = response => {
     receivedAt: Date.now()
   };
 };
-
-export const userSignup = user => {
-  return async dispatch => {
-    try {
-      const response = await clientWeb.post(`users`, { json: user });
-      response.ok && dispatch(userLogin(user));
-    } catch (error) {
-      const error_response = await error.response.json();
-      dispatch({ type: actions.USER_SIGNUP_ERROR, error: error_response });
-    }
-  };
-};
-
 export const userLogin = user => {
   return async dispatch => {
     try {
-      dispatch(requestUserToken(user));
+      await dispatch(requestUserToken(user));
       const response = await clientWeb.post(`token`, {
         json: user
       });
       const json = await response.json();
-      dispatch(receiveUserToken(json));
+      await dispatch(receiveUserToken(json));
       history.push("/");
     } catch (error) {
-      const error_response = await error.response.json();
-      dispatch({ type: actions.USER_TOKEN_ERROR, error: error_response });
+      dispatch(handleError(error, actions.USER_TOKEN_ERROR));
     }
   };
 };
 
 export const userLogout = () => {
   localStorage.removeItem("user");
+  history.push("/");
   return {
     type: actions.USER_LOGOUT
   };

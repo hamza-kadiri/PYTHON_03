@@ -13,9 +13,9 @@ import AccountCircle from "@material-ui/icons/AccountCircle";
 import Lock from "@material-ui/icons/Lock";
 import Mail from "@material-ui/icons/Mail";
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { connect, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
-import { userSignup } from "./actions/user.actions";
+import { userSignup } from "./actions/signup.actions";
 
 const useStyles = makeStyles(theme => ({
   margin: {
@@ -26,17 +26,14 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Signup = ({ match }) => {
+const Signup = ({ match, isLoading }) => {
   const classes = useStyles();
-  const [isLoading, setisLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const dispatch = useDispatch();
   const handleSignup = async () => {
-    setisLoading(true);
     await dispatch(userSignup({ username, password, email }));
-    setisLoading(false);
   };
   return (
     <React.Fragment>
@@ -183,4 +180,9 @@ const Signup = ({ match }) => {
   );
 };
 
-export default Signup;
+const mapStateToProps = ({ user }) => {
+  return {
+    isLoading: user.isFetching
+  };
+};
+export default connect(mapStateToProps)(Signup);

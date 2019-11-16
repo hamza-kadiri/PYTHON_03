@@ -1,11 +1,13 @@
-import { suggestedSeries, selectedSerie } from "./series.reducers.js";
-import { user } from "./user.reducers.js";
+import { suggestedSeries, selectedSerie } from "./series.reducers";
+import { user } from "./auth.reducer";
+import { signup } from "./signup.reducer";
 import { combineReducers } from "redux";
 
 const rootReducer = combineReducers({
   suggestedSeries,
   selectedSerie,
-  user
+  user,
+  signup
 });
 
 export default rootReducer;
