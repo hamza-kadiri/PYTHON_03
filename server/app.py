@@ -137,7 +137,10 @@ def create_app():
                 serie = Serie.create_from_json(get_tv_serie(serie_id))
             if user.get_subscription_by_serie_id(serie_id) is None:
                 user.add_favorite_serie(serie)  # Might raise an IntegrityError
-                Notification.create_from_serie(user_id, serie)
+                try:
+                    Notification.create_from_serie(user_id, serie) #Might raise a ValueError
+                except ValueError:
+                    pass
                 is_favorite = True
             else:
                 user.delete_favorite_serie(serie)
@@ -166,7 +169,10 @@ def create_app():
             if user.get_subscription_by_serie_id(serie_id) is not None:
                 abort(403)
             user.add_favorite_serie(serie)  # Might raise an IntegrityError
-            notif = Notification.create_from_serie(user_id, serie)
+            try:
+                Notification.create_from_serie(user_id, serie) # Might raise a Value Error
+            except ValueError:
+                pass
             return jsonify({"user_id": user_id, "serie_id": serie_id})
 
         @app.route("/users/<int:user_id>/series/<int:serie_id>", methods=['DELETE'])

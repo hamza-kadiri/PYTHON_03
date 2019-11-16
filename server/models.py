@@ -9,7 +9,7 @@ from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from flask import current_app as app
 from time import time
-from database import save_obj
+from database import save_obj, delete_obj
 from tmdb_api import get_tv_serie, get_tv_serie_season
 
 
@@ -486,6 +486,8 @@ class User(Base, EqMixin):
     def delete_favorite_serie(self, serie: Serie):
         self.series.remove(serie)
         self.save_in_db()
+        for notif in Notification.get_notifications_by_user_and_serie(self,serie):
+            notif.delete_in_db()
 
     @classmethod
     def get_user_by_id(cls, user_id: int):
@@ -533,10 +535,11 @@ class Notification(Base, EqMixin):
     episode_number = Column(SmallInteger)
     next_air_date = Column(String)
     creation_date = Column(Integer)
+    backdrop_path = Column(String)
     read = Column(SmallInteger)
 
     def __init__(self, user_id: int, tmdb_id_serie: int, serie_name: str, name: str, season_number: int,
-                 episode_number: int, next_air_date: str):
+                 episode_number: int, next_air_date: str, backdrop_path: str):
         self.user_id = user_id
         self.tmdb_id_serie = tmdb_id_serie
         self.serie_name = serie_name
@@ -544,6 +547,7 @@ class Notification(Base, EqMixin):
         self.season_number = season_number
         self.episode_number = episode_number
         self.next_air_date = next_air_date
+        self.backdrop_path = backdrop_path
         self.creation_date = time()
         self.read = 0
 
@@ -553,26 +557,36 @@ class Notification(Base, EqMixin):
     def save_in_db(self):
         save_obj(self)
 
+    def delete_in_db(self):
+        delete_obj(self)
+
     def mark_as_read(self):
         self.read = 1
         self.save_in_db()
 
     def as_dict(self):
-        return {'id': self.id, 'user_id': self.user_id, ' tmdb_id_serie': self.tmdb_id_serie,
+        return {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie,
                 'serie_name': self.serie_name, 'name': self.name, 'episode_number': self.episode_number,
-                'season_number': self.season_number, 'next_date': self.next_air_date, 'read': self.read}
+                'season_number': self.season_number, 'next_air_date': self.next_air_date, 'backdrop_path': self.backdrop_path, 'read': self.read}
 
     @classmethod
     def create_from_serie(cls, user_id: int, serie: Serie):
         notif = Notification(user_id, serie.tmdb_id_serie, serie.name, serie.next_episode_name,
                              serie.next_episode_season_number, serie.next_episode_episode_number,
-                             serie.next_episode_air_date)
-        notif.save_in_db()
-        return notif
+                             serie.next_episode_air_date, serie.backdrop_path)
+        if notif.next_air_date == "null":
+            raise ValueError("No air date for the notification")
+        else:
+            notif.save_in_db()
+            return notif
 
     @classmethod
     def get_notifications_by_user(cls, user: User):
         return Notification.query.filter_by(user_id=user.id).order_by(desc(Notification.creation_date)).limit(15).all()
+
+    @classmethod
+    def get_notifications_by_user_and_serie(cls, user: User, serie:Serie):
+        return Notification.query.filter_by(user_id=user.id, tmdb_id_serie=serie.tmdb_id_serie).order_by(desc(Notification.creation_date)).all()
 
     @classmethod
     def get_notification_by_id(cls, notification_id: int):
