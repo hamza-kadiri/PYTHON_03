@@ -8,7 +8,16 @@ export const actions = {
   REQUEST_SERIE: "REQUEST_SERIE",
   RECEIVE_SERIE: "RECEIVE_SERIE",
   SELECTED_SERIE_ERROR: "SELECTED_SERIE_ERROR",
-  RESET_SELECTED_SERIE: "RESET_SELECTED_SERIE"
+  RESET_SELECTED_SERIE: "RESET_SELECTED_SERIE",
+  REQUEST_TOGGLE_FAVORITE: "REQUEST_TOGGLE_FAVORITE",
+  SUCCESS_TOGGLE_FAVORITE: "SUCCESS_TOGGLE_FAVORITE",
+  ERROR_TOGGLE_FAVORITE: "ERROR_TOGGLE_FAVORITE",
+  REQUEST_GET_ALL_FAVORITE: "REQUEST_GET_ALL_FAVORITE",
+  SUCCESS_GET_ALL_FAVORITE: "SUCCESS_GET_ALL_FAVORITE",
+  ERROR_GET_ALL_FAVORITE: "ERROR_GET_ALL_FAVORITE",
+  REQUEST_GET_IS_FAVORITE: "REQUEST_GET_IS_FAVORITE",
+  SUCCESS_GET_IS_FAVORITE: "SUCCESS_GET_IS_FAVORITE",
+  ERROR_GET_IS_FAVORITE: "ERROR_GET_IS_FAVORITE"
 };
 
 const requestSuggestedSeries = query => {
@@ -46,31 +55,108 @@ export const fetchSuggestedSeries = query => {
   };
 };
 
-const requestSerie = id_serie => {
+const requestSerie = serie_id => {
   return {
     type: actions.REQUEST_SERIE,
-    id_serie
+    serie_id
   };
 };
 
-const receiveSelectedSerie = (id_serie, serie) => {
+const receiveSelectedSerie = (serie_id, serie) => {
   return {
     type: actions.RECEIVE_SERIE,
-    id_serie,
+    serie_id,
     serie: serie,
     receivedAt: Date.now()
   };
 };
 
-export const fetchSelectedSerie = id_serie => {
+export const fetchSelectedSerie = serie_id => {
   return async dispatch => {
-    dispatch(requestSerie(id_serie));
+    dispatch(requestSerie(serie_id));
     try {
-      const response = await clientWeb(`series/${id_serie}`);
+      const response = await clientWeb(`series/${serie_id}`);
       const json = await response.json();
-      dispatch(receiveSelectedSerie(id_serie, json));
+      dispatch(receiveSelectedSerie(serie_id, json));
     } catch (error) {
       dispatch(handleError(error, actions.SELECTED_SERIE_ERROR));
+    }
+  };
+};
+
+const requestFavorite = (type, user_id, serie_id) => {
+  return {
+    type,
+    user_id,
+    serie_id
+  };
+};
+
+const receiveFavorite = (type, response) => {
+  return {
+    type,
+    subscription: response
+  };
+};
+
+const requestAllFavorite = user_id => {
+  return {
+    type: actions.REQUEST_GET_ALL_FAVORITE,
+    user_id
+  };
+};
+
+const receiveAllFavorite = response => {
+  return {
+    type: actions.SUCCESS_GET_ALL_FAVORITE,
+    series: response.series
+  };
+};
+
+export const toggleFavorite = (user_id, serie_id) => {
+  return async dispatch => {
+    dispatch(
+      requestFavorite(actions.REQUEST_TOGGLE_FAVORITE, user_id, serie_id)
+    );
+    try {
+      const response = await clientWeb.post(`favorite`, {
+        json: { user_id, serie_id }
+      });
+
+      const json = await response.json();
+      dispatch(receiveFavorite(actions.SUCCESS_TOGGLE_FAVORITE, json));
+    } catch (error) {
+      dispatch(handleError(error, actions.ERROR_TOGGLE_FAVORITE));
+    }
+  };
+};
+
+export const getIsFavorite = (user_id, serie_id) => {
+  return async dispatch => {
+    dispatch(
+      requestFavorite(actions.REQUEST_GET_IS_FAVORITE, user_id, serie_id)
+    );
+    try {
+      const response = await clientWeb.get(`favorite`, {
+        searchParams: { user_id, serie_id }
+      });
+      const json = await response.json();
+      dispatch(receiveFavorite(actions.SUCCESS_GET_IS_FAVORITE, json));
+    } catch (error) {
+      dispatch(handleError(error, actions.ERROR_GET_IS_FAVORITE));
+    }
+  };
+};
+
+export const getAllFavorite = user_id => {
+  return async dispatch => {
+    dispatch(requestAllFavorite(user_id));
+    try {
+      const response = await clientWeb(`users/${user_id}/series`);
+      const json = await response.json();
+      dispatch(receiveAllFavorite(json));
+    } catch (error) {
+      dispatch(handleError(error, actions.ERROR_GET_FAVORITE));
     }
   };
 };

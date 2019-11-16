@@ -26,6 +26,7 @@ import {
   actions as seriesActions
 } from "./actions/series.actions";
 import { userLogout } from "./actions/auth.actions";
+import { getNotifications } from "./actions/notifications.actions";
 
 const useStyles = makeStyles(theme => {
   return {
@@ -108,9 +109,16 @@ const useStyles = makeStyles(theme => {
   };
 });
 
-function PrimarySearchAppBar({ suggestions, selectedSerie, suggestionQuery }) {
+function PrimarySearchAppBar({
+  suggestions,
+  selectedSerie,
+  suggestionQuery,
+  user,
+  notifications
+}) {
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState(null);
+  const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const [value, setValue] = useState("");
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -118,14 +126,22 @@ function PrimarySearchAppBar({ suggestions, selectedSerie, suggestionQuery }) {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    dispatch(getNotifications(user.id));
+  }, [user]);
+  useEffect(() => {
     setValue(selectedSerie.serie.name);
   }, [selectedSerie]);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+  const isNotificationsOpen = Boolean(notificationsAnchorEl);
 
   const handleProfileMenuOpen = event => {
     setAnchorEl(event.currentTarget);
+  };
+
+  const handleNotificationMenuOpen = event => {
+    setNotificationsAnchorEl(event.currentTarget);
   };
 
   const handleMobileMenuClose = () => {
@@ -147,6 +163,10 @@ function PrimarySearchAppBar({ suggestions, selectedSerie, suggestionQuery }) {
   const handleMenuClose = () => {
     setAnchorEl(null);
     handleMobileMenuClose();
+  };
+
+  const handleNotificationsClose = () => {
+    setNotificationsAnchorEl(null);
   };
 
   const handleMobileMenuOpen = event => {
@@ -177,6 +197,22 @@ function PrimarySearchAppBar({ suggestions, selectedSerie, suggestionQuery }) {
     </Menu>
   );
 
+  const renderNotifications = (
+    <Menu
+      anchorEl={notificationsAnchorEl}
+      anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+      id={menuId}
+      keepMounted
+      transformOrigin={{ vertical: "top", horizontal: "right" }}
+      open={isNotificationsOpen}
+      onClose={handleNotificationsClose}
+    >
+      {notifications.map((notification, index) => (
+        <MenuItem>{notification.serie_name}</MenuItem>
+      ))}
+    </Menu>
+  );
+
   const mobileMenuId = "primary-search-account-menu-mobile";
   const renderMobileMenu = (
     <Menu
@@ -189,7 +225,11 @@ function PrimarySearchAppBar({ suggestions, selectedSerie, suggestionQuery }) {
       onClose={handleMobileMenuClose}
     >
       <MenuItem>
-        <IconButton aria-label="show 11 new notifications" color="inherit">
+        <IconButton
+          onClick={handleNotificationMenuOpen}
+          aria-label="show 11 new notifications"
+          color="inherit"
+        >
           <Badge badgeContent={11} color="secondary">
             <NotificationsIcon />
           </Badge>
@@ -227,6 +267,7 @@ function PrimarySearchAppBar({ suggestions, selectedSerie, suggestionQuery }) {
     dispatch({
       type: seriesActions.RESET_SUGGESTED_SERIES
     });
+    history.push("/");
     setValue("");
   };
 
@@ -327,10 +368,11 @@ function PrimarySearchAppBar({ suggestions, selectedSerie, suggestionQuery }) {
             <div className={classes.grow} />
             <div className={classes.sectionDesktop}>
               <IconButton
+                onClick={handleNotificationMenuOpen}
                 aria-label="show 17 new notifications"
                 color="inherit"
               >
-                <Badge badgeContent={17} color="secondary">
+                <Badge badgeContent={notifications.length} color="secondary">
                   <NotificationsIcon />
                 </Badge>
               </IconButton>
@@ -361,15 +403,23 @@ function PrimarySearchAppBar({ suggestions, selectedSerie, suggestionQuery }) {
       </AppBar>
       {renderMobileMenu}
       {renderMenu}
+      {renderNotifications}
     </div>
   );
 }
 
-const mapStateToProps = ({ suggestedSeries, selectedSerie }) => {
+const mapStateToProps = ({
+  suggestedSeries,
+  selectedSerie,
+  user,
+  notifications
+}) => {
   return {
     suggestions: suggestedSeries.suggestions,
     suggestionQuery: suggestedSeries.query,
-    selectedSerie: selectedSerie
+    selectedSerie: selectedSerie,
+    user: user.user,
+    notifications: notifications.notifications
   };
 };
 export default connect(mapStateToProps)(withRouter(PrimarySearchAppBar));

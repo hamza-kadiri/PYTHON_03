@@ -9,6 +9,8 @@ import OutlinedLikeIcon from "@material-ui/icons/FavoriteBorder";
 import React, { useEffect, useState } from "react";
 import { connect, useDispatch } from "react-redux";
 import { fetchSelectedSerie } from "./actions/series.actions";
+import { toggleFavorite, getIsFavorite } from "./actions/series.actions";
+import IconButton from "@material-ui/core/IconButton";
 
 const useStyles = makeStyles(theme => ({
   LikeIcon: {
@@ -16,19 +18,25 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Serie = ({ match, serie, isLoading }) => {
+const Serie = ({
+  match,
+  serie,
+  isLoading,
+  user,
+  subscriptions,
+  isLoadingSubscriptions
+}) => {
   const classes = useStyles();
-  const [isLiked, setisLiked] = useState(false);
   const dispatch = useDispatch();
-
   useEffect(() => {
     dispatch(fetchSelectedSerie(match.params.id));
+    dispatch(getIsFavorite(user.id, match.params.id));
   }, [match.params.id]);
 
-  const handleLike = () => {
-    const currentState = isLiked;
-    setisLiked(!currentState);
+  const handleLike = async () => {
+    await dispatch(toggleFavorite(user.id, serie.id));
   };
+
   return (
     <React.Fragment>
       <div
@@ -89,11 +97,20 @@ const Serie = ({ match, serie, isLoading }) => {
                   {serie.overview}
                 </Typography>
                 <Button
-                  variant={isLiked ? "contained" : "outlined"}
+                  variant={
+                    subscriptions[match.params.id] ? "contained" : "outlined"
+                  }
                   color="primary"
                   onClick={handleLike}
+                  style={{ width: "50%", minWidth: "200px" }}
                 >
-                  {isLiked ? (
+                  {isLoadingSubscriptions ? (
+                    <CircularProgress
+                      size={20}
+                      className={classes.LikeIcon}
+                      color="primary"
+                    />
+                  ) : subscriptions[match.params.id] ? (
                     <LikeIcon className={classes.LikeIcon} />
                   ) : (
                     <OutlinedLikeIcon className={classes.LikeIcon} />
@@ -109,9 +126,12 @@ const Serie = ({ match, serie, isLoading }) => {
   );
 };
 
-const mapStateToProps = ({ selectedSerie }) => ({
+const mapStateToProps = ({ selectedSerie, user, favoriteSeries }) => ({
   serie: selectedSerie.serie,
-  isLoading: selectedSerie.isFetching
+  isLoading: selectedSerie.isFetching,
+  user: user.user,
+  subscriptions: favoriteSeries.subscriptions,
+  isLoadingSubscriptions: favoriteSeries.isFetching
 });
 
 export default connect(mapStateToProps)(Serie);

@@ -1,4 +1,5 @@
 import { makeStyles } from "@material-ui/core/styles";
+import { getAllFavorites } from "./actions/series.actions";
 import Typography from "@material-ui/core/Typography";
 import React from "react";
 import Content from "./Slider/Content";

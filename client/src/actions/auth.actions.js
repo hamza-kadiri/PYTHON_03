@@ -1,6 +1,7 @@
 import clientWeb from "../helpers/clientWeb";
 import { history } from "../helpers/history";
 import { handleError } from "./common.actions";
+import { getAllFavorite } from "./series.actions";
 
 export const actions = {
   REQUEST_USER_TOKEN: "REQUEST_USER_TOKEN",
@@ -35,6 +36,7 @@ export const userLogin = user => {
       });
       const json = await response.json();
       await dispatch(receiveUserToken(json));
+      await dispatch(getAllFavorite(json.user.id));
       history.push("/");
     } catch (error) {
       dispatch(handleError(error, actions.USER_TOKEN_ERROR));
