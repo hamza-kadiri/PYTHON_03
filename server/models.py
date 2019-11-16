@@ -567,8 +567,11 @@ class Notification(Base, EqMixin):
         notif = Notification(user_id, serie.tmdb_id_serie, serie.name, serie.next_episode_name,
                              serie.next_episode_season_number, serie.next_episode_episode_number,
                              serie.next_episode_air_date)
-        notif.save_in_db()
-        return notif
+        if notif.next_air_date == "null":
+            raise ValueError("No air date for the notification")
+        else:
+            notif.save_in_db()
+            return notif
 
     @classmethod
     def get_notifications_by_user(cls, user: User):

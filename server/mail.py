@@ -90,5 +90,8 @@ def update_all_series():
         serie.update_from_json(new_serie_json)  # update serie information
         if old_last_diff != serie.next_episode_air_date and serie.next_episode_air_date != "null":
             for user in serie.users:
-                notif = Notification.create_from_serie(user.id, serie)  # create notification
-                send_notifications(smtp_server, notif, MailingContext.get_mailing_address())
+                try:
+                    notif = Notification.create_from_serie(user.id, serie)  # create notification, Might rise a value error
+                    send_notifications(smtp_server, notif, MailingContext.get_mailing_address())
+                except ValueError:
+                    pass
