@@ -66,7 +66,7 @@ def create_app():
             # try to authenticate with username/password
             user = User.get_user_by_username(username)
             if not user or not user.verify_password(password):
-                abort(400)
+                abort(400, {"error_message" : "Invalid username or password", "invalid_fields" : {"username": "", "password": ""}})
             g.user = user
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii'), "user": user.as_dict()})
@@ -184,7 +184,8 @@ def create_app():
 
         @app.errorhandler(400)
         def forbidden_error(error):
-            return jsonify({'status_code': 400, 'error_message': 'Bad Request'}), 400
+            error_message = error.description or {"error_message": error}
+            return jsonify({'status_code': 400, **error_message}), 400
         @app.errorhandler(401)
         def forbidden_error(error):
             return jsonify({'status_code': 401, 'error_message': 'Bad credentials'}), 401

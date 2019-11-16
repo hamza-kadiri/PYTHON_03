@@ -3,6 +3,7 @@ import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import FormControl from "@material-ui/core/FormControl";
+import FormHelperText from "@material-ui/core/FormHelperText";
 import Grid from "@material-ui/core/Grid";
 import Input from "@material-ui/core/Input";
 import InputAdornment from "@material-ui/core/InputAdornment";
@@ -15,6 +16,7 @@ import React, { useState } from "react";
 import { connect, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { userLogin } from "./actions/auth.actions";
+import { TextField } from "@material-ui/core";
 
 const useStyles = makeStyles(theme => ({
   margin: {
@@ -42,11 +44,12 @@ const useStyles = makeStyles(theme => ({
   input: { color: "white", fontSize: "20px" }
 }));
 
-const Login = ({ match, isLoading }) => {
+const Login = ({ match, isLoading, error }) => {
   const classes = useStyles();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const dispatch = useDispatch();
+  console.log(error && error.invalid_fields && error.invalid_fields.username);
   const handleLogin = async () => {
     await dispatch(userLogin({ username, password }));
   };
@@ -79,12 +82,16 @@ const Login = ({ match, isLoading }) => {
                 <FormControl
                   style={{ color: "white" }}
                   className={classes.margin}
+                  error={
+                    error &&
+                    error.invalid_fields &&
+                    "username" in error.invalid_fields
+                  }
                 >
                   <InputLabel className={classes.input} htmlFor="input-login">
                     Login
                   </InputLabel>
                   <Input
-                    required
                     className={classes.input}
                     id="input-login"
                     placehoder="Login"
@@ -95,10 +102,26 @@ const Login = ({ match, isLoading }) => {
                       </InputAdornment>
                     }
                   />
+                  {error &&
+                    error.invalid_fields &&
+                    "username" in error.invalid_fields && (
+                      <FormHelperText>
+                        {error &&
+                          error.invalid_fields &&
+                          error.invalid_fields.username}
+                      </FormHelperText>
+                    )}
                 </FormControl>
               </Grid>
               <Grid>
-                <FormControl className={classes.margin}>
+                <FormControl
+                  className={classes.margin}
+                  error={
+                    error &&
+                    error.invalid_fields &&
+                    "password" in error.invalid_fields
+                  }
+                >
                   <InputLabel
                     className={classes.input}
                     htmlFor="input-password"
@@ -117,6 +140,15 @@ const Login = ({ match, isLoading }) => {
                       </InputAdornment>
                     }
                   />
+                  {error &&
+                    error.invalid_fields &&
+                    "password" in error.invalid_fields && (
+                      <FormHelperText>
+                        {error &&
+                          error.invalid_fields &&
+                          error.invalid_fields.password}
+                      </FormHelperText>
+                    )}
                 </FormControl>
               </Grid>
               <Grid item style={{ width: "40%" }}>
@@ -152,7 +184,8 @@ const Login = ({ match, isLoading }) => {
 
 const mapStateToProps = ({ user }) => {
   return {
-    isLoading: user.isFetching
+    isLoading: user.isFetching,
+    error: user.error
   };
 };
 export default connect(mapStateToProps)(Login);
