@@ -10,7 +10,7 @@ from models import User, Serie, Notification
 from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, get_tv_series_discover_by_genre
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
-from api_exceptions import InvalidForm
+from api_exceptions import InvalidForm, InvalidDBOperation
 from mail import update_all_series, init_mailing_context
 
 
@@ -98,7 +98,10 @@ def create_app():
         def add_user():
             username, email, password = validate_user_registration_form(request.json) # Might raise an InvalidForm exception
             user = User(username, email, password)
-            user.save_in_db()  # Might raise an IntegrityError if user already exist
+            try:
+                user.save_in_db()  # Might raise an IntegrityError if user already exist
+            except IntegrityError:
+                raise InvalidDBOperation("User already exist")
             return jsonify(user.as_dict())
 
         @app.route("/users/<int:user_id>", methods=['GET'])
@@ -137,7 +140,10 @@ def create_app():
             if serie is None:
                 serie = Serie.create_from_json(get_tv_serie(serie_id))
             if user.get_subscription_by_serie_id(serie_id) is None:
-                user.add_favorite_serie(serie)  # Might raise an IntegrityError
+                try:
+                    user.add_favorite_serie(serie)  # Might raise an IntegrityError
+                except IntegrityError:
+                    raise InvalidDBOperation("Subscription already exist")
                 try:
                     Notification.create_from_serie(user_id, serie) #Might raise a ValueError
                 except ValueError:
@@ -169,7 +175,10 @@ def create_app():
                 serie = Serie.create_from_json(get_tv_serie(serie_id))
             if user.get_subscription_by_serie_id(serie_id) is not None:
                 abort(403)
-            user.add_favorite_serie(serie)  # Might raise an IntegrityError
+            try:
+                user.add_favorite_serie(serie)  # Might raise an IntegrityError
+            except IntegrityError:
+                raise InvalidDBOperation("Subscription already exists")
             try:
                 Notification.create_from_serie(user_id, serie) # Might raise a Value Error
             except ValueError:
@@ -185,7 +194,10 @@ def create_app():
             serie = Serie.get_serie_by_id(serie_id)
             if not (serie in user.series):
                 abort(404)
-            user.delete_favorite_serie(serie)  # Might raise an IntegrityError
+            try :
+                user.delete_favorite_serie(serie)  # Might raise an IntegrityError
+            except IntegrityError:
+                raise InvalidDBOperation("Subscription already deleted")
             return jsonify({'user_id': user_id, 'serie_id': serie_id})
 
         @app.route("/users/<int:user_id>/notifications", methods=['GET'])
@@ -236,9 +248,9 @@ def create_app():
             app.logger.error(response)
             return response
 
-        @app.errorhandler(IntegrityError)
-        def handle_invalid_usage(error: IntegrityError):
-            response = jsonify({'status_code': 403, 'error_message': 'Integrity Error'}), 403
+        @app.errorhandler(InvalidDBOperation)
+        def handle_invalid_usage(error: InvalidDBOperation):
+            response = jsonify({"status_code": error.status_code, "error_message": error.error_message}), error.status_code
             app.logger.error(response)
             return response
 
