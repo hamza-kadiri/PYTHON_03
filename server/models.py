@@ -1,5 +1,5 @@
 from typing import List
-from sqlalchemy import Table, Column, Integer, SmallInteger, Numeric, String, ForeignKey, UniqueConstraint, desc, \
+from sqlalchemy import Table, Column,Boolean, Integer, SmallInteger, Numeric, String, ForeignKey, UniqueConstraint, desc, \
     inspect
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.orm import relationship
@@ -108,6 +108,21 @@ class Productor(Person, Base):
         d = {'gender': self.gender}
         d.update(super().as_dict())
         return d
+
+    @classmethod
+    def create_from_json(cls,json):
+        try:
+            profile_path = json['profile_path']
+        except KeyError:
+            profile_path = "null"
+        try:
+            gender = json['gender']
+        except KeyError:
+            gender = "null"
+        new_productor = Productor(json['id'], json['credit_id'], json['name'],
+                                  profile_path, gender)
+        new_productor.save_in_db()
+        return new_productor
 
     @classmethod
     def get_productor_by_id(cls, tmdb_id):
@@ -345,8 +360,7 @@ class Serie(Base, EqMixin):
         for genre in json['genres']:
             new_genre = Genre.get_genre_by_id(genre['id'])
             if new_genre is None:
-                new_genre = Genre(genre['id'], genre['name'])
-                new_genre.save_in_db()
+                new_genre = Genre.create_from_json(genre)
             serie_genres.append(new_genre)
         self.genres = serie_genres
         # Productors informations
@@ -354,12 +368,9 @@ class Serie(Base, EqMixin):
         for productor in json['created_by']:
             new_productor = Productor.get_productor_by_id(productor['id'])
             if new_productor is None:
-                new_productor = Productor(productor['id'], productor['credit_id'], productor['name'],
-                                          productor['profile_path'], productor['gender'])
-                new_productor.save_in_db()
+                new_productor = Productor.create_from_json(productor)
             serie_productors.append(new_productor)
         self.productors = serie_productors
-        # Seasons informations
         # Seasons informations
         serie_seasons = []
         for season in json['seasons']:
@@ -422,16 +433,13 @@ class Serie(Base, EqMixin):
         for genre in json['genres']:
             new_genre = Genre.get_genre_by_id(genre['id'])
             if new_genre is None:
-                new_genre = Genre(genre['id'], genre['name'])
-                new_genre.save_in_db()
+                new_genre = Genre.create_from_json(genre)
             serie.genres.append(new_genre)
         # Productors informations
         for productor in json['created_by']:
             new_productor = Productor.get_productor_by_id(productor['id'])
             if new_productor is None:
-                new_productor = Productor(productor['id'], productor['credit_id'], productor['name'],
-                                          productor['profile_path'], productor['gender'])
-                new_productor.save_in_db()
+                new_productor = Productor.create_from_json(productor)
             serie.productors.append(new_productor)
         # Seasons informations
         for season in json['seasons']:
@@ -541,7 +549,7 @@ class Notification(Base, EqMixin):
     creation_date = Column(Integer)
     backdrop_path = Column(String)
     poster_path = Column(String)
-    read = Column(SmallInteger)
+    read = Column(Boolean)
 
     def __init__(self, user_id: int, tmdb_id_serie: int, serie_name: str, name: str, season_number: int,
                  episode_number: int, next_air_date: str, backdrop_path: str, poster_path: str):
@@ -555,7 +563,7 @@ class Notification(Base, EqMixin):
         self.backdrop_path = backdrop_path
         self.poster_path = poster_path
         self.creation_date = time()
-        self.read = 0
+        self.read = False
 
     def compare_value(self):
         return self.id
@@ -567,7 +575,7 @@ class Notification(Base, EqMixin):
         delete_obj(self)
 
     def mark_as_read(self):
-        self.read = 1
+        self.read = True
         self.save_in_db()
 
     def as_dict(self):
