@@ -95,7 +95,14 @@ const Login = ({ match, isLoading, error }) => {
                     placehoder="Login"
                     onChange={e => setUsername(e.target.value)}
                     startAdornment={
-                      <InputAdornment position="start">
+                      <InputAdornment
+                        error={
+                          error &&
+                          error.invalid_fields &&
+                          "username" in error.invalid_fields
+                        }
+                        position="start"
+                      >
                         <AccountCircle />
                       </InputAdornment>
                     }

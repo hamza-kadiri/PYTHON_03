@@ -56,6 +56,7 @@ def create_app():
             # try to authenticate by token
             user = User.verify_auth_token(token)
             if not user:
+                abort(401)
                 return False
             g.user = user
             return True
@@ -245,6 +246,7 @@ def create_app():
         def forbidden_error(error):
             error_message = error.description or {"error_message": error}
             return jsonify({'status_code': 400, **error_message}), 400
+
         @app.errorhandler(401)
         def forbidden_error(error):
             return jsonify({'status_code': 401, 'error_message': 'Bad credentials'}), 401

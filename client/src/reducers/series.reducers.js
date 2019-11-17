@@ -21,7 +21,7 @@ export function suggestedSeries(state = suggestedSeriesInitialState, action) {
     case actions.RESET_SUGGESTED_SERIES:
       return suggestedSeriesInitialState;
     case actions.SUGGESTED_SERIES_ERROR:
-      return { ...selectedSerieInitialState, error: action.error };
+      return { ...suggestedSeriesInitialState, error: action.error };
     default:
       return state;
   }
