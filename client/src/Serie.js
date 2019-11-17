@@ -117,7 +117,9 @@ const Serie = ({
                   ) : (
                     <OutlinedLikeIcon className={classes.LikeIcon} />
                   )}
-                  Add to Favorites
+                  {subscriptions[match.params.id]
+                    ? "Remove Favorite"
+                    : "Favorite"}
                 </Button>
               </React.Fragment>
             )}

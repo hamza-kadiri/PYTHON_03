@@ -283,17 +283,33 @@ function PrimarySearchAppBar({
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-      <MenuItem>
-        <IconButton
-          onClick={handleNotificationMenuOpen}
-          aria-label="show 11 new notifications"
-          color="inherit"
-        >
-          <Badge badgeContent={11} color="secondary">
+      <MenuItem onClick={handleNotificationMenuOpen}>
+        <IconButton color="inherit">
+          <Badge
+            color="secondary"
+            invisible={
+              notifications.filter(
+                notification =>
+                  notification.read === false &&
+                  notification.next_air_date != null
+              ).length === 0
+            }
+            badgeContent={
+              <Typography color="textPrimary" variant="caption">
+                {
+                  notifications.filter(
+                    notification =>
+                      notification.read === false &&
+                      notification.next_air_date != null
+                  ).length
+                }
+              </Typography>
+            }
+          >
             <NotificationsIcon />
           </Badge>
         </IconButton>
-        <p>Notifications</p>
+        Notifications
       </MenuItem>
       <MenuItem onClick={handleProfileMenuOpen}>
         <IconButton
@@ -422,17 +438,13 @@ function PrimarySearchAppBar({
             </div>
             <div className={classes.grow} />
             <div className={classes.sectionDesktop}>
-              <IconButton
-                onClick={handleNotificationMenuOpen}
-                aria-label="show 17 new notifications"
-                color="inherit"
-              >
+              <IconButton onClick={handleNotificationMenuOpen} color="inherit">
                 <Badge
                   color="secondary"
                   invisible={
                     notifications.filter(
                       notification =>
-                        notification.read === 0 &&
+                        notification.read === false &&
                         notification.next_air_date != null
                     ).length === 0
                   }
@@ -441,7 +453,7 @@ function PrimarySearchAppBar({
                       {
                         notifications.filter(
                           notification =>
-                            notification.read === 0 &&
+                            notification.read === false &&
                             notification.next_air_date != null
                         ).length
                       }

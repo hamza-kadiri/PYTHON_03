@@ -6,7 +6,7 @@ import "./SerieThumbnail.scss";
 import ShowDetailsButton from "./ShowDetailsButton";
 
 const SerieThumbnail = ({ serie }) => (
-  <SliderContext.Consumer>
+  <SliderContext>
     {({ onSelectSlide, currentSlide, elementRef }) => {
       const isActive = currentSlide && currentSlide.id === serie.id;
 
@@ -28,7 +28,7 @@ const SerieThumbnail = ({ serie }) => (
         </div>
       );
     }}
-  </SliderContext.Consumer>
+  </SliderContext>
 );
 
 export default SerieThumbnail;
