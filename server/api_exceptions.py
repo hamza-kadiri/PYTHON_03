@@ -16,6 +16,17 @@ class InvalidForm(Exception):
 
     def to_dict(self):
         final = {}
-        for invalid_field in self.invalid_fields: 
-            final = {**final,**invalid_field.to_dict()}
+        for invalid_field in self.invalid_fields:
+            final = {**final, **invalid_field.to_dict()}
         return final
+
+
+class InvalidDBOperation(Exception):
+    status_code = 403
+
+    def __init__(self, error_message: str):
+        Exception.__init__(self)
+        self.error_message = error_message
+
+    def to_dict(self):
+        return {"error_message": self.error_message}
