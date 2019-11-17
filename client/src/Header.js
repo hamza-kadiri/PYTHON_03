@@ -1,9 +1,12 @@
 import AppBar from "@material-ui/core/AppBar";
+import Avatar from "@material-ui/core/Avatar";
 import Badge from "@material-ui/core/Badge";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import IconButton from "@material-ui/core/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment";
+import ListItemAvatar from "@material-ui/core/ListItemAvatar";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
+import ListItemText from "@material-ui/core/ListItemText";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import { fade, makeStyles } from "@material-ui/core/styles";
@@ -11,22 +14,25 @@ import TextField from "@material-ui/core/TextField";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import AccountCircle from "@material-ui/icons/AccountCircleOutlined";
+import ClearIcon from "@material-ui/icons/ClearOutlined";
 import MenuIcon from "@material-ui/icons/MenuOutlined";
 import MoreIcon from "@material-ui/icons/MoreVertOutlined";
 import NotificationsIcon from "@material-ui/icons/NotificationsOutlined";
 import SearchIcon from "@material-ui/icons/SearchOutlined";
-import ClearIcon from "@material-ui/icons/ClearOutlined";
 import React, { useEffect, useState } from "react";
 import Autosuggest from "react-autosuggest";
 import { connect, useDispatch } from "react-redux";
-import { history } from "./helpers/history";
 import { withRouter } from "react-router-dom";
-import {
-  fetchSuggestedSeries,
-  actions as seriesActions
-} from "./actions/series.actions";
 import { userLogout } from "./actions/auth.actions";
-import { getNotifications } from "./actions/notifications.actions";
+import {
+  getNotifications,
+  markAsReadNotifications
+} from "./actions/notifications.actions";
+import {
+  actions as seriesActions,
+  fetchSuggestedSeries
+} from "./actions/series.actions";
+import { history } from "./helpers/history";
 
 const useStyles = makeStyles(theme => {
   return {
@@ -45,7 +51,7 @@ const useStyles = makeStyles(theme => {
     },
 
     appBar: {
-      backgroundColor: fade(theme.palette.primary.main, 0.05),
+      backgroundColor: fade(theme.palette.primary.main, 0.4),
       position: "fixed",
       zIndex: 10
     },
@@ -99,12 +105,22 @@ const useStyles = makeStyles(theme => {
       height: theme.spacing(2)
     },
     input: {
-      color: theme.palette.common.white
+      color: theme.palette.common.white,
+      paddingLeft: "10px"
     },
     suggestions: {
       root: {
         color: theme.palette.common.white
       }
+    },
+    inline: {
+      display: "inline",
+      color: fade(theme.palette.common.white, 0.7)
+    },
+    bigAvatar: {
+      width: 55,
+      height: 55,
+      marginRight: 10
     }
   };
 });
@@ -121,13 +137,12 @@ function PrimarySearchAppBar({
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const [value, setValue] = useState("");
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [isLoadingSignout, setIsLoadingSignout] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(getNotifications(user.id));
-  }, [user]);
+  }, [user, dispatch]);
   useEffect(() => {
     setValue(selectedSerie.serie.name);
   }, [selectedSerie]);
@@ -167,6 +182,7 @@ function PrimarySearchAppBar({
 
   const handleNotificationsClose = () => {
     setNotificationsAnchorEl(null);
+    dispatch(markAsReadNotifications(user.id, notifications));
   };
 
   const handleMobileMenuOpen = event => {
@@ -197,19 +213,62 @@ function PrimarySearchAppBar({
     </Menu>
   );
 
+  const renderSerieNotification = (notification, index) => (
+    <MenuItem key={`notification-${index}`} alignItems="flex-start">
+      <ListItemAvatar>
+        <Badge
+          color="primary"
+          anchorOrigin={{
+            horizontal: "left",
+            vertical: "top"
+          }}
+          overlap="circle"
+          badgeContent=" "
+          invisible={notification.read}
+        >
+          <Avatar src={notification.poster_url} className={classes.bigAvatar} />
+        </Badge>
+      </ListItemAvatar>
+      <ListItemText
+        primary={
+          <Typography>
+            {notification.serie_name} —{" "}
+            {new Date(notification.next_air_date).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric"
+            })}
+          </Typography>
+        }
+        secondary={
+          <React.Fragment>
+            <Typography
+              component="span"
+              variant="body2"
+              className={classes.inline}
+            >
+              Season : {notification.season_number} - Episode{" "}
+              {notification.episode_number}
+            </Typography>{" "}
+          </React.Fragment>
+        }
+      />
+    </MenuItem>
+  );
   const renderNotifications = (
     <Menu
       anchorEl={notificationsAnchorEl}
-      anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
       id={menuId}
       keepMounted
-      transformOrigin={{ vertical: "top", horizontal: "right" }}
+      transformOrigin={{ vertical: "bottom", horizontal: "left" }}
       open={isNotificationsOpen}
       onClose={handleNotificationsClose}
     >
-      {notifications.map((notification, index) => (
-        <MenuItem>{notification.serie_name}</MenuItem>
-      ))}
+      {notifications
+        .filter(notification => notification.next_air_date != null)
+        .map((notification, index) => {
+          return renderSerieNotification(notification, index);
+        })}
     </Menu>
   );
 
@@ -289,11 +348,7 @@ function PrimarySearchAppBar({
           className: classes.input,
           endAdornment: (
             <InputAdornment position="end">
-              {isLoadingSuggestions ? (
-                <IconButton className={classes.input} aria-label="search">
-                  <CircularProgress size={16} />
-                </IconButton>
-              ) : value == "" ? (
+              {value === "" ? (
                 <IconButton className={classes.input} aria-label="search">
                   <SearchIcon />
                 </IconButton>
@@ -326,7 +381,7 @@ function PrimarySearchAppBar({
   };
 
   const inputProps = {
-    placeholder: "Rechercher une série",
+    placeholder: "Search a serie",
     value,
     onChange,
     classes
@@ -372,7 +427,27 @@ function PrimarySearchAppBar({
                 aria-label="show 17 new notifications"
                 color="inherit"
               >
-                <Badge badgeContent={notifications.length} color="secondary">
+                <Badge
+                  color="secondary"
+                  invisible={
+                    notifications.filter(
+                      notification =>
+                        notification.read === 0 &&
+                        notification.next_air_date != null
+                    ).length === 0
+                  }
+                  badgeContent={
+                    <Typography color="textPrimary" variant="caption">
+                      {
+                        notifications.filter(
+                          notification =>
+                            notification.read === 0 &&
+                            notification.next_air_date != null
+                        ).length
+                      }
+                    </Typography>
+                  }
+                >
                   <NotificationsIcon />
                 </Badge>
               </IconButton>

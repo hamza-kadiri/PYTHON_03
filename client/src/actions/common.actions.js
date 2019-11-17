@@ -6,7 +6,7 @@ export const handleError = (error, errorAction) => {
       const errorResponse = await error.response;
       const errorMessage = await errorResponse.json();
       const status = errorResponse.status;
-      if (status == 401) {
+      if (status === 401) {
         dispatch(userLogout());
       }
       dispatch({

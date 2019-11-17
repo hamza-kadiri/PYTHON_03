@@ -7,7 +7,8 @@ export const actions = {
   REQUEST_USER_TOKEN: "REQUEST_USER_TOKEN",
   RECEIVE_USER_TOKEN: "RECEIVE_USER_TOKEN",
   USER_TOKEN_ERROR: "USER_TOKEN_ERROR",
-  USER_LOGOUT: "USER_LOGOUT"
+  USER_LOGOUT: "USER_LOGOUT",
+  RESET_APP: "RESET_APP"
 };
 
 const requestUserToken = user => {
@@ -45,9 +46,12 @@ export const userLogin = user => {
 };
 
 export const userLogout = () => {
-  localStorage.removeItem("user");
-  history.push("/");
-  return {
-    type: actions.USER_LOGOUT
+  return async dispatch => {
+    localStorage.removeItem("user");
+    history.push("/");
+    await dispatch({ type: actions.RESET_APP });
+    dispatch({
+      type: actions.USER_LOGOUT
+    });
   };
 };

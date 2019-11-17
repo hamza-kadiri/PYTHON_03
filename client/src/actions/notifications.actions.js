@@ -1,5 +1,4 @@
 import clientWeb from "../helpers/clientWeb";
-import { history } from "../helpers/history";
 import { handleError } from "./common.actions";
 
 export const actions = {
@@ -38,6 +37,25 @@ export const getNotifications = user_id => {
       );
     } catch (error) {
       dispatch(handleError(error, actions.ERROR_GET_NOTIFICATIONS));
+    }
+  };
+};
+
+export const markAsReadNotifications = (user_id, notifications) => {
+  return async dispatch => {
+    try {
+      await dispatch(
+        requestNotifications(actions.REQUEST_MARK_AS_READ_, user_id)
+      );
+      const response = await clientWeb.post(`users/${user_id}/notifications`, {
+        json: {
+          notifications: notifications.map(notification => notification.id)
+        }
+      });
+      const json = await response.json();
+      await dispatch(receiveNotifications(actions.SUCCESS_MARK_AS_READ, json));
+    } catch (error) {
+      dispatch(handleError(error, actions.ERROR_MARK_AS_READ));
     }
   };
 };

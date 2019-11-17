@@ -6,11 +6,13 @@ import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import LikeIcon from "@material-ui/icons/Favorite";
 import OutlinedLikeIcon from "@material-ui/icons/FavoriteBorder";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { connect, useDispatch } from "react-redux";
-import { fetchSelectedSerie } from "./actions/series.actions";
-import { toggleFavorite, getIsFavorite } from "./actions/series.actions";
-import IconButton from "@material-ui/core/IconButton";
+import {
+  fetchSelectedSerie,
+  getIsFavorite,
+  toggleFavorite
+} from "./actions/series.actions";
 
 const useStyles = makeStyles(theme => ({
   LikeIcon: {
@@ -31,7 +33,7 @@ const Serie = ({
   useEffect(() => {
     dispatch(fetchSelectedSerie(match.params.id));
     dispatch(getIsFavorite(user.id, match.params.id));
-  }, [match.params.id]);
+  }, [match.params.id, dispatch, user.id]);
 
   const handleLike = async () => {
     await dispatch(toggleFavorite(user.id, serie.id));

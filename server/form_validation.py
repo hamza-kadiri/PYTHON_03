@@ -67,7 +67,7 @@ def validate_add_serie_form(json):
 def validate_notifications_list_form(json):
     try:
         array_ids = json['notifications']
-        array_ids_valid = checkers.is_iterable(array_ids)
+        array_ids_valid = True
     except TypeError:
         array_ids_valid = False
     invalid_fields = []
@@ -75,7 +75,7 @@ def validate_notifications_list_form(json):
         invalid_fields.append(InvalidField('array_ids', f'Invalid value (Must be an iterable)'))
     else:
         for notif_id in array_ids:
-            notif_id_valid = checkers.is_string(notif_id)
+            notif_id_valid = True
             if not notif_id_valid:
                 invalid_fields.append(InvalidField('array_ids', f'Invalid id : {id}'))
     if len(invalid_fields) > 0:

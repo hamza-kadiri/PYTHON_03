@@ -429,7 +429,7 @@ const Home = ({ suggestions, query }) => {
             ))}
           </Slider>
         </React.Fragment>
-      ) : query != "" ? (
+      ) : query !== "" ? (
         <React.Fragment>
           <Typography style={{ margin: "auto" }} variant="h5" component="h5">
             No result for: "<b>{query}</b>"

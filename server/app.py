@@ -41,7 +41,7 @@ def create_app():
     # Set auth
     auth = HTTPTokenAuth(scheme='Token')
     #Init CRON
-    init_jobs(app)
+    #init_jobs(app)
     #Init contexts
     init_tmdb_context(app)
     init_mailing_context(app)
@@ -194,14 +194,21 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             notifications = Notification.get_notifications_by_user(user)
-            return jsonify({"notifications": [notification.as_dict() for notification in notifications]})
+            notifications_array = []
+            poster_base_url = app.config["POSTER_BASE_URL"]
+            for notification in notifications :
+                result = notification.as_dict()
+                if result['poster_path'] is not None:
+                    result['poster_url'] = f"{poster_base_url}{result['poster_path']}"  
+                notifications_array.append(result)             
+            return jsonify({"notifications": notifications_array})
 
         @app.route("/users/<int:user_id>/notifications", methods=['POST'])
         @auth.login_required
         def mark_notifications_as_read(user_id: int):
             if user_id != g.user.id:
                 abort(403)
-            array_ids = validate_notifications_list_form(request.form)
+            array_ids = validate_notifications_list_form(request.json)
             responses_array = []
             response_status = None
             for notification_id in array_ids:
@@ -220,7 +227,7 @@ def create_app():
                     response_status = notif_status
                 else:
                     response_status = 207
-            return jsonify({'responses': responses_array}), response_status
+            return get_notifications(user_id)
 
         @app.errorhandler(InvalidForm)
         def handle_invalid_usage(error: InvalidForm):

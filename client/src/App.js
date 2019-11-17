@@ -1,5 +1,5 @@
 import orange from "@material-ui/core/colors/orange";
-import red from "@material-ui/core/colors/red";
+import grey from "@material-ui/core/colors/grey";
 import { createMuiTheme, MuiThemeProvider } from "@material-ui/core/styles";
 import React from "react";
 import { Router, Redirect, Route, Switch } from "react-router-dom";
@@ -41,10 +41,30 @@ const GuestRoute = ({ component: Component, ...rest }) => (
 const theme = createMuiTheme({
   palette: {
     primary: orange,
-    secondary: red
+    secondary: grey,
+    text: {
+      primary: "#ffffff",
+      secondary: "#00000"
+    }
   },
   status: {
     danger: "orange"
+  },
+  overrides: {
+    MuiMenu: {
+      paper: {
+        backgroundColor: "rgba(255, 152, 0, 0.85)",
+        color: "white"
+      }
+    },
+    MuiBadge: {
+      colorPrimary: {
+        backgroundColor: orange[300]
+      },
+      colorSecondary: {
+        backgroundColor: orange[800]
+      }
+    }
   }
 });
 

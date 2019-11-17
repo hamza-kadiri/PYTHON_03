@@ -1,5 +1,6 @@
 import clientWeb from "../helpers/clientWeb";
 import { handleError } from "./common.actions";
+import { getNotifications } from "./notifications.actions";
 export const actions = {
   REQUEST_SUGGESTED_SERIES: "REQUEST_SUGGESTED_SERIES",
   RECEIVE_SUGGESTED_SERIES: "RECEIVE_SUGGESTED_SERIES",
@@ -38,7 +39,7 @@ const receiveSuggestedSeries = (query, series) => {
 
 export const fetchSuggestedSeries = query => {
   return async dispatch => {
-    if (query == "") {
+    if (query === "") {
       dispatch({ type: actions.RESET_SUGGESTED_SERIES });
     } else {
       dispatch(requestSuggestedSeries(query));
@@ -125,6 +126,7 @@ export const toggleFavorite = (user_id, serie_id) => {
 
       const json = await response.json();
       dispatch(receiveFavorite(actions.SUCCESS_TOGGLE_FAVORITE, json));
+      dispatch(getNotifications(user_id));
     } catch (error) {
       dispatch(handleError(error, actions.ERROR_TOGGLE_FAVORITE));
     }

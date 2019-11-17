@@ -111,7 +111,7 @@ export function favoriteSeries(state = favoriteSeriesInitialState, action) {
           ...state.subscriptions,
           ...action.series
             .map(serie => serie.tmdb_id_serie)
-            .reduce((acc, id_serie) => ((acc[id_serie] = true), acc), {})
+            .reduce((acc, id_serie) => ({ ...acc, [id_serie]: true }), {})
         }
       };
     case actions.ERROR_GET_ALL_FAVORITE:

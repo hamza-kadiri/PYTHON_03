@@ -8,7 +8,7 @@ import { signup } from "./signup.reducer";
 import { notifications } from "./notificiations.reducer";
 import { combineReducers } from "redux";
 
-const rootReducer = combineReducers({
+const allReducers = combineReducers({
   suggestedSeries,
   selectedSerie,
   favoriteSeries,
@@ -16,5 +16,12 @@ const rootReducer = combineReducers({
   signup,
   notifications
 });
+
+const rootReducer = (state, action) => {
+  if (action.type === "RESET_APP") {
+    state = undefined;
+  }
+  return allReducers(state, action);
+};
 
 export default rootReducer;

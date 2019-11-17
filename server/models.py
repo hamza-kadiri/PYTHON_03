@@ -272,6 +272,7 @@ class Serie(Base, EqMixin):
     name = Column(String)
     overview = Column(String)
     backdrop_path = Column(String, nullable=True)
+    poster_path = Column(String, nullable=True)
     nb_seasons = Column(SmallInteger)
     nb_episodes = Column(SmallInteger)
     next_episode_name = Column(String)
@@ -287,7 +288,7 @@ class Serie(Base, EqMixin):
     users = relationship("User", secondary=subscriptions_table, back_populates="series")
     seasons = relationship('Season', backref='series', lazy=True)
 
-    def __init__(self, tmdb_id_serie: int, name: str, overview: str, backdrop_path: str, nb_seasons: int,
+    def __init__(self, tmdb_id_serie: int, name: str, overview: str, backdrop_path: str, poster_path: str, nb_seasons: int,
                  nb_episodes: int, next_episode_name: str, next_episode_air_date: str, next_episode_season_number: int,
                  next_episode_episode_number: int, vote_count: int, vote_average: float, genres: List[Genre],
                  productors: List[Productor], seasons: List[Season]):
@@ -295,6 +296,7 @@ class Serie(Base, EqMixin):
         self.name = name
         self.overview = overview
         self.backdrop_path = backdrop_path
+        self.poster_path = poster_path
         self.nb_seasons = nb_seasons
         self.nb_episodes = nb_episodes
         self.next_episode_name = next_episode_name
@@ -318,6 +320,7 @@ class Serie(Base, EqMixin):
         self.name = json['name']
         self.overview = json['overview']
         self.backdrop_path = json['backdrop_path']
+        self.backdrop_path = json['poster_path']
         self.nb_seasons = json['number_of_seasons']
         self.nb_episodes = json['number_of_episodes']
         self.vote_count = json['vote_count']
@@ -375,6 +378,7 @@ class Serie(Base, EqMixin):
     def as_dict(self):
         return {'tmdb_id_serie': self.tmdb_id_serie, 'name': self.name, 'overview': self.overview,
                 'backdrop_path': self.backdrop_path,
+                'poster_path': self.poster_path,
                 'nb_seasons': self.nb_seasons, 'nb_episodes': self.nb_episodes,
                 'next_episode_name': self.next_episode_name, 'next_episode_air_date': self.next_episode_air_date,
                 'next_episode_season_number': self.next_episode_season_number,
@@ -410,7 +414,7 @@ class Serie(Base, EqMixin):
             next_episode_air_date = next_episode['air_date']
             next_episode_season_number = next_episode['season_number']
             next_episode_episode_number = next_episode['episode_number']
-        serie = Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['number_of_seasons'],
+        serie = Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['poster_path'], json['number_of_seasons'],
                       json['number_of_episodes'], next_episode_name, next_episode_air_date, next_episode_season_number,
                       next_episode_episode_number, json['vote_count'], json['vote_average'], [], [], [])
         serie.save_in_db()
@@ -536,10 +540,11 @@ class Notification(Base, EqMixin):
     next_air_date = Column(String)
     creation_date = Column(Integer)
     backdrop_path = Column(String)
+    poster_path = Column(String)
     read = Column(SmallInteger)
 
     def __init__(self, user_id: int, tmdb_id_serie: int, serie_name: str, name: str, season_number: int,
-                 episode_number: int, next_air_date: str, backdrop_path: str):
+                 episode_number: int, next_air_date: str, backdrop_path: str, poster_path: str):
         self.user_id = user_id
         self.tmdb_id_serie = tmdb_id_serie
         self.serie_name = serie_name
@@ -548,6 +553,7 @@ class Notification(Base, EqMixin):
         self.episode_number = episode_number
         self.next_air_date = next_air_date
         self.backdrop_path = backdrop_path
+        self.poster_path = poster_path
         self.creation_date = time()
         self.read = 0
 
@@ -567,13 +573,13 @@ class Notification(Base, EqMixin):
     def as_dict(self):
         return {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie,
                 'serie_name': self.serie_name, 'name': self.name, 'episode_number': self.episode_number,
-                'season_number': self.season_number, 'next_air_date': self.next_air_date, 'backdrop_path': self.backdrop_path, 'read': self.read}
+                'season_number': self.season_number, 'next_air_date': self.next_air_date, 'backdrop_path': self.backdrop_path, 'read': self.read, 'poster_path': self.poster_path }
 
     @classmethod
     def create_from_serie(cls, user_id: int, serie: Serie):
         notif = Notification(user_id, serie.tmdb_id_serie, serie.name, serie.next_episode_name,
                              serie.next_episode_season_number, serie.next_episode_episode_number,
-                             serie.next_episode_air_date, serie.backdrop_path)
+                             serie.next_episode_air_date, serie.backdrop_path, serie.poster_path)
         if notif.next_air_date == "null":
             raise ValueError("No air date for the notification")
         else:
