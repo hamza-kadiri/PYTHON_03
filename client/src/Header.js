@@ -22,7 +22,7 @@ import SearchIcon from "@material-ui/icons/SearchOutlined";
 import React, { useEffect, useState } from "react";
 import Autosuggest from "react-autosuggest";
 import { connect, useDispatch } from "react-redux";
-import { withRouter } from "react-router-dom";
+import { withRouter, NavLink } from "react-router-dom";
 import { userLogout } from "./actions/auth.actions";
 import {
   getNotifications,
@@ -33,6 +33,8 @@ import {
   fetchSuggestedSeries
 } from "./actions/series.actions";
 import { history } from "./helpers/history";
+import { Button } from "@material-ui/core";
+import { Link } from "react-router-dom/";
 
 const useStyles = makeStyles(theme => {
   return {
@@ -214,7 +216,12 @@ function PrimarySearchAppBar({
   );
 
   const renderSerieNotification = (notification, index) => (
-    <MenuItem key={`notification-${index}`} alignItems="flex-start">
+    <MenuItem
+      component={Link}
+      to={`/serie/${notification.tmdb_id_serie}`}
+      key={`notification-${index}`}
+      alignItems="flex-start"
+    >
       <ListItemAvatar>
         <Badge
           color="primary"
@@ -407,17 +414,15 @@ function PrimarySearchAppBar({
       <AppBar className={classes.appBar}>
         {localStorage.getItem("user") && (
           <Toolbar style={{ color: "white" }}>
-            <IconButton
-              edge="start"
-              className={classes.menuButton}
-              color="inherit"
-              aria-label="open drawer"
+            <Button
+              style={{ textTransform: "none" }}
+              component={NavLink}
+              to="/"
             >
-              <MenuIcon />
-            </IconButton>
-            <Typography className={classes.title} variant="h6" noWrap>
-              Séries Préférées
-            </Typography>
+              <Typography className={classes.title} variant="h6" noWrap>
+                Favorite Series
+              </Typography>
+            </Button>
             <div className={classes.search}>
               <Autosuggest
                 suggestions={suggestions}

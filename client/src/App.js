@@ -11,6 +11,7 @@ import Home from "./Home";
 import Login from "./Login";
 import Serie from "./Serie";
 import Signup from "./Signup";
+import { Icon } from "@material-ui/core";
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route
@@ -63,6 +64,24 @@ const theme = createMuiTheme({
       },
       colorSecondary: {
         backgroundColor: orange[800]
+      }
+    },
+    MuiSelect: {
+      root: {
+        borderBottom: "2px solid white"
+      },
+      select: {
+        color: "white"
+      },
+      icon: {
+        color: "white"
+      }
+    },
+    MuiDivider: {
+      root: {
+        marginLeft: "5px",
+        marginRight: "5px",
+        backgroundColor: "rgb(255,255,255,0.08)"
       }
     }
   }

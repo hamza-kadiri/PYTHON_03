@@ -18,7 +18,10 @@ export const actions = {
   ERROR_GET_ALL_FAVORITE: "ERROR_GET_ALL_FAVORITE",
   REQUEST_GET_IS_FAVORITE: "REQUEST_GET_IS_FAVORITE",
   SUCCESS_GET_IS_FAVORITE: "SUCCESS_GET_IS_FAVORITE",
-  ERROR_GET_IS_FAVORITE: "ERROR_GET_IS_FAVORITE"
+  ERROR_GET_IS_FAVORITE: "ERROR_GET_IS_FAVORITE",
+  REQUEST_DISCOVER_SERIES: "REQUEST_DISCOVER_SERIES",
+  SUCCESS_DISCOVER_SERIES: "SUCCESS_DISCOVER_SERIES",
+  ERROR_DISCOVER_SERIES: "ERROR_DISCOVER_SERIES"
 };
 
 const requestSuggestedSeries = query => {
@@ -158,7 +161,33 @@ export const getAllFavorite = user_id => {
       const json = await response.json();
       dispatch(receiveAllFavorite(json));
     } catch (error) {
-      dispatch(handleError(error, actions.ERROR_GET_FAVORITE));
+      dispatch(handleError(error, actions.ERROR_GET_ALL_FAVORITE));
+    }
+  };
+};
+
+const requestDiscoverSeries = () => {
+  return {
+    type: actions.REQUEST_DISCOVER_SERIES
+  };
+};
+
+const receiveDiscoverSeries = response => {
+  return {
+    type: actions.SUCCESS_DISCOVER_SERIES,
+    categories: response
+  };
+};
+
+export const getDiscoverSeries = () => {
+  return async dispatch => {
+    dispatch(requestDiscoverSeries());
+    try {
+      const response = await clientWeb(`discover`);
+      const json = await response.json();
+      dispatch(receiveDiscoverSeries(json));
+    } catch (error) {
+      dispatch(handleError(error, actions.ERROR_DISCOVER_SERIES));
     }
   };
 };

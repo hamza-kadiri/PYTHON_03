@@ -35,7 +35,7 @@ const selectedSerieInitialState = {
 export function selectedSerie(state = selectedSerieInitialState, action) {
   switch (action.type) {
     case actions.REQUEST_SERIE:
-      return { ...state, isFetching: true };
+      return { ...selectedSerieInitialState, isFetching: true };
     case actions.RECEIVE_SERIE:
       return {
         ...state,
@@ -106,7 +106,9 @@ export function favoriteSeries(state = favoriteSeriesInitialState, action) {
       return {
         ...state,
         isFetching: false,
-        series: action.series,
+        series: action.series.map(serie => {
+          return { ...serie, id: serie.tmdb_id_serie };
+        }),
         subscriptions: {
           ...state.subscriptions,
           ...action.series
@@ -119,6 +121,28 @@ export function favoriteSeries(state = favoriteSeriesInitialState, action) {
         ...state,
         isFetching: false
       };
+    default:
+      return state;
+  }
+}
+
+const discoverInitialState = {
+  isFetching: false,
+  categories: []
+};
+
+export function discoverSeries(state = discoverInitialState, action) {
+  switch (action.type) {
+    case actions.REQUEST_DISCOVER_SERIES:
+      return { ...state, isFetching: true };
+    case actions.SUCCESS_DISCOVER_SERIES:
+      return {
+        ...state,
+        isFetching: false,
+        categories: action.categories
+      };
+    case actions.ERROR_DISCOVER_SERIES:
+      return { ...discoverInitialState, error: action.error };
     default:
       return state;
   }

@@ -1,0 +1,7 @@
+{
+  "python.pythonPath": "/home/smokoco/.pyenv/versions/3.7.3/bin/python",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

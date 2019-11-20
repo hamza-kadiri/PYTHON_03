@@ -10,6 +10,7 @@ class Config(object):
     """API Config"""
     API_KEY = "84eae13884eb7a9e47fcc760ca08f593"
     API_URL = "https://api.themoviedb.org/3"
+    ORIGINAL_BASE_URL = "https://image.tmdb.org/t/p/original"
     THUMBNAIL_BASE_URL = "https://image.tmdb.org/t/p/w300"
     BACKDROP_BASE_URL = "https://image.tmdb.org/t/p/w1280"
     POSTER_BASE_URL = "https://image.tmdb.org/t/p/w185"

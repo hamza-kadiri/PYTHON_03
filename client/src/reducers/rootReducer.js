@@ -1,7 +1,8 @@
 import {
   suggestedSeries,
   selectedSerie,
-  favoriteSeries
+  favoriteSeries,
+  discoverSeries
 } from "./series.reducers";
 import { user } from "./auth.reducer";
 import { signup } from "./signup.reducer";
@@ -12,6 +13,7 @@ const allReducers = combineReducers({
   suggestedSeries,
   selectedSerie,
   favoriteSeries,
+  discoverSeries,
   user,
   signup,
   notifications

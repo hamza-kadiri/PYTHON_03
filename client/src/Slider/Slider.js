@@ -1,5 +1,5 @@
 import cx from "classnames";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Content from "./Content";
 import SliderContext from "./context";
 import SlideButton from "./SlideButton";
@@ -8,7 +8,12 @@ import SliderWrapper from "./SliderWrapper";
 import useSizeElement from "./useSizeElement";
 import useSliding from "./useSliding";
 
-const Slider = ({ children, activeSlide }) => {
+const Slider = ({ children, activeSlide, singleSlider, episode }) => {
+  useEffect(() => {
+    return () => {
+      handleClose();
+    };
+  }, [children]);
   const [currentSlide, setCurrentSlide] = useState(activeSlide);
   let { width, elementRef } = useSizeElement();
   let {
@@ -49,7 +54,14 @@ const Slider = ({ children, activeSlide }) => {
         {hasPrev && <SlideButton onClick={handlePrev} type="prev" />}
         {hasNext && <SlideButton onClick={handleNext} type="next" />}
       </SliderWrapper>
-      {currentSlide && <Content serie={currentSlide} onClose={handleClose} />}
+      {currentSlide && (
+        <Content
+          singleSlider={singleSlider}
+          episode={episode}
+          serie={currentSlide}
+          onClose={handleClose}
+        />
+      )}
     </SliderContext.Provider>
   );
 };

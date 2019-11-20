@@ -1,5 +1,5 @@
 from typing import List
-from sqlalchemy import Table, Column,Boolean, Integer, SmallInteger, Numeric, String, ForeignKey, UniqueConstraint, desc, \
+from sqlalchemy import Table, Column, Boolean, Integer, SmallInteger, Numeric, String, ForeignKey, UniqueConstraint, desc, \
     inspect
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.orm import relationship
@@ -41,15 +41,19 @@ class EqMixin(object):
 
 subscriptions_table = Table('subscriptions', Base.metadata,
                             Column('user_id', Integer, ForeignKey('users.id')),
-                            Column('tmdb_id_serie', Integer, ForeignKey('series.tmdb_id_serie'))
+                            Column('tmdb_id_serie', Integer,
+                                   ForeignKey('series.tmdb_id_serie'))
                             )
 
 series_genres_table = Table('series_genres', Base.metadata,
-                            Column('tmdb_id_genre', Integer, ForeignKey('genres.tmdb_id_genre')),
-                            Column('tmdb_id_serie', Integer, ForeignKey('series.tmdb_id_serie'))
+                            Column('tmdb_id_genre', Integer,
+                                   ForeignKey('genres.tmdb_id_genre')),
+                            Column('tmdb_id_serie', Integer,
+                                   ForeignKey('series.tmdb_id_serie'))
                             )
 series_productors_table = Table('series_productors', Base.metadata,
-                                Column('tmdb_id_productor', Integer, ForeignKey('productors.tmdb_id')),
+                                Column('tmdb_id_productor', Integer,
+                                       ForeignKey('productors.tmdb_id')),
                                 Column('tmdb_id_serie', Integer, ForeignKey('series.tmdb_id_serie')))
 
 
@@ -95,7 +99,8 @@ class Actor(Person, Base):
 class Productor(Person, Base):
     __tablename__ = 'productors'
     gender = Column(String)
-    series = relationship("Serie", secondary=series_productors_table, back_populates="productors")
+    series = relationship(
+        "Serie", secondary=series_productors_table, back_populates="productors")
 
     def __init__(self, tmdb_id: int, credit_id: str, name: str, profile_path: str, gender: int):
         Person.__init__(self, tmdb_id, credit_id, name, profile_path)
@@ -110,7 +115,7 @@ class Productor(Person, Base):
         return d
 
     @classmethod
-    def create_from_json(cls,json):
+    def create_from_json(cls, json):
         try:
             profile_path = json['profile_path']
         except KeyError:
@@ -138,7 +143,8 @@ class Genre(Base, EqMixin):
     __tablename__ = 'genres'
     tmdb_id_genre = Column(SmallInteger, primary_key=True)
     name = Column(String)
-    series = relationship("Serie", secondary=series_genres_table, back_populates="genres")
+    series = relationship(
+        "Serie", secondary=series_genres_table, back_populates="genres")
 
     def __init__(self, tmdb_id_genre: int, name: str):
         self.tmdb_id_genre = tmdb_id_genre
@@ -155,7 +161,7 @@ class Genre(Base, EqMixin):
 
     @classmethod
     def create_from_json(cls, json: dict):
-        genre = Genre(json['id'],json['name'])
+        genre = Genre(json['id'], json['name'])
         genre.save_in_db()
         return genre
 
@@ -180,7 +186,8 @@ class Episode(Base, EqMixin):
     vote_average = Column(Numeric(3, 1))
     air_date = Column(String)
     still_path = Column(String, nullable=True)
-    tmdb_id_season = Column(Integer, ForeignKey('seasons.tmdb_id_season'), nullable=False)
+    tmdb_id_season = Column(Integer, ForeignKey(
+        'seasons.tmdb_id_season'), nullable=False)
 
     def compare_value(self):
         return self.tmdb_id_episode
@@ -233,7 +240,8 @@ class Season(Base, EqMixin):
     season_number = Column(SmallInteger)
     air_date = Column(String)
     poster_path = Column(String, nullable=True)
-    tmdb_id_serie = Column(Integer, ForeignKey('series.tmdb_id_serie'), nullable=False)
+    tmdb_id_serie = Column(Integer, ForeignKey(
+        'series.tmdb_id_serie'), nullable=False)
     episodes = relationship('Episode', backref='seasons', lazy=True)
 
     def compare_value(self):
@@ -249,7 +257,7 @@ class Season(Base, EqMixin):
         self.overview = overview
         self.season_number = season_number
         self.air_date = air_date
-        self.still_path = poster_path
+        self.poster_path = poster_path
         self.episodes = episodes
         self.tmdb_id_serie = tmdb_id_serie
 
@@ -298,9 +306,12 @@ class Serie(Base, EqMixin):
     vote_average = Column(Numeric(3, 1))
     creation = Column(Integer)
     last_update = Column(Integer)
-    productors = relationship("Productor", secondary=series_productors_table, back_populates="series")
-    genres = relationship("Genre", secondary=series_genres_table, back_populates="series")
-    users = relationship("User", secondary=subscriptions_table, back_populates="series")
+    productors = relationship(
+        "Productor", secondary=series_productors_table, back_populates="series")
+    genres = relationship(
+        "Genre", secondary=series_genres_table, back_populates="series")
+    users = relationship(
+        "User", secondary=subscriptions_table, back_populates="series")
     seasons = relationship('Season', backref='series', lazy=True)
 
     def __init__(self, tmdb_id_serie: int, name: str, overview: str, backdrop_path: str, poster_path: str, nb_seasons: int,
@@ -410,7 +421,7 @@ class Serie(Base, EqMixin):
 
     @classmethod
     def get_all_series(cls):
-            return Serie.query.all()
+        return Serie.query.all()
 
     @classmethod
     def create_from_json(cls, json: dict):
@@ -458,7 +469,8 @@ class User(Base, EqMixin):
     username = Column(String(20), unique=True)
     email = Column(String(80))
     password_hash = Column(String(128))
-    series = relationship("Serie", secondary=subscriptions_table, back_populates="users")
+    series = relationship(
+        "Serie", secondary=subscriptions_table, back_populates="users")
 
     def __init__(self, username: str, email: str, password: str):
         self.username = username
@@ -498,7 +510,7 @@ class User(Base, EqMixin):
     def delete_favorite_serie(self, serie: Serie):
         self.series.remove(serie)
         self.save_in_db()
-        for notif in Notification.get_notifications_by_user_and_serie(self,serie):
+        for notif in Notification.get_notifications_by_user_and_serie(self, serie):
             notif.delete_in_db()
 
     @classmethod
@@ -540,7 +552,8 @@ class Notification(Base, EqMixin):
     __tablename__ = "notifications"
     id = Column(SmallInteger, primary_key=True)
     user_id = Column(SmallInteger, ForeignKey('users.id'), nullable=False)
-    tmdb_id_serie = Column(Integer, ForeignKey('series.tmdb_id_serie'), nullable=False)
+    tmdb_id_serie = Column(Integer, ForeignKey(
+        'series.tmdb_id_serie'), nullable=False)
     serie_name = Column(String)
     name = Column(String)
     season_number = Column(SmallInteger)
@@ -581,7 +594,7 @@ class Notification(Base, EqMixin):
     def as_dict(self):
         return {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie,
                 'serie_name': self.serie_name, 'name': self.name, 'episode_number': self.episode_number,
-                'season_number': self.season_number, 'next_air_date': self.next_air_date, 'backdrop_path': self.backdrop_path, 'read': self.read, 'poster_path': self.poster_path }
+                'season_number': self.season_number, 'next_air_date': self.next_air_date, 'backdrop_path': self.backdrop_path, 'read': self.read, 'poster_path': self.poster_path}
 
     @classmethod
     def create_from_serie(cls, user_id: int, serie: Serie):
@@ -599,7 +612,7 @@ class Notification(Base, EqMixin):
         return Notification.query.filter_by(user_id=user.id).order_by(desc(Notification.creation_date)).limit(15).all()
 
     @classmethod
-    def get_notifications_by_user_and_serie(cls, user: User, serie:Serie):
+    def get_notifications_by_user_and_serie(cls, user: User, serie: Serie):
         return Notification.query.filter_by(user_id=user.id, tmdb_id_serie=serie.tmdb_id_serie).order_by(desc(Notification.creation_date)).all()
 
     @classmethod
