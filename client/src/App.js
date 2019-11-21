@@ -1,7 +1,7 @@
 import orange from "@material-ui/core/colors/orange";
 import grey from "@material-ui/core/colors/grey";
 import { createMuiTheme, MuiThemeProvider } from "@material-ui/core/styles";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Router, Redirect, Route, Switch } from "react-router-dom";
 import "./App.css";
 import FavoriteSeries from "./FavoriteSeries";
@@ -11,7 +11,11 @@ import Home from "./Home";
 import Login from "./Login";
 import Serie from "./Serie";
 import Signup from "./Signup";
-import { Icon } from "@material-ui/core";
+
+const handleScroll = e => {
+  console.log("coucou");
+  console.log(e);
+};
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route
@@ -88,10 +92,26 @@ const theme = createMuiTheme({
 });
 
 function App() {
+  const [scrollY, setScrollY] = useState(0);
+
+  function logit() {
+    setScrollY(window.pageYOffset);
+  }
+
+  useEffect(() => {
+    function watchScroll() {
+      window.addEventListener("scroll", logit);
+    }
+    watchScroll();
+    // Remove listener (like componentWillUnmount)
+    return () => {
+      window.removeEventListener("scroll", logit);
+    };
+  });
   return (
     <MuiThemeProvider theme={theme}>
-      <Router history={history}>
-        <Header className="App-header"> </Header>
+      <Router onScroll={handleScroll} history={history}>
+        <Header scrollY={scrollY} className="App-header"></Header>
         <div
           style={{
             position: "absolute",
@@ -101,6 +121,7 @@ function App() {
             alignItems: "center",
             zIndex: 2
           }}
+          onScroll={handleScroll}
         >
           <Switch>
             <PrivateRoute path="/serie/:id" component={Serie}></PrivateRoute>

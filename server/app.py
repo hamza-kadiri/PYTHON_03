@@ -185,7 +185,7 @@ def create_app():
                                 "seasons" : list(map(lambda season : {**get_assets_url_app(season), 
                                                                         "episodes" : list(map(get_assets_url_app, season["episodes"]))
                                                                         }, serie_dict["seasons"]))
-                                }
+                            }
                 response['series'].append(serie_dict)
             return jsonify(response)
 

@@ -79,7 +79,7 @@ const useStyles = makeStyles(theme => {
       WebkitLineClamp: "15",
       WebkitBoxOrient: "vertical",
       flex: "1",
-      maxHeight: "20vh"
+      maxHeight: "15vh"
     }
   };
 });

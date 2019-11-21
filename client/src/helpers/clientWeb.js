@@ -12,5 +12,5 @@ export default ky.extend({
       }
     ]
   },
-  prefixUrl: "//localhost:8001"
+  prefixUrl: "//0.0.0.0:8001"
 });
