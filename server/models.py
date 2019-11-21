@@ -467,7 +467,7 @@ class User(Base, EqMixin):
     __tablename__ = 'users'
     id = Column(SmallInteger, primary_key=True)
     username = Column(String(20), unique=True)
-    email = Column(String(80))
+    email = Column(String(80), unique=True)
     password_hash = Column(String(128))
     series = relationship(
         "Serie", secondary=subscriptions_table, back_populates="users")
