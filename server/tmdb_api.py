@@ -1,6 +1,7 @@
 import requests
 import urllib.parse
 from requests import RequestException
+from helpers import generate_assets_url
 
 
 # Documentation for the API available at : https://developers.themoviedb.org/3/getting-started/introduction
@@ -23,9 +24,6 @@ class RequestContext:
             cls._has_been_initialized = True
             cls._api_url = app.config['API_URL']
             cls._api_key = app.config['API_KEY']
-            cls._thumbnail_base_url = app.config['THUMBNAIL_BASE_URL']
-            cls._backdrop_base_url = app.config['BACKDROP_BASE_URL']
-            cls._poster_base_url = app.config['POSTER_BASE_URL']
         except RuntimeError:
             raise AttributeError(
                 "Cannot initialize RequestContext without a proper app configuration")
@@ -41,24 +39,6 @@ class RequestContext:
         if not cls._has_been_initialized:
             raise AttributeError("Request Context not initialized")
         return cls._api_key
-
-    @classmethod
-    def get_thumbnail_base_url(cls):
-        if not cls._has_been_initialized:
-            raise AttributeError("Request Context not initialized")
-        return cls._thumbnail_base_url
-
-    @classmethod
-    def get_backdrop_base_url(cls):
-        if not cls._has_been_initialized:
-            raise AttributeError("Request Context not initialized")
-        return cls._backdrop_base_url
-
-    @classmethod
-    def get_poster_base_url(cls):
-        if not cls._has_been_initialized:
-            raise AttributeError("Request Context not initialized")
-        return cls._poster_base_url
 
 
 class RequestExceptionOMDB(RequestException):
@@ -116,15 +96,8 @@ def search_tv_serie_by_title(query: str):
     request = RequestOMDB()
     resp = request.perform_request(endpoint, query=query)
     json = resp.json()
-    filteredResults = []
-    results = json['results']
-    for result in results:
-        if result['backdrop_path'] is not None:
-            result['thumbnail_url'] = f"{RequestContext.get_backdrop_base_url()}{result['backdrop_path']}"
-        if result['poster_path'] is not None:
-            result['poster_url'] = f"{RequestContext.get_poster_base_url()}{result['poster_path']}"
-            filteredResults.append(result)
-    json['results'] = filteredResults
+    for result in json['results']:
+        generate_assets_url(result)
     return json
 
 
@@ -133,8 +106,7 @@ def get_tv_serie(tv_id: int):
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
     json = resp.json()
-    if json['backdrop_path'] is not None:
-        json['backdrop_url'] = f"{RequestContext.get_backdrop_base_url()}{json['backdrop_path']}"
+    generate_assets_url(json)
     return json
 
 
@@ -172,10 +144,7 @@ def get_tv_series_discover_by_genre():
         for serie in series:
             try:
                 serie['genre_ids'].index(genre['id']) # Raise value error if element not in list
-                if serie['backdrop_path'] is not None:
-                    serie['thumbnail_url'] = f"{RequestContext.get_backdrop_base_url()}{serie['backdrop_path']}"
-                if serie['poster_path'] is not None:
-                    serie['poster_url'] = f"{RequestContext.get_poster_base_url()}{serie['poster_path']}"
+                generate_assets_url(serie)
                 series_concerned.append(serie)
             except ValueError:
                 pass

@@ -11,7 +11,7 @@ from flask import current_app as app
 from time import time
 from database import save_obj, delete_obj
 from tmdb_api import get_tv_serie, get_tv_serie_season
-from helpers import sortListByLambda
+from helpers import sortListByLambda, generate_assets_url
 
 
 class EqMixin(object):
@@ -210,10 +210,12 @@ class Episode(Base, EqMixin):
         self.tmdb_id_season = tmdb_id_season
 
     def as_dict(self):
-        return {'tmdb_id_episode': self.tmdb_id_episode, 'name': self.name, 'overview': self.overview,
+        dict = {'tmdb_id_episode': self.tmdb_id_episode, 'name': self.name, 'overview': self.overview,
                 'season_number': self.season_number, 'episode_number': self.episode_number,
                 'vote_count': self.vote_count, 'vote_average': str(self.vote_average), 'air_date': self.air_date,
                 'still_path': self.still_path}
+        generate_assets_url(dict)
+        return dict
 
     @classmethod
     def get_episode_by_id(cls, tmdb_id_episode: int):
@@ -263,10 +265,11 @@ class Season(Base, EqMixin):
         self.tmdb_id_serie = tmdb_id_serie
 
     def as_dict(self):
-        return {'tmdb_id_season': self.tmdb_id_season, 'name': self.name, 'overview': self.overview,
+        dict = {'tmdb_id_season': self.tmdb_id_season, 'name': self.name, 'overview': self.overview,
                 'season_number': self.season_number, 'air_date': self.air_date, 'poster_path': self.poster_path,
                 'episodes': [episode.as_dict() for episode in sortListByLambda(self.episodes, lambda x: x.episode_number)], }
-
+        generate_assets_url(dict)
+        return dict
     @classmethod
     def get_season_by_id(cls, tmdb_id_season: int):
         try:
@@ -399,7 +402,7 @@ class Serie(Base, EqMixin):
         return self.tmdb_id_serie
 
     def as_dict(self):
-        return {'tmdb_id_serie': self.tmdb_id_serie, 'name': self.name, 'overview': self.overview,
+        dict = {'tmdb_id_serie': self.tmdb_id_serie, 'name': self.name, 'overview': self.overview,
                 'backdrop_path': self.backdrop_path,
                 'poster_path': self.poster_path,
                 'nb_seasons': self.nb_seasons, 'nb_episodes': self.nb_episodes,
@@ -410,6 +413,8 @@ class Serie(Base, EqMixin):
                 'genres': [genre.as_dict() for genre in self.genres],
                 'productors': [productor.as_dict() for productor in self.productors],
                 'seasons': [season.as_dict() for season in sortListByLambda(self.seasons, lambda x: x.season_number)]}
+        generate_assets_url(dict)
+        return dict
 
     @classmethod
     def get_serie_by_id(cls, tmdb_id_serie: int):
@@ -593,9 +598,11 @@ class Notification(Base, EqMixin):
         self.save_in_db()
 
     def as_dict(self):
-        return {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie,
+        dict = {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie,
                 'serie_name': self.serie_name, 'name': self.name, 'episode_number': self.episode_number,
                 'season_number': self.season_number, 'next_air_date': self.next_air_date, 'backdrop_path': self.backdrop_path, 'read': self.read, 'poster_path': self.poster_path}
+        generate_assets_url(dict)
+        return dict
 
     @classmethod
     def create_from_serie(cls, user_id: int, serie: Serie):

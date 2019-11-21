@@ -32,9 +32,10 @@ class InvalidAuth(Exception):
 class InvalidDBOperation(Exception):
     status_code = 403
 
-    def __init__(self, error_message: str):
+    def __init__(self, error_message: str, **kwargs):
         Exception.__init__(self)
         self.error_message = error_message
+        self.invalid_fields = kwargs
 
     def to_dict(self):
         return {"error_message": self.error_message}

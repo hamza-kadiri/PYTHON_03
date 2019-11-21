@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
 from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth
 from mail import update_all_series, init_mailing_context, send_notification_default
-from helpers import get_assets_url
+from helpers import generate_assets_url, init_helpers_context
 
 
 def init_jobs(app):
@@ -47,6 +47,7 @@ def create_app():
     # Init contexts
     init_tmdb_context(app)
     init_mailing_context(app)
+    init_helpers_context(app)
 
     def get_assets_url_app(dict) :
         return get_assets_url(app, dict)
@@ -108,7 +109,10 @@ def create_app():
             try:
                 user.save_in_db()  # Might raise an IntegrityError if user already exist
             except IntegrityError:
-                raise InvalidDBOperation("User already exist")
+                if User.get_user_by_username(username) is not None :
+                    raise InvalidDBOperation("Username already taken",{"username":"Username already taken"})
+                else:
+                    raise InvalidDBOperation("Email already taken",{"email":"Email already taken"})
             return jsonify(user.as_dict())
 
         @app.route("/users/<int:user_id>", methods=['GET'])
@@ -154,7 +158,7 @@ def create_app():
                     # Might raise an IntegrityError
                     user.add_favorite_serie(serie)
                 except IntegrityError:
-                    raise InvalidDBOperation("Subscription already exist")
+                    raise InvalidDBOperation("Subscription already exist",{"serie_id":"Serie already in favorites"})
                 try:
                     notification = Notification.create_from_serie(
                         user_id, serie)  # Might raise a ValueError
@@ -174,17 +178,7 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             series = user.series
-            response = {"series": []}
-            for serie in series :
-                serie_dict = serie.as_dict()
-                serie_dict = get_assets_url_app(serie_dict)
-                serie_dict = {**serie_dict, 
-                                "seasons" : list(map(lambda season : {**get_assets_url_app(season), 
-                                                                        "episodes" : list(map(get_assets_url_app, season["episodes"]))
-                                                                        }, serie_dict["seasons"]))
-                                }
-                response['series'].append(serie_dict)
-            return jsonify(response)
+            return jsonify({"series": [serie.as_dict() for serie in series]})
 
         @app.route("/users/<int:user_id>/notifications", methods=['GET'])
         @auth.login_required
@@ -193,14 +187,7 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             notifications = Notification.get_notifications_by_user(user)
-            notifications_array = []
-            poster_base_url = app.config["POSTER_BASE_URL"]
-            for notification in notifications:
-                result = notification.as_dict()
-                if result['poster_path'] is not None:
-                    result['poster_url'] = f"{poster_base_url}{result['poster_path']}"
-                notifications_array.append(result)
-            return jsonify({"notifications": notifications_array})
+            return jsonify({"notifications": [notification.as_dict() for notification in notifications]})
 
         @app.route("/users/<int:user_id>/notifications", methods=['POST'])
         @auth.login_required
@@ -228,7 +215,9 @@ def create_app():
                     response_status = notif_status
                 else:
                     response_status = 207
-            return get_notifications(user_id)
+            user = User.get_user_by_id(user_id)
+            notifications = Notification.get_notifications_by_user(user)
+            return jsonify({"notifications": [notification.as_dict() for notification in notifications]})
 
         @app.errorhandler(InvalidAuth)
         def handle_invalid_auth(error:InvalidAuth):
@@ -247,7 +236,7 @@ def create_app():
         @app.errorhandler(InvalidDBOperation)
         def handle_invalid_usage(error: InvalidDBOperation):
             response = jsonify({"status_code": error.status_code,
-                                "error_message": error.error_message}), error.status_code
+                                "error_message": error.error_message, "invalids_fields":error.invalid_fields}), error.status_code
             app.logger.error(response)
             return response
 
@@ -285,5 +274,4 @@ def create_app():
 application = create_app()
 
 if __name__ == "__main__":
-    # use_reloader set to false to prevent CRON Jobs to be run twice
-    application.run(host="0.0.0.0", port=80, use_reloader=False)
+    application.run(host="0.0.0.0", port=80)
