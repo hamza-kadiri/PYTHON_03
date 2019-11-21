@@ -10,7 +10,7 @@ from models import User, Serie, Notification
 from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, get_tv_series_discover_by_genre
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
-from api_exceptions import InvalidForm, InvalidDBOperation
+from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth
 from mail import update_all_series, init_mailing_context
 from helpers import get_assets_url
 
@@ -74,8 +74,7 @@ def create_app():
             # try to authenticate with username/password
             user = User.get_user_by_username(username)
             if not user or not user.verify_password(password):
-                abort(400, {"error_message": "Invalid username or password",
-                            "invalid_fields": {"username": "", "password": ""}})
+                raise InvalidAuth()
             g.user = user
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii'), "user": user.as_dict()})
@@ -233,9 +232,16 @@ def create_app():
                     response_status = 207
             return get_notifications(user_id)
 
+        @app.errorhandler(InvalidAuth)
+        def handle_invalid_auth(error:InvalidAuth):
+            response = jsonify({"status_code": error.status_code, "error_message": error.error_message,
+                                "invalid_fields": error.invalid_fields}), error.status_code
+            app.logger.error(response)
+            return response
+
         @app.errorhandler(InvalidForm)
         def handle_invalid_usage(error: InvalidForm):
-            response = jsonify({"status_code": error.status_code, "error_message": "Invalid Fields",
+            response = jsonify({"status_code": error.status_code, "error_message": error.error_message,
                                 "invalid_fields": error.to_dict()}), error.status_code
             app.logger.error(response)
             return response
@@ -249,8 +255,7 @@ def create_app():
 
         @app.errorhandler(400)
         def forbidden_error(error):
-            error_message = error.description or {"error_message": error}
-            return jsonify({'status_code': 400, **error_message}), 400
+            return jsonify({'status_code': 400, "error_message":"Bad Request"}), 400
 
         @app.errorhandler(401)
         def forbidden_error(error):

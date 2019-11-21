@@ -9,6 +9,7 @@ class InvalidField:
 
 class InvalidForm(Exception):
     status_code = 400
+    error_message = "Invalid Fields"
 
     def __init__(self, invalid_fields: [InvalidField] = []):
         Exception.__init__(self)
@@ -20,6 +21,13 @@ class InvalidForm(Exception):
             final = {**final, **invalid_field.to_dict()}
         return final
 
+class InvalidAuth(Exception):
+    status_code = 400
+    error_message = "Invalid username or password"
+
+    def __init__(self):
+        Exception.__init__(self)
+        self.invalid_fields = {"username": "", "password": ""}
 
 class InvalidDBOperation(Exception):
     status_code = 403
