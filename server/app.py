@@ -11,7 +11,7 @@ from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, 
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
 from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth
-from mail import update_all_series, init_mailing_context
+from mail import update_all_series, init_mailing_context, send_notification_default
 from helpers import get_assets_url
 
 
@@ -25,7 +25,7 @@ def init_jobs(app):
         update_all_series()
         app.logger.info("Updating series finished !")
 
-    scheduler.add_job(update_series_and_notify, 'cron', second=0)
+    scheduler.add_job(update_series_and_notify, 'cron', hour=0)
     scheduler.start()
     # Shut down the scheduler when exiting the app
     atexit.register(lambda: scheduler.shutdown())
@@ -43,7 +43,7 @@ def create_app():
     # Set auth
     auth = HTTPTokenAuth(scheme='Token')
     # Init CRON
-    # init_jobs(app)
+    init_jobs(app)
     # Init contexts
     init_tmdb_context(app)
     init_mailing_context(app)
@@ -84,7 +84,6 @@ def create_app():
         def index():
             return jsonify("Welcome to our API")
 
-        # TODO Handle multiple pages results
         @app.route("/search", methods=['GET'])
         @auth.login_required
         def search():
@@ -157,8 +156,9 @@ def create_app():
                 except IntegrityError:
                     raise InvalidDBOperation("Subscription already exist")
                 try:
-                    Notification.create_from_serie(
+                    notification = Notification.create_from_serie(
                         user_id, serie)  # Might raise a ValueError
+                    send_notification_default(notification)
                 except ValueError:
                     pass
                 is_favorite = True
@@ -175,8 +175,6 @@ def create_app():
             user = User.get_user_by_id(user_id)
             series = user.series
             response = {"series": []}
-            poster_base_url = app.config["POSTER_BASE_URL"]
-            backdrop_base_url = app.config["BACKDROP_BASE_URL"]
             for serie in series :
                 serie_dict = serie.as_dict()
                 serie_dict = get_assets_url_app(serie_dict)
