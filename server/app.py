@@ -189,46 +189,6 @@ def create_app():
                 response['series'].append(serie_dict)
             return jsonify(response)
 
-        @app.route("/users/<int:user_id>/series", methods=['POST'])
-        @auth.login_required
-        def add_serie_to_favorites(user_id: int):
-            if user_id != g.user.id:
-                abort(403)
-            # Might raise an InvalidForm exception
-            serie_id = validate_add_serie_form(request.form)
-            user = User.get_user_by_id(user_id)
-            serie = Serie.get_serie_by_id(serie_id)
-            if serie is None:
-                serie = Serie.create_from_json(get_tv_serie(serie_id))
-            if user.get_subscription_by_serie_id(serie_id) is not None:
-                abort(403)
-            try:
-                user.add_favorite_serie(serie)  # Might raise an IntegrityError
-            except IntegrityError:
-                raise InvalidDBOperation("Subscription already exists")
-            try:
-                Notification.create_from_serie(
-                    user_id, serie)  # Might raise a Value Error
-            except ValueError:
-                pass
-            return jsonify({"user_id": user_id, "serie_id": serie_id})
-
-        @app.route("/users/<int:user_id>/series/<int:serie_id>", methods=['DELETE'])
-        @auth.login_required
-        def delete_serie_from_favorites(user_id: int, serie_id: int):
-            if user_id != g.user.id:
-                abort(403)
-            user = User.get_user_by_id(user_id)
-            serie = Serie.get_serie_by_id(serie_id)
-            if not (serie in user.series):
-                abort(404)
-            try:
-                # Might raise an IntegrityError
-                user.delete_favorite_serie(serie)
-            except IntegrityError:
-                raise InvalidDBOperation("Subscription already deleted")
-            return jsonify({'user_id': user_id, 'serie_id': serie_id})
-
         @app.route("/users/<int:user_id>/notifications", methods=['GET'])
         @auth.login_required
         def get_notifications(user_id: int):

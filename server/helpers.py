@@ -12,3 +12,11 @@ def get_assets_url(app, dict) :
         dict['still_url'] = f"{original_base_url}{dict.get('still_path')}"
         dict['thumbnail_url'] = f"{thumbnail_base_url}{dict.get('still_path')}"
     return dict
+
+def sortListByLambda(list,func):
+    filteredList = filter(lambda x : func(x) != 0,list)
+    numberZero = filter(lambda x : func(x) == 0,list)
+    sortedList = sorted(filteredList, key=func)
+    sortedList.extend(numberZero)
+    return sortedList
+

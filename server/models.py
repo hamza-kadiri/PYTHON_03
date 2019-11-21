@@ -11,6 +11,7 @@ from flask import current_app as app
 from time import time
 from database import save_obj, delete_obj
 from tmdb_api import get_tv_serie, get_tv_serie_season
+from helpers import sortListByLambda
 
 
 class EqMixin(object):
@@ -264,7 +265,7 @@ class Season(Base, EqMixin):
     def as_dict(self):
         return {'tmdb_id_season': self.tmdb_id_season, 'name': self.name, 'overview': self.overview,
                 'season_number': self.season_number, 'air_date': self.air_date, 'poster_path': self.poster_path,
-                'episodes': [episode.as_dict() for episode in self.episodes]}
+                'episodes': [episode.as_dict() for episode in sortListByLambda(self.episodes, lambda x: x.episode_number)], }
 
     @classmethod
     def get_season_by_id(cls, tmdb_id_season: int):
@@ -408,7 +409,7 @@ class Serie(Base, EqMixin):
                 'vote_count': self.vote_count, 'vote_average': str(self.vote_average),
                 'genres': [genre.as_dict() for genre in self.genres],
                 'productors': [productor.as_dict() for productor in self.productors],
-                'seasons': [season.as_dict() for season in self.seasons]}
+                'seasons': [season.as_dict() for season in sortListByLambda(self.seasons, lambda x: x.season_number)]}
 
     @classmethod
     def get_serie_by_id(cls, tmdb_id_serie: int):
