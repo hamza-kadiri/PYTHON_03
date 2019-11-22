@@ -225,8 +225,13 @@ class Episode(Base, EqMixin):
             return None
 
     @classmethod
-    def create_from_json(cls, json: dict, tmdb_id_season: int):
-        episode = Episode(json['id'], json['name'], json['overview'], json['season_number'], json['episode_number'],
+    def create_from_json(cls, json: dict, season_poster_path: str, tmdb_id_season: int):
+        if json['still_path'] is None or json['still_path'] == "" or json['still_path']  == "null":
+            episode = Episode(json['id'], json['name'], json['overview'], json['season_number'], json['episode_number'],
+                          json['vote_count'], json['vote_average'], json['air_date'],season_poster_path,
+                          tmdb_id_season)
+        else:
+            episode = Episode(json['id'], json['name'], json['overview'], json['season_number'], json['episode_number'],
                           json['vote_count'], json['vote_average'], json['air_date'], json['still_path'],
                           tmdb_id_season)
         episode.save_in_db()
@@ -277,14 +282,18 @@ class Season(Base, EqMixin):
             return None
 
     @classmethod
-    def create_season_from_json(cls, json: dict, tmdb_id_serie: int):
-        season = Season(json['id'], json['name'], json['overview'], json['season_number'], json['air_date'],
+    def create_season_from_json(cls, json: dict, serie_poster_path: str, tmdb_id_serie: int):
+        if json['poster_path'] is None or json['poster_path'] == "null" or json['poster_path'] == "":
+            season = Season(json['id'], json['name'], json['overview'], json['season_number'], json['air_date'],
+                        serie_poster_path, [], tmdb_id_serie)
+        else:
+            season = Season(json['id'], json['name'], json['overview'], json['season_number'], json['air_date'],
                         json['poster_path'], [], tmdb_id_serie)
         season.save_in_db()
         for episode in json['episodes']:
             new_episode = Episode.get_episode_by_id(episode['id'])
             if new_episode is None:
-                new_episode = Episode.create_from_json(episode, json['id'])
+                new_episode = Episode.create_from_json(episode, season.poster_path, json['id'])
             season.episodes.append(new_episode)
         season.save_in_db()
         return season
@@ -296,11 +305,11 @@ class Season(Base, EqMixin):
         for season in json['seasons']:
             new_season = Season.get_season_by_id(season['id'])
             if new_season is None:
-                new_season = Season.create_season_from_json(get_tv_serie_season(json['id'], season['season_number']),
+                new_season = Season.create_season_from_json(get_tv_serie_season(json['id'], season['season_number']), json['poster_path'],
                                                      json['id'])
             seasons.append(new_season)
         serie = Serie.get_serie_by_id(json['id'])
-        serie.seasons.append(seasons)
+        serie.seasons = seasons
         serie.save_in_db()
         return
 
@@ -403,7 +412,7 @@ class Serie(Base, EqMixin):
         for season in json['seasons']:
             new_season = Season.get_season_by_id(season['id'])
             if new_season is None:
-                new_season = Season.create_season_from_json(get_tv_serie_season(json['id'], season['season_number']),
+                new_season = Season.create_season_from_json(get_tv_serie_season(json['id'], season['season_number']), json['poster_path'],
                                                      json['id'])
             serie_seasons.append(new_season)
         self.seasons = serie_seasons
