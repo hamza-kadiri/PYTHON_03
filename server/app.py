@@ -6,13 +6,14 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from form_validation import validate_add_serie_form, validate_user_registration_form, validate_user_login_form, \
     validate_notifications_list_form, validate_favorite_form
 from database import init_models, db_session
-from models import User, Serie, Notification
+from models import User, Serie, Notification, Season
 from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, get_tv_series_discover_by_genre
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
 from api_exceptions import InvalidForm, InvalidDBOperation
 from mail import update_all_series, init_mailing_context
 from helpers import get_assets_url
+from threading import Thread
 
 
 def init_jobs(app):
@@ -150,7 +151,10 @@ def create_app():
             user = User.get_user_by_id(user_id)
             serie = Serie.get_serie_by_id(serie_id)
             if serie is None:
-                serie = Serie.create_from_json(get_tv_serie(serie_id))
+                json = get_tv_serie(serie_id)
+                serie = Serie.create_from_json(json)
+                thread_seasons = Thread(target=Season.create_seasons_from_json, args=(json,))
+                thread_seasons.start()
             if user.get_subscription_by_serie_id(serie_id) is None:
                 try:
                     # Might raise an IntegrityError

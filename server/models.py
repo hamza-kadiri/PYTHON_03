@@ -277,7 +277,7 @@ class Season(Base, EqMixin):
             return None
 
     @classmethod
-    def create_from_json(cls, json: dict, tmdb_id_serie: int):
+    def create_season_from_json(cls, json: dict, tmdb_id_serie: int):
         season = Season(json['id'], json['name'], json['overview'], json['season_number'], json['air_date'],
                         json['poster_path'], [], tmdb_id_serie)
         season.save_in_db()
@@ -288,6 +288,21 @@ class Season(Base, EqMixin):
             season.episodes.append(new_episode)
         season.save_in_db()
         return season
+
+    @classmethod
+    def create_seasons_from_json(cls, json):
+        # Seasons informations
+        seasons = []
+        for season in json['seasons']:
+            new_season = Season.get_season_by_id(season['id'])
+            if new_season is None:
+                new_season = Season.create_season_from_json(get_tv_serie_season(json['id'], season['season_number']),
+                                                     json['id'])
+            seasons.append(new_season)
+        serie = Serie.get_serie_by_id(json['id'])
+        serie.seasons.append(seasons)
+        serie.save_in_db()
+        return
 
 
 class Serie(Base, EqMixin):
@@ -388,12 +403,13 @@ class Serie(Base, EqMixin):
         for season in json['seasons']:
             new_season = Season.get_season_by_id(season['id'])
             if new_season is None:
-                new_season = Season.create_from_json(get_tv_serie_season(json['id'], season['season_number']),
+                new_season = Season.create_season_from_json(get_tv_serie_season(json['id'], season['season_number']),
                                                      json['id'])
             serie_seasons.append(new_season)
         self.seasons = serie_seasons
         # Saving changes
         self.save_in_db()
+        return self
 
     def compare_value(self):
         return self.tmdb_id_serie
@@ -453,13 +469,6 @@ class Serie(Base, EqMixin):
             if new_productor is None:
                 new_productor = Productor.create_from_json(productor)
             serie.productors.append(new_productor)
-        # Seasons informations
-        for season in json['seasons']:
-            new_season = Season.get_season_by_id(season['id'])
-            if new_season is None:
-                new_season = Season.create_from_json(get_tv_serie_season(json['id'], season['season_number']),
-                                                     json['id'])
-            serie.seasons.append(new_season)
         serie.save_in_db()
         return serie
 
