@@ -224,21 +224,21 @@ def create_app():
         @app.errorhandler(InvalidAuth)
         def handle_invalid_auth(error:InvalidAuth):
             response = jsonify({"status_code": error.status_code, "error_message": error.error_message,
-                                "invalid_fields": [invalid_field.to_dict() for invalid_field in error.invalid_fields]}), error.status_code
+                                "invalid_fields": error.invalid_fields}), error.status_code
             app.logger.error(response)
             return response
 
         @app.errorhandler(InvalidForm)
         def handle_invalid_usage(error: InvalidForm):
             response = jsonify({"status_code": error.status_code, "error_message": error.error_message,
-                                "invalid_fields": [invalid_field.to_dict() for invalid_field in error.invalid_fields]}), error.status_code
+                                "invalid_fields": error.invalid_fields}), error.status_code
             app.logger.error(response)
             return response
 
         @app.errorhandler(InvalidDBOperation)
         def handle_invalid_usage(error: InvalidDBOperation):
             response = jsonify({"status_code": error.status_code,
-                                "error_message": error.error_message, "invalids_fields":[invalid_field.to_dict() for invalid_field in error.invalid_fields]}), error.status_code
+                                "error_message": error.error_message, "invalids_fields":error.invalid_fields}), error.status_code
             app.logger.error(response)
             return response
 
