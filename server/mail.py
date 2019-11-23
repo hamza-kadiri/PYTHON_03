@@ -56,13 +56,13 @@ class MailingContext:
 
 class MailingServer:
 
-    def __init__(self, host: str = MailingContext.get_mailing_host(), port: int = MailingContext.get_mailing_port(),
-                 address: str = MailingContext.get_mailing_address(),
-                 password: str = MailingContext.get_mailing_password()):
-        self.__host = host
-        self.__port = port
-        self.__address = address
-        self.__password = password
+    def __init__(self, host: str = None, port: int = None,
+                 address: str = None,
+                 password: str = None):
+        self.__host = host if not None else MailingContext.get_mailing_host()
+        self.__port = port if not None else MailingContext.get_mailing_port()
+        self.__address = address if not None else MailingContext.get_mailing_address()
+        self.__password = password if not None else MailingContext.get_mailing_password()
         self.__smtp_server = MailingServer.create_smtp_server(host, port, address, password)
 
     @staticmethod
@@ -83,7 +83,8 @@ class MailingServer:
     def send_message(self, message: MIMEMultipart):
         self.__smtp_server.send_message(message)
 
-    def send_notification(self, notification: Notification, sent_from: str = MailingContext.get_mailing_address()):
+    def send_notification(self, notification: Notification, sent_from: str = None):
+        sent_from = sent_from if not None else MailingContext.get_mailing_address()
         user = User.get_user_by_id(notification.user_id)
         message = f'A new episode is going to be released for "{notification.serie_name}" on {notification.next_air_date}. Check our website for more info !'
         subject = f'Some news for "{notification.serie_name}"'

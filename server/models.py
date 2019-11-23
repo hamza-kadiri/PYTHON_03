@@ -44,7 +44,7 @@ class EqMixin(object):
         return hash(self.__class__) ^ hash(self.compare_value())
 
 
-class DBObject(EqMixin, Base):
+class DBObject(EqMixin):
     def save_in_db(self):
         save_obj(self)
 
@@ -56,7 +56,7 @@ class DBObject(EqMixin, Base):
 
 
 subscriptions_table = Table('subscriptions', Base.metadata,
-                            Column('user_id', Integer, ForeignKey('users.id')),
+                            Column('user_id', Integer, ForeignKey('users._User__id')),
                             Column('tmdb_id_serie', Integer,
                                    ForeignKey('series.tmdb_id_serie'))
                             )
@@ -95,7 +95,7 @@ class Person:
                 'profile_path': self.profile_path}
 
 
-class Actor(Person, DBObject):
+class Actor(Person, DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'actors'
     department = Column(String)
@@ -113,7 +113,7 @@ class Actor(Person, DBObject):
         return {'department': self.department, 'job': self.job, **super().as_dict()}
 
 
-class Productor(Person, DBObject):
+class Productor(Person, DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'productors'
     gender = Column(String)
@@ -157,7 +157,7 @@ class Productor(Person, DBObject):
             return None
 
 
-class Genre(DBObject):
+class Genre(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'genres'
     tmdb_id_genre = Column(SmallInteger, primary_key=True)
@@ -193,7 +193,7 @@ class Genre(DBObject):
             return None
 
 
-class Episode(DBObject):
+class Episode(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'episodes'
     tmdb_id_episode = Column(Integer, primary_key=True)
@@ -252,7 +252,7 @@ class Episode(DBObject):
             return None
 
 
-class Season(DBObject):
+class Season(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'seasons'
     tmdb_id_season = Column(Integer, primary_key=True)
@@ -312,7 +312,7 @@ class Season(DBObject):
             return None
 
 
-class Serie(DBObject):
+class Serie(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'series'
     tmdb_id_serie = Column(Integer, primary_key=True)
@@ -492,16 +492,17 @@ class Serie(DBObject):
         self.save_in_db()
 
 
-class User(DBObject):
-    # Attributes, basic methods (init, compare_value, as_dict) and getters
+class User(DBObject, Base):
+    # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'users'
     __id = Column(SmallInteger, primary_key=True)
     __username = Column(String(20), unique=True)
     __email = Column(String(80), unique=True)
     __password_hash = Column(String(128))
+
     __series = relationship(
         "Serie", secondary=subscriptions_table, back_populates="users")
-
+    
     def __init__(self, username: str, email: str, password: str):
         self.__username = username
         self.__email = email
@@ -513,6 +514,8 @@ class User(DBObject):
 
     def as_dict(self):
         return {'id': self.__id, 'username': self.__username, 'email': self.__email}
+
+    # Getters
 
     @property
     def id(self):
@@ -606,7 +609,7 @@ class User(DBObject):
             notif.delete_in_db()
 
 
-class Notification(DBObject):
+class Notification(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = "notifications"
     id = Column(SmallInteger, primary_key=True)

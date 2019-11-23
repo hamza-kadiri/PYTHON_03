@@ -15,7 +15,7 @@ class InvalidField:
         return self.__error
 
     @staticmethod
-    def invalid_fields_to_dict(invalid_fields:[InvalidField]):
+    def invalid_fields_to_dict(invalid_fields):
         final = {}
         for invalid_field in invalid_fields:
             final = {**final, **(invalid_field.to_dict())}

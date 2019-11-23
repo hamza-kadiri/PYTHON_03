@@ -40,6 +40,10 @@ def create_app():
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
     app.logger.setLevel(logging.INFO)
+    # Init contexts
+    init_tmdb_context(app)
+    init_mailing_context(app)
+    init_helpers_context(app)
     # Set CORS
     CORS(app)
     # Set globals
@@ -48,10 +52,6 @@ def create_app():
     auth = HTTPTokenAuth(scheme='Token')
     # Init CRON
     init_jobs(app)
-    # Init contexts
-    init_tmdb_context(app)
-    init_mailing_context(app)
-    init_helpers_context(app)
 
     with app.app_context():
 
