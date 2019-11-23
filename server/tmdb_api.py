@@ -11,34 +11,31 @@ def init_tmdb_context(app):
 
 
 class RequestContext:
-    _has_been_initialized = False
-    _api_url = None
-    _api_key = None
-    _thumbnail_base_url = None
-    _backdrop_base_url = None
-    _poster_base_url = None
+    __has_been_initialized = False
+    __api_url = None
+    __api_key = None
 
     @classmethod
     def init_request_context(cls, app):
         try:
-            cls._has_been_initialized = True
-            cls._api_url = app.config['API_URL']
-            cls._api_key = app.config['API_KEY']
+            cls.__has_been_initialized = True
+            cls.__api_url = app.config['API_URL']
+            cls.__api_key = app.config['API_KEY']
         except RuntimeError:
             raise AttributeError(
                 "Cannot initialize RequestContext without a proper app configuration")
 
     @classmethod
     def get_api_url(cls):
-        if not cls._has_been_initialized:
+        if not cls.__has_been_initialized:
             raise AttributeError("Request Context not initialized")
-        return cls._api_url
+        return cls.__api_url
 
     @classmethod
     def get_api_key(cls):
-        if not cls._has_been_initialized:
+        if not cls.__has_been_initialized:
             raise AttributeError("Request Context not initialized")
-        return cls._api_key
+        return cls.__api_key
 
 
 class RequestExceptionOMDB(RequestException):

@@ -11,7 +11,7 @@ from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, 
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
 from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth, InvalidField
-from mail import update_all_series, init_mailing_context, send_notification_default
+from mail import MailingServer, init_mailing_context
 from helpers import generate_assets_url, init_helpers_context
 
 
@@ -22,7 +22,7 @@ def init_jobs(app):
 
     def update_series_and_notify():
         app.logger.info("Starting updating series...")
-        update_all_series()
+        MailingServer.update_all_series()
         app.logger.info("Updating series finished !")
 
     scheduler.add_job(update_series_and_notify, 'cron', hour=0)
@@ -48,9 +48,6 @@ def create_app():
     init_tmdb_context(app)
     init_mailing_context(app)
     init_helpers_context(app)
-
-    def get_assets_url_app(dict) :
-        return get_assets_url(app, dict)
 
     with app.app_context():
 
@@ -112,7 +109,7 @@ def create_app():
                 invalid_fields = []
                 if User.get_user_by_username(username) is not None:
                     invalid_fields.append(InvalidField("username","Username already taken"))
-                if User.get_user_by_email(email):
+                if User.get_user_by_email(email) is not None:
                     invalid_fields.append(InvalidField("email","Email already taken"))
                 raise InvalidDBOperation("Cannot register user", invalid_fields)
             return jsonify(user.as_dict())
@@ -130,11 +127,8 @@ def create_app():
         @app.route("/favorite", methods=['GET'])
         @auth.login_required
         def check_favorite_serie():
-            args = request.args
-            json = {"user_id": int(request.args.get(
-                "user_id")), "serie_id": request.args.get("serie_id")}
             user_id, serie_id = validate_favorite_form(
-                json)  # Might raise an InvalidForm exception
+                request.args)  # Might raise an InvalidForm exception
             if user_id != g.user.id:
                 abort(403)
             user = User.get_user_by_id(user_id)
@@ -164,7 +158,8 @@ def create_app():
                 try:
                     notification = Notification.create_from_serie(
                         user_id, serie)  # Might raise a ValueError
-                    send_notification_default(notification)
+                    mailing_server = MailingServer()
+                    mailing_server.send_notification(notification)
                 except ValueError:
                     pass
                 is_favorite = True

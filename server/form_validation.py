@@ -2,7 +2,7 @@ from validator_collection import checkers, validators, errors
 from api_exceptions import InvalidForm, InvalidField
 
 
-def validate_user_registration_form(json):
+def validate_user_registration_form(json:dict):
     try:
         username = json['username']
         username_valid = checkers.is_not_empty(username) and checkers.is_string(username) and checkers.has_length(username, minimum=1, maximum=20)
@@ -30,7 +30,7 @@ def validate_user_registration_form(json):
     return username, email, password
 
 
-def validate_user_login_form(json):
+def validate_user_login_form(json:dict):
     try:
         username = json['username']
         username_valid = checkers.is_not_empty(username) and checkers.is_string(username)
@@ -51,7 +51,7 @@ def validate_user_login_form(json):
     return username, password
 
 
-def validate_add_serie_form(json):
+def validate_add_serie_form(json:dict):
     try:
         serie_id = json['serie_id']
         serie_id_valid = checkers.is_integer(serie_id)
@@ -64,7 +64,7 @@ def validate_add_serie_form(json):
     return serie_id
 
 
-def validate_notifications_list_form(json):
+def validate_notifications_list_form(json:dict):
     try:
         array_ids = json['notifications']
         array_ids_valid = True
@@ -82,7 +82,7 @@ def validate_notifications_list_form(json):
         raise InvalidForm(invalid_fields)
     return array_ids
 
-def validate_favorite_form(json):
+def validate_favorite_form(json:dict):
     try:
         user_id = json['user_id']
         user_id_valid = checkers.is_integer(user_id)

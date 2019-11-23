@@ -42,7 +42,7 @@ class HelpersContext:
     def get_original_base_url(cls):
         return cls._original_base_url
 
-def generate_assets_url(dict) :
+def generate_assets_url(dict:dict) :
     if dict.get('poster_path') is not None:
         dict['poster_url'] = f"{HelpersContext.get_poster_base_url()}{dict.get('poster_path')}"
     if dict.get('backdrop_path') is not None:
