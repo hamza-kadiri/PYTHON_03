@@ -63,13 +63,15 @@ class MailingServer:
         self.__port = port if not None else MailingContext.get_mailing_port()
         self.__address = address if not None else MailingContext.get_mailing_address()
         self.__password = password if not None else MailingContext.get_mailing_password()
-        self.__smtp_server = MailingServer.create_smtp_server(host, port, address, password)
 
     @staticmethod
     def create_smtp_server(host: str, port: int, address: str, password: str):
         s = SMTP_SSL(host=host, port=port)
         s.login(address, password)
         return s
+
+    def get_smtp_server(self):
+        return MailingServer.create_smtp_server(self.__host,self.__port,self.__address, self.__password)
 
     @staticmethod
     def create_message(sender: str, recipient: str, subject: str, message: str, is_html: bool = False):
@@ -80,8 +82,8 @@ class MailingServer:
         msg.attach(MIMEText(message, 'html' if is_html else 'plain'))
         return msg
 
-    def send_message(self, message: MIMEMultipart):
-        self.__smtp_server.send_message(message)
+    def send_message(self, server:SMTP_SSL, message: MIMEMultipart):
+        server.send_message(message)
 
     def send_notification(self, notification: Notification, sent_from: str = None):
         sent_from = sent_from if not None else MailingContext.get_mailing_address()
@@ -89,7 +91,7 @@ class MailingServer:
         message = f'A new episode is going to be released for "{notification.serie_name}" on {notification.next_air_date}. Check our website for more info !'
         subject = f'Some news for "{notification.serie_name}"'
         msg = MailingServer.create_message(sent_from, user.email, subject, message)
-        self.send_message(msg)
+        self.send_message(self.get_smtp_server(), msg)
 
     @staticmethod
     def update_all_series():

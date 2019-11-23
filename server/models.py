@@ -790,8 +790,8 @@ class User(DBObject, Base):
 
     def get_subscription_by_serie_id(self, tmdb_id_serie: int):
         try:
-            return User.query.join(Serie, User.series).filter(User.id == self.__id).filter(
-                Serie.tmdb_id_serie == tmdb_id_serie).one()
+            return User.query.join(Serie, User._User__series).filter(User._User__id == self.__id).filter(
+                Serie._Serie__tmdb_id_serie == tmdb_id_serie).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -915,12 +915,12 @@ class Notification(DBObject, Base):
     # Static methods for selection
     @classmethod
     def get_notifications_by_user(cls, user: User):
-        return Notification.query.filter_by(_Notification__user_id=user.id).order_by(desc(Notification.creation_date)).limit(15).all()
+        return Notification.query.filter_by(_Notification__user_id=user.id).order_by(desc(Notification._Notification__creation_date)).limit(15).all()
 
     @classmethod
     def get_notifications_by_user_and_serie(cls, user: User, serie: Serie):
         return Notification.query.filter_by(_Notification__user_id=user.id, _Notification__tmdb_id_serie=serie.tmdb_id_serie).order_by(
-            desc(Notification.creation_date)).all()
+            desc(Notification._Notification__creation_date)).all()
 
     @classmethod
     def get_notification_by_id(cls, notification_id: int):
