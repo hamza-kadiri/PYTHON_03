@@ -14,6 +14,8 @@ from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth, Invalid
 from mail import MailingServer, init_mailing_context
 from helpers import generate_assets_url, init_helpers_context
 
+''' Defining CRON jobs'''
+
 
 def init_jobs(app):
     app.logger.info("Initializing CRON Jobs")
@@ -31,8 +33,10 @@ def init_jobs(app):
     atexit.register(lambda: scheduler.shutdown())
 
 
+'''Construct the core Flask application'''
+
+
 def create_app():
-    """Construct the core application."""
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
     app.logger.setLevel(logging.INFO)
@@ -51,6 +55,8 @@ def create_app():
 
     with app.app_context():
 
+        '''Setting up database and authentication for each session'''
+
         @app.teardown_appcontext
         def shutdown_session(exception=None):
             db_session.remove()  # Teardown connexion after every request
@@ -65,6 +71,8 @@ def create_app():
             g.user = user
             return True
 
+        '''Routing for the whole application'''
+
         @app.route('/token', methods=['POST'])
         def generate_auth_token():
             username, password = validate_user_login_form(
@@ -77,7 +85,6 @@ def create_app():
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii'), "user": user.as_dict()})
 
-        # Add some routes
         @app.route("/", methods=['GET'])
         def index():
             return jsonify("Welcome to our API")
@@ -108,9 +115,9 @@ def create_app():
             except IntegrityError:
                 invalid_fields = []
                 if User.get_user_by_username(username) is not None:
-                    invalid_fields.append(InvalidField("username","Username already taken"))
+                    invalid_fields.append(InvalidField("username", "Username already taken"))
                 if User.get_user_by_email(email) is not None:
-                    invalid_fields.append(InvalidField("email","Email already taken"))
+                    invalid_fields.append(InvalidField("email", "Email already taken"))
                 raise InvalidDBOperation("Cannot register user", invalid_fields)
             return jsonify(user.as_dict())
 
@@ -154,7 +161,8 @@ def create_app():
                     # Might raise an IntegrityError
                     user.add_favorite_serie(serie)
                 except IntegrityError:
-                    raise InvalidDBOperation("Subscription already exist",InvalidField("serie_id","Serie already in favorites"))
+                    raise InvalidDBOperation("Subscription already exist",
+                                             InvalidField("serie_id", "Serie already in favorites"))
                 try:
                     notification = Notification.create_from_serie(
                         user_id, serie)  # Might raise a ValueError
@@ -216,8 +224,10 @@ def create_app():
             notifications = Notification.get_notifications_by_user(user)
             return jsonify({"notifications": [notification.as_dict() for notification in notifications]})
 
+        '''Error Handlers'''
+
         @app.errorhandler(InvalidAuth)
-        def handle_invalid_auth(error:InvalidAuth):
+        def handle_invalid_auth(error: InvalidAuth):
             response = jsonify({"status_code": error.status_code, "error_message": error.error_message,
                                 "invalid_fields": error.invalid_fields}), error.status_code
             app.logger.error(response)
@@ -233,13 +243,14 @@ def create_app():
         @app.errorhandler(InvalidDBOperation)
         def handle_invalid_usage(error: InvalidDBOperation):
             response = jsonify({"status_code": error.status_code,
-                                "error_message": error.error_message, "invalids_fields":error.invalid_fields}), error.status_code
+                                "error_message": error.error_message,
+                                "invalids_fields": error.invalid_fields}), error.status_code
             app.logger.error(response)
             return response
 
         @app.errorhandler(400)
         def forbidden_error(error):
-            return jsonify({'status_code': 400, "error_message":"Bad Request"}), 400
+            return jsonify({'status_code': 400, "error_message": "Bad Request"}), 400
 
         @app.errorhandler(401)
         def forbidden_error(error):
@@ -252,7 +263,8 @@ def create_app():
         @app.errorhandler(404)
         def not_found_error(error):
             app.logger.error('404 Not Found Error: %s', (error))
-            return jsonify({'status_code': 404, 'error_message': 'The ressource you have requested could not be found'}), 403
+            return jsonify(
+                {'status_code': 404, 'error_message': 'The ressource you have requested could not be found'}), 403
 
         @app.errorhandler(500)
         def internal_server_error(error):

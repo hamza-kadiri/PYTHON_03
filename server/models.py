@@ -1,5 +1,6 @@
 from typing import List
-from sqlalchemy import Table, Column, Boolean, Integer, SmallInteger, Numeric, String, ForeignKey, UniqueConstraint, desc, \
+from sqlalchemy import Table, Column, Boolean, Integer, SmallInteger, Numeric, String, ForeignKey, UniqueConstraint, \
+    desc, \
     inspect
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.orm import relationship
@@ -12,6 +13,9 @@ from time import time
 from database import save_obj, delete_obj
 from tmdb_api import get_tv_serie, get_tv_serie_season
 from helpers import sortListByLambda, generate_assets_url
+
+
+'''Defining basic classes'''
 
 
 class EqMixin(object):
@@ -40,6 +44,17 @@ class EqMixin(object):
         return hash(self.__class__) ^ hash(self.compare_value())
 
 
+class DBObject(EqMixin, Base):
+    def save_in_db(self):
+        save_obj(self)
+
+    def delete_in_db(self):
+        delete_obj(self)
+
+
+'''Initializing many-to-many relationships between tables'''
+
+
 subscriptions_table = Table('subscriptions', Base.metadata,
                             Column('user_id', Integer, ForeignKey('users.id')),
                             Column('tmdb_id_serie', Integer,
@@ -58,7 +73,12 @@ series_productors_table = Table('series_productors', Base.metadata,
                                 Column('tmdb_id_serie', Integer, ForeignKey('series.tmdb_id_serie')))
 
 
-class Person(EqMixin):
+'''Defining models'''
+'''Please note that the methods are ordered to follow a "CRUD" order : static method(s) for creation, static method(s) for selection, method(s) for update and method(s) to delete'''
+
+
+class Person:
+    # Attributes and basic methods (init, as_dict)
     tmdb_id = Column(Integer, primary_key=True)
     credit_id = Column(String)
     name = Column(String)
@@ -70,15 +90,13 @@ class Person(EqMixin):
         self.name = name
         self.profile_path = profile_path
 
-    def compare_value(self):
-        return self.tmdb_id
-
     def as_dict(self):
         return {'tmdb_id': self.tmdb_id, 'credit_id': self.credit_id, 'name': self.name,
                 'profile_path': self.profile_path}
 
 
-class Actor(Person, Base):
+class Actor(Person, DBObject):
+    # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'actors'
     department = Column(String)
     job = Column(String)
@@ -88,16 +106,15 @@ class Actor(Person, Base):
         self.department = department
         self.job = job
 
-    def save_in_db(self):
-        save_obj(self)
+    def compare_value(self):
+        return self.tmdb_id
 
     def as_dict(self):
-        d = {'department': self.department, 'job': self.job}
-        d.update(super().as_dict())
-        return d
+        return {'department': self.department, 'job': self.job, **super().as_dict()}
 
 
-class Productor(Person, Base):
+class Productor(Person, DBObject):
+    # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'productors'
     gender = Column(String)
     series = relationship(
@@ -107,14 +124,13 @@ class Productor(Person, Base):
         Person.__init__(self, tmdb_id, credit_id, name, profile_path)
         self.gender = gender
 
-    def save_in_db(self):
-        save_obj(self)
+    def compare_value(self):
+        return self.tmdb_id
 
     def as_dict(self):
-        d = {'gender': self.gender}
-        d.update(super().as_dict())
-        return d
+        return {'gender': self.gender, **super().as_dict()}
 
+    # Static method for creation
     @classmethod
     def create_from_json(cls, json):
         try:
@@ -130,6 +146,7 @@ class Productor(Person, Base):
         new_productor.save_in_db()
         return new_productor
 
+    # Static method for selection
     @classmethod
     def get_productor_by_id(cls, tmdb_id):
         try:
@@ -140,7 +157,8 @@ class Productor(Person, Base):
             return None
 
 
-class Genre(Base, EqMixin):
+class Genre(DBObject):
+    # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'genres'
     tmdb_id_genre = Column(SmallInteger, primary_key=True)
     name = Column(String)
@@ -154,18 +172,17 @@ class Genre(Base, EqMixin):
     def compare_value(self):
         return self.tmdb_id_genre
 
-    def save_in_db(self):
-        save_obj(self)
-
     def as_dict(self):
         return {'tmdb_id_genre': self.tmdb_id_genre, 'name': self.name}
 
+    # Static method for creation
     @classmethod
     def create_from_json(cls, json: dict):
         genre = Genre(json['id'], json['name'])
         genre.save_in_db()
         return genre
 
+    # Static method for selection
     @classmethod
     def get_genre_by_id(cls, genre_id: int):
         try:
@@ -176,7 +193,8 @@ class Genre(Base, EqMixin):
             return None
 
 
-class Episode(Base, EqMixin):
+class Episode(DBObject):
+    # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'episodes'
     tmdb_id_episode = Column(Integer, primary_key=True)
     name = Column(String)
@@ -189,12 +207,6 @@ class Episode(Base, EqMixin):
     still_path = Column(String, nullable=True)
     tmdb_id_season = Column(Integer, ForeignKey(
         'seasons.tmdb_id_season'), nullable=False)
-
-    def compare_value(self):
-        return self.tmdb_id_episode
-
-    def save_in_db(self):
-        save_obj(self)
 
     def __init__(self, tmdb_id_episode: int, name: str, overview: str, season_number: int, episode_number: int,
                  vote_count: int, vote_average: float, air_date: str, still_path: str, tmdb_id_season: int):
@@ -209,6 +221,9 @@ class Episode(Base, EqMixin):
         self.still_path = still_path
         self.tmdb_id_season = tmdb_id_season
 
+    def compare_value(self):
+        return self.tmdb_id_episode
+
     def as_dict(self):
         dict = {'tmdb_id_episode': self.tmdb_id_episode, 'name': self.name, 'overview': self.overview,
                 'season_number': self.season_number, 'episode_number': self.episode_number,
@@ -217,6 +232,16 @@ class Episode(Base, EqMixin):
         generate_assets_url(dict)
         return dict
 
+    # Static method for creation
+    @classmethod
+    def create_from_json(cls, json: dict, tmdb_id_season: int):
+        episode = Episode(json['id'], json['name'], json['overview'], json['season_number'], json['episode_number'],
+                          json['vote_count'], json['vote_average'], json['air_date'], json['still_path'],
+                          tmdb_id_season)
+        episode.save_in_db()
+        return episode
+
+    # Static method for selection
     @classmethod
     def get_episode_by_id(cls, tmdb_id_episode: int):
         try:
@@ -226,16 +251,9 @@ class Episode(Base, EqMixin):
         except MultipleResultsFound:
             return None
 
-    @classmethod
-    def create_from_json(cls, json: dict, tmdb_id_season: int):
-        episode = Episode(json['id'], json['name'], json['overview'], json['season_number'], json['episode_number'],
-                          json['vote_count'], json['vote_average'], json['air_date'], json['still_path'],
-                          tmdb_id_season)
-        episode.save_in_db()
-        return episode
 
-
-class Season(Base, EqMixin):
+class Season(DBObject):
+    # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'seasons'
     tmdb_id_season = Column(Integer, primary_key=True)
     name = Column(String)
@@ -246,12 +264,6 @@ class Season(Base, EqMixin):
     tmdb_id_serie = Column(Integer, ForeignKey(
         'series.tmdb_id_serie'), nullable=False)
     episodes = relationship('Episode', backref='seasons', lazy=True)
-
-    def compare_value(self):
-        return self.tmdb_id_season
-
-    def save_in_db(self):
-        save_obj(self)
 
     def __init__(self, tmdb_id_season: int, name: str, overview: str, season_number: int, air_date: str,
                  poster_path: str, episodes: List[Episode], tmdb_id_serie: int):
@@ -264,21 +276,18 @@ class Season(Base, EqMixin):
         self.episodes = episodes
         self.tmdb_id_serie = tmdb_id_serie
 
+    def compare_value(self):
+        return self.tmdb_id_season
+
     def as_dict(self):
         dict = {'tmdb_id_season': self.tmdb_id_season, 'name': self.name, 'overview': self.overview,
                 'season_number': self.season_number, 'air_date': self.air_date, 'poster_path': self.poster_path,
-                'episodes': [episode.as_dict() for episode in sortListByLambda(self.episodes, lambda x: x.episode_number)], }
+                'episodes': [episode.as_dict() for episode in
+                             sortListByLambda(self.episodes, lambda x: x.episode_number)], }
         generate_assets_url(dict)
         return dict
-    @classmethod
-    def get_season_by_id(cls, tmdb_id_season: int):
-        try:
-            return Season.query.filter_by(tmdb_id_season=tmdb_id_season).one()
-        except NoResultFound:
-            return None
-        except MultipleResultsFound:
-            return None
 
+    # Static method for creation
     @classmethod
     def create_from_json(cls, json: dict, tmdb_id_serie: int):
         season = Season(json['id'], json['name'], json['overview'], json['season_number'], json['air_date'],
@@ -292,8 +301,19 @@ class Season(Base, EqMixin):
         season.save_in_db()
         return season
 
+    # Static method for selection
+    @classmethod
+    def get_season_by_id(cls, tmdb_id_season: int):
+        try:
+            return Season.query.filter_by(tmdb_id_season=tmdb_id_season).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
 
-class Serie(Base, EqMixin):
+
+class Serie(DBObject):
+    # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'series'
     tmdb_id_serie = Column(Integer, primary_key=True)
     name = Column(String)
@@ -318,7 +338,8 @@ class Serie(Base, EqMixin):
         "User", secondary=subscriptions_table, back_populates="series")
     seasons = relationship('Season', backref='series', lazy=True)
 
-    def __init__(self, tmdb_id_serie: int, name: str, overview: str, backdrop_path: str, poster_path: str, nb_seasons: int,
+    def __init__(self, tmdb_id_serie: int, name: str, overview: str, backdrop_path: str, poster_path: str,
+                 nb_seasons: int,
                  nb_episodes: int, next_episode_name: str, next_episode_air_date: str, next_episode_season_number: int,
                  next_episode_episode_number: int, vote_count: int, vote_average: float, genres: List[Genre],
                  productors: List[Productor], seasons: List[Season]):
@@ -341,8 +362,80 @@ class Serie(Base, EqMixin):
         self.productors = productors
         self.seasons = seasons
 
-    def save_in_db(self):
-        save_obj(self)
+    def compare_value(self):
+        return self.tmdb_id_serie
+
+    def as_dict(self):
+        dict = {'tmdb_id_serie': self.tmdb_id_serie, 'name': self.name, 'overview': self.overview,
+                'backdrop_path': self.backdrop_path,
+                'poster_path': self.poster_path,
+                'nb_seasons': self.nb_seasons, 'nb_episodes': self.nb_episodes,
+                'next_episode_name': self.next_episode_name, 'next_episode_air_date': self.next_episode_air_date,
+                'next_episode_season_number': self.next_episode_season_number,
+                'next_episode_episode_number': self.next_episode_episode_number,
+                'vote_count': self.vote_count, 'vote_average': str(self.vote_average),
+                'genres': [genre.as_dict() for genre in self.genres],
+                'productors': [productor.as_dict() for productor in self.productors],
+                'seasons': [season.as_dict() for season in sortListByLambda(self.seasons, lambda x: x.season_number)]}
+        generate_assets_url(dict)
+        return dict
+
+    # Static method for creation
+    @classmethod
+    def create_from_json(cls, json: dict):
+        # Next episode information
+        next_episode_name = None
+        next_episode_air_date = None
+        next_episode_season_number = None
+        next_episode_episode_number = None
+        next_episode = json['next_episode_to_air']
+        if next_episode is not None:
+            next_episode_name = next_episode['name']
+            next_episode_air_date = next_episode['air_date']
+            next_episode_season_number = next_episode['season_number']
+            next_episode_episode_number = next_episode['episode_number']
+        serie = Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['poster_path'],
+                      json['number_of_seasons'],
+                      json['number_of_episodes'], next_episode_name, next_episode_air_date, next_episode_season_number,
+                      next_episode_episode_number, json['vote_count'], json['vote_average'], [], [], [])
+        serie.save_in_db()
+        # Genres informations
+        for genre in json['genres']:
+            new_genre = Genre.get_genre_by_id(genre['id'])
+            if new_genre is None:
+                new_genre = Genre.create_from_json(genre)
+            serie.genres.append(new_genre)
+        # Productors informations
+        for productor in json['created_by']:
+            new_productor = Productor.get_productor_by_id(productor['id'])
+            if new_productor is None:
+                new_productor = Productor.create_from_json(productor)
+            serie.productors.append(new_productor)
+        # Seasons informations
+        for season in json['seasons']:
+            new_season = Season.get_season_by_id(season['id'])
+            if new_season is None:
+                new_season = Season.create_from_json(get_tv_serie_season(json['id'], season['season_number']),
+                                                     json['id'])
+            serie.seasons.append(new_season)
+        serie.save_in_db()
+        return serie
+
+    # Static methods for selection
+    @classmethod
+    def get_serie_by_id(cls, tmdb_id_serie: int):
+        try:
+            return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
+
+    @classmethod
+    def get_all_series(cls):
+        return Serie.query.all()
+
+        # Method to update
 
     def update_from_json(self, json: dict):
         self.last_update = time()
@@ -398,78 +491,9 @@ class Serie(Base, EqMixin):
         # Saving changes
         self.save_in_db()
 
-    def compare_value(self):
-        return self.tmdb_id_serie
 
-    def as_dict(self):
-        dict = {'tmdb_id_serie': self.tmdb_id_serie, 'name': self.name, 'overview': self.overview,
-                'backdrop_path': self.backdrop_path,
-                'poster_path': self.poster_path,
-                'nb_seasons': self.nb_seasons, 'nb_episodes': self.nb_episodes,
-                'next_episode_name': self.next_episode_name, 'next_episode_air_date': self.next_episode_air_date,
-                'next_episode_season_number': self.next_episode_season_number,
-                'next_episode_episode_number': self.next_episode_episode_number,
-                'vote_count': self.vote_count, 'vote_average': str(self.vote_average),
-                'genres': [genre.as_dict() for genre in self.genres],
-                'productors': [productor.as_dict() for productor in self.productors],
-                'seasons': [season.as_dict() for season in sortListByLambda(self.seasons, lambda x: x.season_number)]}
-        generate_assets_url(dict)
-        return dict
-
-    @classmethod
-    def get_serie_by_id(cls, tmdb_id_serie: int):
-        try:
-            return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).one()
-        except NoResultFound:
-            return None
-        except MultipleResultsFound:
-            return None
-
-    @classmethod
-    def get_all_series(cls):
-        return Serie.query.all()
-
-    @classmethod
-    def create_from_json(cls, json: dict):
-        # Next episode information
-        next_episode_name = None
-        next_episode_air_date = None
-        next_episode_season_number = None
-        next_episode_episode_number = None
-        next_episode = json['next_episode_to_air']
-        if next_episode is not None:
-            next_episode_name = next_episode['name']
-            next_episode_air_date = next_episode['air_date']
-            next_episode_season_number = next_episode['season_number']
-            next_episode_episode_number = next_episode['episode_number']
-        serie = Serie(json['id'], json['name'], json['overview'], json['backdrop_path'], json['poster_path'], json['number_of_seasons'],
-                      json['number_of_episodes'], next_episode_name, next_episode_air_date, next_episode_season_number,
-                      next_episode_episode_number, json['vote_count'], json['vote_average'], [], [], [])
-        serie.save_in_db()
-        # Genres informations
-        for genre in json['genres']:
-            new_genre = Genre.get_genre_by_id(genre['id'])
-            if new_genre is None:
-                new_genre = Genre.create_from_json(genre)
-            serie.genres.append(new_genre)
-        # Productors informations
-        for productor in json['created_by']:
-            new_productor = Productor.get_productor_by_id(productor['id'])
-            if new_productor is None:
-                new_productor = Productor.create_from_json(productor)
-            serie.productors.append(new_productor)
-        # Seasons informations
-        for season in json['seasons']:
-            new_season = Season.get_season_by_id(season['id'])
-            if new_season is None:
-                new_season = Season.create_from_json(get_tv_serie_season(json['id'], season['season_number']),
-                                                     json['id'])
-            serie.seasons.append(new_season)
-        serie.save_in_db()
-        return serie
-
-
-class User(Base, EqMixin):
+class User(DBObject):
+    # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'users'
     id = Column(SmallInteger, primary_key=True)
     username = Column(String(20), unique=True)
@@ -490,6 +514,8 @@ class User(Base, EqMixin):
     def as_dict(self):
         return {'id': self.id, 'username': self.username, 'email': self.email}
 
+    # Methods related to authentication
+
     def verify_password(self, password: str):
         return pwd_context.verify(password, self.password_hash)
 
@@ -497,27 +523,23 @@ class User(Base, EqMixin):
         s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
-    def get_subscription_by_serie_id(self, tmdb_id_serie: int):
+    @classmethod
+    def hash_password(cls, password: str):
+        return pwd_context.encrypt(password)
+
+    @classmethod
+    def verify_auth_token(cls, token: str):
+        s = Serializer(app.config['SECRET_KEY'])
         try:
-            return User.query.join(Serie, User.series).filter(User.id == self.id).filter(
-                Serie.tmdb_id_serie == tmdb_id_serie).one()
-        except NoResultFound:
-            return None
-        except MultipleResultsFound:
-            return None
+            data = s.loads(token)
+        except SignatureExpired:
+            return None  # valid token, but expired
+        except BadSignature:
+            return None  # invalid token
+        user = User.get_user_by_id(data['id'])
+        return user
 
-    def save_in_db(self):
-        save_obj(self)
-
-    def add_favorite_serie(self, serie: Serie):
-        self.series.append(serie)
-        self.save_in_db()
-
-    def delete_favorite_serie(self, serie: Serie):
-        self.series.remove(serie)
-        self.save_in_db()
-        for notif in Notification.get_notifications_by_user_and_serie(self, serie):
-            notif.delete_in_db()
+    # Static methods for selection
 
     @classmethod
     def get_user_by_id(cls, user_id: int):
@@ -546,24 +568,30 @@ class User(Base, EqMixin):
         except MultipleResultsFound:
             return None
 
-    @classmethod
-    def hash_password(cls, password: str):
-        return pwd_context.encrypt(password)
+    # Methods to update
 
-    @classmethod
-    def verify_auth_token(cls, token: str):
-        s = Serializer(app.config['SECRET_KEY'])
+    def get_subscription_by_serie_id(self, tmdb_id_serie: int):
         try:
-            data = s.loads(token)
-        except SignatureExpired:
-            return None  # valid token, but expired
-        except BadSignature:
-            return None  # invalid token
-        user = User.get_user_by_id(data['id'])
-        return user
+            return User.query.join(Serie, User.series).filter(User.id == self.id).filter(
+                Serie.tmdb_id_serie == tmdb_id_serie).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
+
+    def add_favorite_serie(self, serie: Serie):
+        self.series.append(serie)
+        self.save_in_db()
+
+    def delete_favorite_serie(self, serie: Serie):
+        self.series.remove(serie)
+        self.save_in_db()
+        for notif in Notification.get_notifications_by_user_and_serie(self, serie):
+            notif.delete_in_db()
 
 
-class Notification(Base, EqMixin):
+class Notification(DBObject):
+    # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = "notifications"
     id = Column(SmallInteger, primary_key=True)
     user_id = Column(SmallInteger, ForeignKey('users.id'), nullable=False)
@@ -596,23 +624,15 @@ class Notification(Base, EqMixin):
     def compare_value(self):
         return self.id
 
-    def save_in_db(self):
-        save_obj(self)
-
-    def delete_in_db(self):
-        delete_obj(self)
-
-    def mark_as_read(self):
-        self.read = True
-        self.save_in_db()
-
     def as_dict(self):
         dict = {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie,
                 'serie_name': self.serie_name, 'name': self.name, 'episode_number': self.episode_number,
-                'season_number': self.season_number, 'next_air_date': self.next_air_date, 'backdrop_path': self.backdrop_path, 'read': self.read, 'poster_path': self.poster_path}
+                'season_number': self.season_number, 'next_air_date': self.next_air_date,
+                'backdrop_path': self.backdrop_path, 'read': self.read, 'poster_path': self.poster_path}
         generate_assets_url(dict)
         return dict
 
+    # Static method for creation
     @classmethod
     def create_from_serie(cls, user_id: int, serie: Serie):
         notif = Notification(user_id, serie.tmdb_id_serie, serie.name, serie.next_episode_name,
@@ -624,13 +644,15 @@ class Notification(Base, EqMixin):
             notif.save_in_db()
             return notif
 
+    # Static methods for selection
     @classmethod
     def get_notifications_by_user(cls, user: User):
         return Notification.query.filter_by(user_id=user.id).order_by(desc(Notification.creation_date)).limit(15).all()
 
     @classmethod
     def get_notifications_by_user_and_serie(cls, user: User, serie: Serie):
-        return Notification.query.filter_by(user_id=user.id, tmdb_id_serie=serie.tmdb_id_serie).order_by(desc(Notification.creation_date)).all()
+        return Notification.query.filter_by(user_id=user.id, tmdb_id_serie=serie.tmdb_id_serie).order_by(
+            desc(Notification.creation_date)).all()
 
     @classmethod
     def get_notification_by_id(cls, notification_id: int):
@@ -640,3 +662,8 @@ class Notification(Base, EqMixin):
             return None
         except MultipleResultsFound:
             return None
+
+    # Method to update
+    def mark_as_read(self):
+        self.read = True
+        self.save_in_db()
