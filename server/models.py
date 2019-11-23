@@ -67,7 +67,7 @@ series_genres_table = Table('series_genres', Base.metadata,
                             )
 series_productors_table = Table('series_productors', Base.metadata,
                                 Column('tmdb_id_productor', Integer,
-                                       ForeignKey('productors._Productor__tmdb_id')),
+                                       ForeignKey('productors._Person__tmdb_id')),
                                 Column('tmdb_id_serie', Integer, ForeignKey('series._Serie__tmdb_id_serie')))
 
 '''Defining models'''
@@ -181,7 +181,7 @@ class Productor(Person, DBObject, Base):
     @classmethod
     def get_productor_by_id(cls, tmdb_id):
         try:
-            return Productor.query.filter_by(_Productor__tmdb_id=tmdb_id).one()
+            return Productor.query.filter_by(_Person__tmdb_id=tmdb_id).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -812,7 +812,7 @@ class Notification(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = "notifications"
     __id = Column(SmallInteger, primary_key=True)
-    __user_id = Column(SmallInteger, ForeignKey('users.id'), nullable=False)
+    __user_id = Column(SmallInteger, ForeignKey('users._User__id'), nullable=False)
     __tmdb_id_serie = Column(Integer, ForeignKey(
         'series._Serie__tmdb_id_serie'), nullable=False)
     __serie_name = Column(String)
