@@ -75,7 +75,7 @@ class RequestExceptionOMDB(RequestException):
 class RequestOMDB:
     def perform_request(self, endpoint: str, method: str = 'GET', query: str = None):
         if query is not None:
-            query_string = f'&query={urllib.parse.quote(query)}'
+            query_string = query
         else:
             query_string = False
         url = f'{RequestContext.get_api_url()}{endpoint}?api_key={RequestContext.get_api_key()}{query_string or ""}'
@@ -94,7 +94,8 @@ def create_request_exception(method: str, url: str, resp: any):
 def search_tv_serie_by_title(query: str):
     endpoint = "/search/tv"
     request = RequestOMDB()
-    resp = request.perform_request(endpoint, query=query)
+    query_string = f'&query={urllib.parse.quote(query)}'
+    resp = request.perform_request(endpoint, query=query_string)
     json = resp.json()
     for result in json['results']:
         generate_assets_url(result)
@@ -131,8 +132,9 @@ def get_tv_genres():
 
 def get_tv_series_discover():
     endpoint = f'/discover/tv'
+    query = "language=en-US&sort_by=popularity.desc&air_date.gte=1573992374&page=1&timezone=America%2FNew_York&include_null_first_air_dates=false"
     request = RequestOMDB()
-    resp = request.perform_request(endpoint)
+    resp = request.perform_request(endpoint,query=query)
     return resp.json()
 
 def get_tv_series_discover_by_genre():

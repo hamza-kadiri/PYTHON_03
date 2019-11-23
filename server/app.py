@@ -10,7 +10,7 @@ from models import User, Serie, Notification
 from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, get_tv_series_discover_by_genre
 from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPTokenAuth
-from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth
+from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth, InvalidField
 from mail import update_all_series, init_mailing_context, send_notification_default
 from helpers import generate_assets_url, init_helpers_context
 
@@ -109,10 +109,12 @@ def create_app():
             try:
                 user.save_in_db()  # Might raise an IntegrityError if user already exist
             except IntegrityError:
-                if User.get_user_by_username(username) is not None :
-                    raise InvalidDBOperation("Username already taken",{"username":"Username already taken"})
-                else:
-                    raise InvalidDBOperation("Email already taken",{"email":"Email already taken"})
+                invalid_fields = []
+                if User.get_user_by_username(username) is not None:
+                    invalid_fields.append(InvalidField("username","Username already taken"))
+                if User.get_user_by_email(email):
+                    invalid_fields.append(InvalidField("email","Email already taken"))
+                raise InvalidDBOperation("Cannot register user", invalid_fields)
             return jsonify(user.as_dict())
 
         @app.route("/users/<int:user_id>", methods=['GET'])
@@ -158,7 +160,7 @@ def create_app():
                     # Might raise an IntegrityError
                     user.add_favorite_serie(serie)
                 except IntegrityError:
-                    raise InvalidDBOperation("Subscription already exist",{"serie_id":"Serie already in favorites"})
+                    raise InvalidDBOperation("Subscription already exist",InvalidField("serie_id","Serie already in favorites"))
                 try:
                     notification = Notification.create_from_serie(
                         user_id, serie)  # Might raise a ValueError
@@ -222,21 +224,21 @@ def create_app():
         @app.errorhandler(InvalidAuth)
         def handle_invalid_auth(error:InvalidAuth):
             response = jsonify({"status_code": error.status_code, "error_message": error.error_message,
-                                "invalid_fields": error.invalid_fields}), error.status_code
+                                "invalid_fields": [invalid_field.to_dict() for invalid_field in error.invalid_fields]}), error.status_code
             app.logger.error(response)
             return response
 
         @app.errorhandler(InvalidForm)
         def handle_invalid_usage(error: InvalidForm):
             response = jsonify({"status_code": error.status_code, "error_message": error.error_message,
-                                "invalid_fields": error.to_dict()}), error.status_code
+                                "invalid_fields": [invalid_field.to_dict() for invalid_field in error.invalid_fields]}), error.status_code
             app.logger.error(response)
             return response
 
         @app.errorhandler(InvalidDBOperation)
         def handle_invalid_usage(error: InvalidDBOperation):
             response = jsonify({"status_code": error.status_code,
-                                "error_message": error.error_message, "invalids_fields":error.invalid_fields}), error.status_code
+                                "error_message": error.error_message, "invalids_fields":[invalid_field.to_dict() for invalid_field in error.invalid_fields]}), error.status_code
             app.logger.error(response)
             return response
 

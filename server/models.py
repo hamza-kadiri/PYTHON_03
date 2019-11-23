@@ -538,6 +538,15 @@ class User(Base, EqMixin):
             return None
 
     @classmethod
+    def get_user_by_email(cls, email: str):
+        try:
+            return User.query.filter_by(email=email).one()
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            return None
+
+    @classmethod
     def hash_password(cls, password: str):
         return pwd_context.encrypt(password)
 

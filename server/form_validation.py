@@ -5,12 +5,12 @@ from api_exceptions import InvalidForm, InvalidField
 def validate_user_registration_form(json):
     try:
         username = json['username']
-        username_valid = checkers.is_not_empty(username) and checkers.is_string(username)
+        username_valid = checkers.is_not_empty(username) and checkers.is_string(username) and checkers.has_length(username, minimum=1, maximum=20)
     except TypeError:
         username_valid = False
     try:
         password = json['password']
-        password_valid = checkers.is_not_empty(password) and checkers.is_string(password)
+        password_valid = checkers.is_not_empty(password) and checkers.is_string(password) and checkers.has_length(password, minimum=1, maximum=128)
     except TypeError:
         password_valid = False
     try:
