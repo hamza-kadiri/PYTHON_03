@@ -143,7 +143,7 @@ class Productor(Person, DBObject, Base):
     __tablename__ = 'productors'
     __gender = Column(String)
     __series = relationship(
-        "Serie", secondary=series_productors_table, back_populates="productors")
+        "Serie", secondary=series_productors_table, back_populates="_Serie__productors")
 
     def __init__(self, tmdb_id: int, credit_id: str, name: str, profile_path: str, gender: int):
         Person.__init__(self, tmdb_id, credit_id, name, profile_path)
@@ -194,7 +194,7 @@ class Genre(DBObject, Base):
     __tmdb_id_genre = Column(SmallInteger, primary_key=True)
     __name = Column(String)
     __series = relationship(
-        "Serie", secondary=series_genres_table, back_populates="genres")
+        "Serie", secondary=series_genres_table, back_populates="_Serie__genres")
 
     def __init__(self, tmdb_id_genre: int, name: str):
         self.__tmdb_id_genre = tmdb_id_genre
@@ -453,11 +453,11 @@ class Serie(DBObject, Base):
     __creation = Column(Integer)
     __last_update = Column(Integer)
     __productors = relationship(
-        "Productor", secondary=series_productors_table, back_populates="series")
+        "Productor", secondary=series_productors_table, back_populates="_Productor__series")
     __genres = relationship(
-        "Genre", secondary=series_genres_table, back_populates="series")
+        "Genre", secondary=series_genres_table, back_populates="_Genre__series")
     __users = relationship(
-        "User", secondary=subscriptions_table, back_populates="series")
+        "User", secondary=subscriptions_table, back_populates="_User__series")
     __seasons = relationship('Season', backref='series', lazy=True)
 
     def __init__(self, tmdb_id_serie: int, name: str, overview: str, backdrop_path: str, poster_path: str,
@@ -700,7 +700,7 @@ class User(DBObject, Base):
     __email = Column(String(80), unique=True)
     __password_hash = Column(String(128))
     __series = relationship(
-        "Serie", secondary=subscriptions_table, back_populates="users")
+        "Serie", secondary=subscriptions_table, back_populates="_Serie__users")
 
     def __init__(self, username: str, email: str, password: str):
         self.__username = username
