@@ -14,7 +14,6 @@ from database import save_obj, delete_obj
 from tmdb_api import get_tv_serie, get_tv_serie_season
 from helpers import sortListByLambda, generate_assets_url
 
-
 '''Defining basic classes'''
 
 
@@ -54,24 +53,22 @@ class DBObject(EqMixin):
 
 '''Initializing many-to-many relationships between tables'''
 
-
 subscriptions_table = Table('subscriptions', Base.metadata,
                             Column('user_id', Integer, ForeignKey('users._User__id')),
                             Column('tmdb_id_serie', Integer,
-                                   ForeignKey('series.tmdb_id_serie'))
+                                   ForeignKey('series._Serie__tmdb_id_serie'))
                             )
 
 series_genres_table = Table('series_genres', Base.metadata,
                             Column('tmdb_id_genre', Integer,
-                                   ForeignKey('genres.tmdb_id_genre')),
+                                   ForeignKey('genres._Genre__tmdb_id_genre')),
                             Column('tmdb_id_serie', Integer,
-                                   ForeignKey('series.tmdb_id_serie'))
+                                   ForeignKey('series._Serie__tmdb_id_serie'))
                             )
 series_productors_table = Table('series_productors', Base.metadata,
                                 Column('tmdb_id_productor', Integer,
-                                       ForeignKey('productors.tmdb_id')),
-                                Column('tmdb_id_serie', Integer, ForeignKey('series.tmdb_id_serie')))
-
+                                       ForeignKey('productors._Productor__tmdb_id')),
+                                Column('tmdb_id_serie', Integer, ForeignKey('series._Serie__tmdb_id_serie')))
 
 '''Defining models'''
 '''Please note that the methods are ordered to follow a "CRUD" order : static method(s) for creation, static method(s) for selection, method(s) for update and method(s) to delete'''
@@ -79,56 +76,90 @@ series_productors_table = Table('series_productors', Base.metadata,
 
 class Person:
     # Attributes and basic methods (init, as_dict)
-    tmdb_id = Column(Integer, primary_key=True)
-    credit_id = Column(String)
-    name = Column(String)
-    profile_path = Column(String)
+    __tmdb_id = Column(Integer, primary_key=True)
+    __credit_id = Column(String)
+    __name = Column(String)
+    __profile_path = Column(String)
 
     def __init__(self, tmdb_id: int, credit_id: str, name: str, profile_path: str):
-        self.tmdb_id = tmdb_id
-        self.credit_id = credit_id
-        self.name = name
-        self.profile_path = profile_path
+        self.__tmdb_id = tmdb_id
+        self.__credit_id = credit_id
+        self.__name = name
+        self.__profile_path = profile_path
 
     def as_dict(self):
-        return {'tmdb_id': self.tmdb_id, 'credit_id': self.credit_id, 'name': self.name,
-                'profile_path': self.profile_path}
+        return {'tmdb_id': self.__tmdb_id, 'credit_id': self.__credit_id, 'name': self.__name,
+                'profile_path': self.__profile_path}
+
+    # Getters
+
+    @property
+    def tmdb_id(self):
+        return self.__tmdb_id
+
+    @property
+    def credit_id(self):
+        return self.__credit_id
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def profile_path(self):
+        return self.__profile_path
 
 
 class Actor(Person, DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'actors'
-    department = Column(String)
-    job = Column(String)
+    __department = Column(String)
+    __job = Column(String)
 
     def __init__(self, tmdb_id: int, credit_id: str, name: str, profile_path: str, department: str, job: str):
         Person.__init__(self, tmdb_id, credit_id, name, profile_path)
-        self.department = department
-        self.job = job
+        self.__department = department
+        self.__job = job
 
     def compare_value(self):
-        return self.tmdb_id
+        return self.__tmdb_id
 
     def as_dict(self):
-        return {'department': self.department, 'job': self.job, **super().as_dict()}
+        return {'department': self.__department, 'job': self.__job, **super().as_dict()}
+
+    # Getters
+
+    @property
+    def department(self):
+        return self.__department
+
+    @property
+    def job(self):
+        return self.__job
 
 
 class Productor(Person, DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'productors'
-    gender = Column(String)
-    series = relationship(
+    __gender = Column(String)
+    __series = relationship(
         "Serie", secondary=series_productors_table, back_populates="productors")
 
     def __init__(self, tmdb_id: int, credit_id: str, name: str, profile_path: str, gender: int):
         Person.__init__(self, tmdb_id, credit_id, name, profile_path)
-        self.gender = gender
+        self.__gender = gender
 
     def compare_value(self):
-        return self.tmdb_id
+        return self.__tmdb_id
 
     def as_dict(self):
-        return {'gender': self.gender, **super().as_dict()}
+        return {'gender': self.__gender, **super().as_dict()}
+
+    # Getters
+
+    @property
+    def gender(self):
+        return self.__gender
 
     # Static method for creation
     @classmethod
@@ -150,7 +181,7 @@ class Productor(Person, DBObject, Base):
     @classmethod
     def get_productor_by_id(cls, tmdb_id):
         try:
-            return Productor.query.filter_by(tmdb_id=tmdb_id).one()
+            return Productor.query.filter_by(_Productor__tmdb_id=tmdb_id).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -160,20 +191,34 @@ class Productor(Person, DBObject, Base):
 class Genre(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'genres'
-    tmdb_id_genre = Column(SmallInteger, primary_key=True)
-    name = Column(String)
-    series = relationship(
+    __tmdb_id_genre = Column(SmallInteger, primary_key=True)
+    __name = Column(String)
+    __series = relationship(
         "Serie", secondary=series_genres_table, back_populates="genres")
 
     def __init__(self, tmdb_id_genre: int, name: str):
-        self.tmdb_id_genre = tmdb_id_genre
-        self.name = name
+        self.__tmdb_id_genre = tmdb_id_genre
+        self.__name = name
 
     def compare_value(self):
-        return self.tmdb_id_genre
+        return self.__tmdb_id_genre
 
     def as_dict(self):
-        return {'tmdb_id_genre': self.tmdb_id_genre, 'name': self.name}
+        return {'tmdb_id_genre': self.__tmdb_id_genre, 'name': self.__name}
+
+    # Getters
+
+    @property
+    def tmdb_id_genre(self):
+        return self.__tmdb_id_genre
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def series(self):
+        return self.__series
 
     # Static method for creation
     @classmethod
@@ -186,7 +231,7 @@ class Genre(DBObject, Base):
     @classmethod
     def get_genre_by_id(cls, genre_id: int):
         try:
-            return Genre.query.filter_by(tmdb_id_genre=genre_id).one()
+            return Genre.query.filter_by(_Genre__tmdb_id_genre=genre_id).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -196,41 +241,83 @@ class Genre(DBObject, Base):
 class Episode(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'episodes'
-    tmdb_id_episode = Column(Integer, primary_key=True)
-    name = Column(String)
-    overview = Column(String)
-    season_number = Column(SmallInteger)
-    episode_number = Column(SmallInteger)
-    vote_count = Column(Integer)
-    vote_average = Column(Numeric(3, 1))
-    air_date = Column(String)
-    still_path = Column(String, nullable=True)
-    tmdb_id_season = Column(Integer, ForeignKey(
-        'seasons.tmdb_id_season'), nullable=False)
+    __tmdb_id_episode = Column(Integer, primary_key=True)
+    __name = Column(String)
+    __overview = Column(String)
+    __season_number = Column(SmallInteger)
+    __episode_number = Column(SmallInteger)
+    __vote_count = Column(Integer)
+    __vote_average = Column(Numeric(3, 1))
+    __air_date = Column(String)
+    __still_path = Column(String, nullable=True)
+    __tmdb_id_season = Column(Integer, ForeignKey(
+        'seasons._Season__tmdb_id_season'), nullable=False)
 
     def __init__(self, tmdb_id_episode: int, name: str, overview: str, season_number: int, episode_number: int,
                  vote_count: int, vote_average: float, air_date: str, still_path: str, tmdb_id_season: int):
-        self.tmdb_id_episode = tmdb_id_episode
-        self.name = name
-        self.overview = overview
-        self.season_number = season_number
-        self.episode_number = episode_number
-        self.vote_count = vote_count
-        self.vote_average = vote_average
-        self.air_date = air_date
-        self.still_path = still_path
-        self.tmdb_id_season = tmdb_id_season
+        self.__tmdb_id_episode = tmdb_id_episode
+        self.__name = name
+        self.__overview = overview
+        self.__season_number = season_number
+        self.__episode_number = episode_number
+        self.__vote_count = vote_count
+        self.__vote_average = vote_average
+        self.__air_date = air_date
+        self.__still_path = still_path
+        self.__tmdb_id_season = tmdb_id_season
 
     def compare_value(self):
-        return self.tmdb_id_episode
+        return self.__tmdb_id_episode
 
     def as_dict(self):
-        dict = {'tmdb_id_episode': self.tmdb_id_episode, 'name': self.name, 'overview': self.overview,
-                'season_number': self.season_number, 'episode_number': self.episode_number,
-                'vote_count': self.vote_count, 'vote_average': str(self.vote_average), 'air_date': self.air_date,
-                'still_path': self.still_path}
+        dict = {'tmdb_id_episode': self.__tmdb_id_episode, 'name': self.__name, 'overview': self.__overview,
+                'season_number': self.__season_number, 'episode_number': self.__episode_number,
+                'vote_count': self.__vote_count, 'vote_average': str(self.__vote_average), 'air_date': self.__air_date,
+                'still_path': self.__still_path}
         generate_assets_url(dict)
         return dict
+
+    # Getters
+
+    @property
+    def tmdb_id_episode(self):
+        return self.__tmdb_id_episode
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def overview(self):
+        return self.__overview
+
+    @property
+    def season_number(self):
+        return self.__season_number
+
+    @property
+    def episode_number(self):
+        return self.__episode_number
+
+    @property
+    def vote_count(self):
+        return self.__vote_count
+
+    @property
+    def vote_average(self):
+        return self.__vote_average
+
+    @property
+    def air_date(self):
+        return self.__air_date
+
+    @property
+    def still_path(self):
+        return self.__still_path
+
+    @property
+    def tmdb_id_season(self):
+        return self.__tmdb_id_season
 
     # Static method for creation
     @classmethod
@@ -245,7 +332,7 @@ class Episode(DBObject, Base):
     @classmethod
     def get_episode_by_id(cls, tmdb_id_episode: int):
         try:
-            return Episode.query.filter_by(tmdb_id_episode=tmdb_id_episode).one()
+            return Episode.query.filter_by(_Episode__tmdb_id_episode=tmdb_id_episode).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -255,39 +342,74 @@ class Episode(DBObject, Base):
 class Season(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'seasons'
-    tmdb_id_season = Column(Integer, primary_key=True)
-    name = Column(String)
-    overview = Column(String)
-    season_number = Column(SmallInteger)
-    air_date = Column(String)
-    poster_path = Column(String, nullable=True)
-    tmdb_id_serie = Column(Integer, ForeignKey(
-        'series.tmdb_id_serie'), nullable=False)
-    episodes = relationship('Episode', backref='seasons', lazy=True)
+    __tmdb_id_season = Column(Integer, primary_key=True)
+    __name = Column(String)
+    __overview = Column(String)
+    __season_number = Column(SmallInteger)
+    __air_date = Column(String)
+    __poster_path = Column(String, nullable=True)
+    __tmdb_id_serie = Column(Integer, ForeignKey(
+        'series._Serie__tmdb_id_serie'), nullable=False)
+    __episodes = relationship('Episode', backref='seasons', lazy=True)
 
     def __init__(self, tmdb_id_season: int, name: str, overview: str, season_number: int, air_date: str,
                  poster_path: str, episodes: List[Episode], tmdb_id_serie: int):
-        self.tmdb_id_season = tmdb_id_season
-        self.name = name
-        self.overview = overview
-        self.season_number = season_number
-        self.air_date = air_date
-        self.poster_path = poster_path
-        self.episodes = episodes
-        self.tmdb_id_serie = tmdb_id_serie
+        self.__tmdb_id_season = tmdb_id_season
+        self.__name = name
+        self.__overview = overview
+        self.__season_number = season_number
+        self.__air_date = air_date
+        self.__poster_path = poster_path
+        self.__episodes = episodes
+        self.__tmdb_id_serie = tmdb_id_serie
 
     def compare_value(self):
-        return self.tmdb_id_season
+        return self.__tmdb_id_season
 
     def as_dict(self):
-        dict = {'tmdb_id_season': self.tmdb_id_season, 'name': self.name, 'overview': self.overview,
-                'season_number': self.season_number, 'air_date': self.air_date, 'poster_path': self.poster_path,
+        dict = {'tmdb_id_season': self.__tmdb_id_season, 'name': self.__name, 'overview': self.__overview,
+                'season_number': self.__season_number, 'air_date': self.__air_date, 'poster_path': self.__poster_path,
                 'episodes': [episode.as_dict() for episode in
-                             sortListByLambda(self.episodes, lambda x: x.episode_number)], }
+                             sortListByLambda(self.__episodes, lambda x: x.episode_number)], }
         generate_assets_url(dict)
         return dict
 
-    # Static method for creation
+    # Getters
+
+    @property
+    def tmdb_id_season(self):
+        return self.__tmdb_id_season
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def overview(self):
+        return self.__overview
+
+    @property
+    def season_number(self):
+        return self.__season_number
+
+    @property
+    def air_date(self):
+        return self.__air_date
+
+    @property
+    def poster_path(self):
+        return self.__poster_path
+
+    @property
+    def tmdb_id_serie(self):
+        return self.__tmdb_id_serie
+
+    @property
+    def episodes(self):
+        return self.__episodes
+
+        # Static method for creation
+
     @classmethod
     def create_from_json(cls, json: dict, tmdb_id_serie: int):
         season = Season(json['id'], json['name'], json['overview'], json['season_number'], json['air_date'],
@@ -305,7 +427,7 @@ class Season(DBObject, Base):
     @classmethod
     def get_season_by_id(cls, tmdb_id_season: int):
         try:
-            return Season.query.filter_by(tmdb_id_season=tmdb_id_season).one()
+            return Season.query.filter_by(_Season__tmdb_id_season=tmdb_id_season).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -315,70 +437,148 @@ class Season(DBObject, Base):
 class Serie(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = 'series'
-    tmdb_id_serie = Column(Integer, primary_key=True)
-    name = Column(String)
-    overview = Column(String)
-    backdrop_path = Column(String, nullable=True)
-    poster_path = Column(String, nullable=True)
-    nb_seasons = Column(SmallInteger)
-    nb_episodes = Column(SmallInteger)
-    next_episode_name = Column(String)
-    next_episode_air_date = Column(String)
-    next_episode_season_number = Column(SmallInteger)
-    next_episode_episode_number = Column(SmallInteger)
-    vote_count = Column(Integer)
-    vote_average = Column(Numeric(3, 1))
-    creation = Column(Integer)
-    last_update = Column(Integer)
-    productors = relationship(
+    __tmdb_id_serie = Column(Integer, primary_key=True)
+    __name = Column(String)
+    __overview = Column(String)
+    __backdrop_path = Column(String, nullable=True)
+    __poster_path = Column(String, nullable=True)
+    __nb_seasons = Column(SmallInteger)
+    __nb_episodes = Column(SmallInteger)
+    __next_episode_name = Column(String)
+    __next_episode_air_date = Column(String)
+    __next_episode_season_number = Column(SmallInteger)
+    __next_episode_episode_number = Column(SmallInteger)
+    __vote_count = Column(Integer)
+    __vote_average = Column(Numeric(3, 1))
+    __creation = Column(Integer)
+    __last_update = Column(Integer)
+    __productors = relationship(
         "Productor", secondary=series_productors_table, back_populates="series")
-    genres = relationship(
+    __genres = relationship(
         "Genre", secondary=series_genres_table, back_populates="series")
-    users = relationship(
+    __users = relationship(
         "User", secondary=subscriptions_table, back_populates="series")
-    seasons = relationship('Season', backref='series', lazy=True)
+    __seasons = relationship('Season', backref='series', lazy=True)
 
     def __init__(self, tmdb_id_serie: int, name: str, overview: str, backdrop_path: str, poster_path: str,
                  nb_seasons: int,
                  nb_episodes: int, next_episode_name: str, next_episode_air_date: str, next_episode_season_number: int,
                  next_episode_episode_number: int, vote_count: int, vote_average: float, genres: List[Genre],
                  productors: List[Productor], seasons: List[Season]):
-        self.tmdb_id_serie = tmdb_id_serie
-        self.name = name
-        self.overview = overview
-        self.backdrop_path = backdrop_path
-        self.poster_path = poster_path
-        self.nb_seasons = nb_seasons
-        self.nb_episodes = nb_episodes
-        self.next_episode_name = next_episode_name
-        self.next_episode_air_date = next_episode_air_date
-        self.next_episode_season_number = next_episode_season_number
-        self.next_episode_episode_number = next_episode_episode_number
-        self.vote_count = vote_count
-        self.vote_average = vote_average
-        self.creation = time()
-        self.last_update = time()
-        self.genres = genres
-        self.productors = productors
-        self.seasons = seasons
+        self.__tmdb_id_serie = tmdb_id_serie
+        self.__name = name
+        self.__overview = overview
+        self.__backdrop_path = backdrop_path
+        self.__poster_path = poster_path
+        self.__nb_seasons = nb_seasons
+        self.__nb_episodes = nb_episodes
+        self.__next_episode_name = next_episode_name
+        self.__next_episode_air_date = next_episode_air_date
+        self.__next_episode_season_number = next_episode_season_number
+        self.__next_episode_episode_number = next_episode_episode_number
+        self.__vote_count = vote_count
+        self.__vote_average = vote_average
+        self.__creation = time()
+        self.__last_update = time()
+        self.__genres = genres
+        self.__productors = productors
+        self.__seasons = seasons
 
     def compare_value(self):
-        return self.tmdb_id_serie
+        return self.__tmdb_id_serie
 
     def as_dict(self):
-        dict = {'tmdb_id_serie': self.tmdb_id_serie, 'name': self.name, 'overview': self.overview,
-                'backdrop_path': self.backdrop_path,
-                'poster_path': self.poster_path,
-                'nb_seasons': self.nb_seasons, 'nb_episodes': self.nb_episodes,
-                'next_episode_name': self.next_episode_name, 'next_episode_air_date': self.next_episode_air_date,
-                'next_episode_season_number': self.next_episode_season_number,
-                'next_episode_episode_number': self.next_episode_episode_number,
-                'vote_count': self.vote_count, 'vote_average': str(self.vote_average),
-                'genres': [genre.as_dict() for genre in self.genres],
-                'productors': [productor.as_dict() for productor in self.productors],
-                'seasons': [season.as_dict() for season in sortListByLambda(self.seasons, lambda x: x.season_number)]}
+        dict = {'tmdb_id_serie': self.__tmdb_id_serie, 'name': self.__name, 'overview': self.__overview,
+                'backdrop_path': self.__backdrop_path,
+                'poster_path': self.__poster_path,
+                'nb_seasons': self.__nb_seasons, 'nb_episodes': self.__nb_episodes,
+                'next_episode_name': self.__next_episode_name, 'next_episode_air_date': self.__next_episode_air_date,
+                'next_episode_season_number': self.__next_episode_season_number,
+                'next_episode_episode_number': self.__next_episode_episode_number,
+                'vote_count': self.__vote_count, 'vote_average': str(self.__vote_average),
+                'genres': [genre.as_dict() for genre in self.__genres],
+                'productors': [productor.as_dict() for productor in self.__productors],
+                'seasons': [season.as_dict() for season in sortListByLambda(self.__seasons, lambda x: x.season_number)]}
         generate_assets_url(dict)
         return dict
+
+    # Getters
+
+    @property
+    def tmdb_id_serie(self):
+        return self.__tmdb_id_serie
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def overview(self):
+        return self.__overview
+
+    @property
+    def backdrop_path(self):
+        return self.__backdrop_path
+
+    @property
+    def poster_path(self):
+        return self.__poster_path
+
+    @property
+    def nb_seasons(self):
+        return self.__nb_seasons
+
+    @property
+    def nb_episodes(self):
+        return self.__nb_episodes
+
+    @property
+    def next_episode_name(self):
+        return self.__next_episode_name
+
+    @property
+    def next_episode_air_date(self):
+        return self.__next_episode_air_date
+
+    @property
+    def next_episode_season_number(self):
+        return self.__next_episode_season_number
+
+    @property
+    def next_episode_episode_number(self):
+        return self.__next_episode_episode_number
+
+    @property
+    def vote_count(self):
+        return self.__vote_count
+
+    @property
+    def vote_average(self):
+        return self.__vote_average
+
+    @property
+    def creation(self):
+        return self.__creation
+
+    @property
+    def last_update(self):
+        return self.__last_update
+
+    @property
+    def productors(self):
+        return self.__productors
+
+    @property
+    def genres(self):
+        return self.__genres
+
+    @property
+    def users(self):
+        return self.__users
+
+    @property
+    def seasons(self):
+        return self.__seasons
 
     # Static method for creation
     @classmethod
@@ -425,7 +625,7 @@ class Serie(DBObject, Base):
     @classmethod
     def get_serie_by_id(cls, tmdb_id_serie: int):
         try:
-            return Serie.query.filter_by(tmdb_id_serie=tmdb_id_serie).one()
+            return Serie.query.filter_by(_Serie__tmdb_id_serie=tmdb_id_serie).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -438,16 +638,16 @@ class Serie(DBObject, Base):
         # Method to update
 
     def update_from_json(self, json: dict):
-        self.last_update = time()
+        self.__last_update = time()
         # Basic informations
-        self.name = json['name']
-        self.overview = json['overview']
-        self.backdrop_path = json['backdrop_path']
-        self.backdrop_path = json['poster_path']
-        self.nb_seasons = json['number_of_seasons']
-        self.nb_episodes = json['number_of_episodes']
-        self.vote_count = json['vote_count']
-        self.vote_average = json['vote_average']
+        self.__name = json['name']
+        self.__overview = json['overview']
+        self.__backdrop_path = json['backdrop_path']
+        self.__backdrop_path = json['poster_path']
+        self.__nb_seasons = json['number_of_seasons']
+        self.__nb_episodes = json['number_of_episodes']
+        self.__vote_count = json['vote_count']
+        self.__vote_average = json['vote_average']
         # Next episode informations
         next_episode_name = None
         next_episode_air_date = None
@@ -459,10 +659,10 @@ class Serie(DBObject, Base):
             next_episode_air_date = next_episode['air_date']
             next_episode_season_number = next_episode['season_number']
             next_episode_episode_number = next_episode['episode_number']
-        self.next_episode_name = next_episode_name
-        self.next_episode_air_date = next_episode_air_date
-        self.next_episode_season_number = next_episode_season_number
-        self.next_episode_episode_number = next_episode_episode_number
+        self.__next_episode_name = next_episode_name
+        self.__next_episode_air_date = next_episode_air_date
+        self.__next_episode_season_number = next_episode_season_number
+        self.__next_episode_episode_number = next_episode_episode_number
         # Genres informations
         serie_genres = []
         for genre in json['genres']:
@@ -470,7 +670,7 @@ class Serie(DBObject, Base):
             if new_genre is None:
                 new_genre = Genre.create_from_json(genre)
             serie_genres.append(new_genre)
-        self.genres = serie_genres
+        self.__genres = serie_genres
         # Productors informations
         serie_productors = []
         for productor in json['created_by']:
@@ -478,7 +678,7 @@ class Serie(DBObject, Base):
             if new_productor is None:
                 new_productor = Productor.create_from_json(productor)
             serie_productors.append(new_productor)
-        self.productors = serie_productors
+        self.__productors = serie_productors
         # Seasons informations
         serie_seasons = []
         for season in json['seasons']:
@@ -487,7 +687,7 @@ class Serie(DBObject, Base):
                 new_season = Season.create_from_json(get_tv_serie_season(json['id'], season['season_number']),
                                                      json['id'])
             serie_seasons.append(new_season)
-        self.seasons = serie_seasons
+        self.__seasons = serie_seasons
         # Saving changes
         self.save_in_db()
 
@@ -499,10 +699,9 @@ class User(DBObject, Base):
     __username = Column(String(20), unique=True)
     __email = Column(String(80), unique=True)
     __password_hash = Column(String(128))
-
     __series = relationship(
         "Serie", secondary=subscriptions_table, back_populates="users")
-    
+
     def __init__(self, username: str, email: str, password: str):
         self.__username = username
         self.__email = email
@@ -563,7 +762,7 @@ class User(DBObject, Base):
     @classmethod
     def get_user_by_id(cls, user_id: int):
         try:
-            return User.query.filter_by(id=user_id).one()
+            return User.query.filter_by(_User__id=user_id).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -572,7 +771,7 @@ class User(DBObject, Base):
     @classmethod
     def get_user_by_username(cls, username: str):
         try:
-            return User.query.filter_by(username=username).one()
+            return User.query.filter_by(_User__username=username).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -581,7 +780,7 @@ class User(DBObject, Base):
     @classmethod
     def get_user_by_email(cls, email: str):
         try:
-            return User.query.filter_by(email=email).one()
+            return User.query.filter_by(_User__email=email).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -612,44 +811,94 @@ class User(DBObject, Base):
 class Notification(DBObject, Base):
     # Attributes and basic methods (init, compare_value, as_dict)
     __tablename__ = "notifications"
-    id = Column(SmallInteger, primary_key=True)
-    user_id = Column(SmallInteger, ForeignKey('users.id'), nullable=False)
-    tmdb_id_serie = Column(Integer, ForeignKey(
-        'series.tmdb_id_serie'), nullable=False)
-    serie_name = Column(String)
-    name = Column(String)
-    season_number = Column(SmallInteger)
-    episode_number = Column(SmallInteger)
-    next_air_date = Column(String)
-    creation_date = Column(Integer)
-    backdrop_path = Column(String)
-    poster_path = Column(String)
-    read = Column(Boolean)
+    __id = Column(SmallInteger, primary_key=True)
+    __user_id = Column(SmallInteger, ForeignKey('users.id'), nullable=False)
+    __tmdb_id_serie = Column(Integer, ForeignKey(
+        'series._Serie__tmdb_id_serie'), nullable=False)
+    __serie_name = Column(String)
+    __name = Column(String)
+    __season_number = Column(SmallInteger)
+    __episode_number = Column(SmallInteger)
+    __next_air_date = Column(String)
+    __creation_date = Column(Integer)
+    __backdrop_path = Column(String)
+    __poster_path = Column(String)
+    __read = Column(Boolean)
 
     def __init__(self, user_id: int, tmdb_id_serie: int, serie_name: str, name: str, season_number: int,
                  episode_number: int, next_air_date: str, backdrop_path: str, poster_path: str):
-        self.user_id = user_id
-        self.tmdb_id_serie = tmdb_id_serie
-        self.serie_name = serie_name
-        self.name = name
-        self.season_number = season_number
-        self.episode_number = episode_number
-        self.next_air_date = next_air_date
-        self.backdrop_path = backdrop_path
-        self.poster_path = poster_path
-        self.creation_date = time()
-        self.read = False
+        self.__user_id = user_id
+        self.__tmdb_id_serie = tmdb_id_serie
+        self.__serie_name = serie_name
+        self.__name = name
+        self.__season_number = season_number
+        self.__episode_number = episode_number
+        self.__next_air_date = next_air_date
+        self.__backdrop_path = backdrop_path
+        self.__poster_path = poster_path
+        self.__creation_date = time()
+        self.__read = False
 
     def compare_value(self):
-        return self.id
+        return self.__id
 
     def as_dict(self):
-        dict = {'id': self.id, 'user_id': self.user_id, 'tmdb_id_serie': self.tmdb_id_serie,
-                'serie_name': self.serie_name, 'name': self.name, 'episode_number': self.episode_number,
-                'season_number': self.season_number, 'next_air_date': self.next_air_date,
-                'backdrop_path': self.backdrop_path, 'read': self.read, 'poster_path': self.poster_path}
+        dict = {'id': self.__id, 'user_id': self.__user_id, 'tmdb_id_serie': self.__tmdb_id_serie,
+                'serie_name': self.__serie_name, 'name': self.__name, 'episode_number': self.__episode_number,
+                'season_number': self.__season_number, 'next_air_date': self.__next_air_date,
+                'backdrop_path': self.__backdrop_path, 'read': self.__read, 'poster_path': self.__poster_path}
         generate_assets_url(dict)
         return dict
+
+    # Getters
+
+    @property
+    def id(self):
+        return self.__id
+
+    @property
+    def user_id(self):
+        return self.__user_id
+
+    @property
+    def tmdb_id_serie(self):
+        return self.__tmdb_id_serie
+
+    @property
+    def serie_name(self):
+        return self.__serie_name
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def season_number(self):
+        return self.__season_number
+
+    @property
+    def episode_number(self):
+        return self.__episode_number
+
+    @property
+    def next_air_date(self):
+        return self.__next_air_date
+
+    @property
+    def creation_date(self):
+        return self.__creation_date
+
+    @property
+    def backdrop_path(self):
+        return self.__backdrop_path
+
+    @property
+    def poster_path(self):
+        return self.__poster_path
+
+    @property
+    def read(self):
+        return self.__read
 
     # Static method for creation
     @classmethod
@@ -666,17 +915,17 @@ class Notification(DBObject, Base):
     # Static methods for selection
     @classmethod
     def get_notifications_by_user(cls, user: User):
-        return Notification.query.filter_by(user_id=user.id).order_by(desc(Notification.creation_date)).limit(15).all()
+        return Notification.query.filter_by(_Notification__user_id=user.id).order_by(desc(Notification.creation_date)).limit(15).all()
 
     @classmethod
     def get_notifications_by_user_and_serie(cls, user: User, serie: Serie):
-        return Notification.query.filter_by(user_id=user.id, tmdb_id_serie=serie.tmdb_id_serie).order_by(
+        return Notification.query.filter_by(_Notification__user_id=user.id, _Notification__tmdb_id_serie=serie.tmdb_id_serie).order_by(
             desc(Notification.creation_date)).all()
 
     @classmethod
     def get_notification_by_id(cls, notification_id: int):
         try:
-            return Notification.query.filter_by(id=notification_id).one()
+            return Notification.query.filter_by(_Notification__id=notification_id).one()
         except NoResultFound:
             return None
         except MultipleResultsFound:
@@ -684,5 +933,5 @@ class Notification(DBObject, Base):
 
     # Method to update
     def mark_as_read(self):
-        self.read = True
+        self.__read = True
         self.save_in_db()
