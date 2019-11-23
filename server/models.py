@@ -493,35 +493,51 @@ class Serie(DBObject):
 
 
 class User(DBObject):
-    # Attributes and basic methods (init, compare_value, as_dict)
+    # Attributes, basic methods (init, compare_value, as_dict) and getters
     __tablename__ = 'users'
-    id = Column(SmallInteger, primary_key=True)
-    username = Column(String(20), unique=True)
-    email = Column(String(80), unique=True)
-    password_hash = Column(String(128))
-    series = relationship(
+    __id = Column(SmallInteger, primary_key=True)
+    __username = Column(String(20), unique=True)
+    __email = Column(String(80), unique=True)
+    __password_hash = Column(String(128))
+    __series = relationship(
         "Serie", secondary=subscriptions_table, back_populates="users")
 
     def __init__(self, username: str, email: str, password: str):
-        self.username = username
-        self.email = email
-        self.password_hash = User.hash_password(password)
-        self.last_connexion = time()
+        self.__username = username
+        self.__email = email
+        self.__password_hash = User.hash_password(password)
+        self.__last_connexion = time()
 
     def compare_value(self):
-        return self.id
+        return self.__id
 
     def as_dict(self):
-        return {'id': self.id, 'username': self.username, 'email': self.email}
+        return {'id': self.__id, 'username': self.__username, 'email': self.__email}
+
+    @property
+    def id(self):
+        return self.__id
+
+    @property
+    def username(self):
+        return self.__username
+
+    @property
+    def email(self):
+        return self.__email
+
+    @property
+    def series(self):
+        return self.__series
 
     # Methods related to authentication
 
     def verify_password(self, password: str):
-        return pwd_context.verify(password, self.password_hash)
+        return pwd_context.verify(password, self.__password_hash)
 
     def generate_auth_token(self, expiration: int = 6000):
         s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
-        return s.dumps({'id': self.id})
+        return s.dumps({'id': self.__id})
 
     @classmethod
     def hash_password(cls, password: str):
@@ -572,7 +588,7 @@ class User(DBObject):
 
     def get_subscription_by_serie_id(self, tmdb_id_serie: int):
         try:
-            return User.query.join(Serie, User.series).filter(User.id == self.id).filter(
+            return User.query.join(Serie, User.series).filter(User.id == self.__id).filter(
                 Serie.tmdb_id_serie == tmdb_id_serie).one()
         except NoResultFound:
             return None
@@ -580,11 +596,11 @@ class User(DBObject):
             return None
 
     def add_favorite_serie(self, serie: Serie):
-        self.series.append(serie)
+        self.__series.append(serie)
         self.save_in_db()
 
     def delete_favorite_serie(self, serie: Serie):
-        self.series.remove(serie)
+        self.__series.remove(serie)
         self.save_in_db()
         for notif in Notification.get_notifications_by_user_and_serie(self, serie):
             notif.delete_in_db()
