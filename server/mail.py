@@ -59,19 +59,16 @@ class MailingServer:
     def __init__(self, host: str = None, port: int = None,
                  address: str = None,
                  password: str = None):
-        self.__host = host if not None else MailingContext.get_mailing_host()
-        self.__port = port if not None else MailingContext.get_mailing_port()
-        self.__address = address if not None else MailingContext.get_mailing_address()
-        self.__password = password if not None else MailingContext.get_mailing_password()
+        self.__host = host if host is not None else MailingContext.get_mailing_host()
+        self.__port = port if port is not None else MailingContext.get_mailing_port()
+        self.__address = address if address is not None else MailingContext.get_mailing_address()
+        self.__password = password if password is not None else MailingContext.get_mailing_password()
 
     @staticmethod
     def create_smtp_server(host: str, port: int, address: str, password: str):
         s = SMTP_SSL(host=host, port=port)
         s.login(address, password)
         return s
-
-    def get_smtp_server(self):
-        return MailingServer.create_smtp_server(self.__host,self.__port,self.__address, self.__password)
 
     @staticmethod
     def create_message(sender: str, recipient: str, subject: str, message: str, is_html: bool = False):
@@ -82,20 +79,33 @@ class MailingServer:
         msg.attach(MIMEText(message, 'html' if is_html else 'plain'))
         return msg
 
-    def send_message(self, server:SMTP_SSL, message: MIMEMultipart):
-        server.send_message(message)
+    def open_smtp_server(self):
+        self.__smtp_server = MailingServer.create_smtp_server(self.__host, self.__port, self.__address, self.__password)
 
-    def send_notification(self, notification: Notification, sent_from: str = None):
-        sent_from = sent_from if not None else MailingContext.get_mailing_address()
+    def close_smtp_server(self):
+        self.__smtp_server.close()
+        self.__smtp_server = None
+
+    def send_message(self, message: MIMEMultipart):
+        self.__smtp_server.send_message(message)
+
+    def send_notification(self, notification: Notification, open_and_close_smtp: bool = True, sent_from: str = None):
+        print('SENDING NOTIFICATION')
+        if open_and_close_smtp:
+            self.open_smtp_server()
+        sent_from = sent_from if sent_from is not None else MailingContext.get_mailing_address()
         user = User.get_user_by_id(notification.user_id)
         message = f'A new episode is going to be released for "{notification.serie_name}" on {notification.next_air_date}. Check our website for more info !'
         subject = f'Some news for "{notification.serie_name}"'
         msg = MailingServer.create_message(sent_from, user.email, subject, message)
-        self.send_message(self.get_smtp_server(), msg)
+        self.send_message(msg)
+        if open_and_close_smtp:
+            self.close_smtp_server()
 
     @staticmethod
     def update_all_series():
         mailing_server = MailingServer()
+        mailing_server.open_smtp_server()
         series = Serie.get_all_series()
         for serie in series:
             old_last_diff = serie.next_episode_air_date
@@ -106,6 +116,7 @@ class MailingServer:
                     try:
                         notif = Notification.create_from_serie(user.id,
                                                                serie)  # create notification, Might rise a value error
-                        mailing_server.send_notification(notif)
+                        mailing_server.send_notification(notif, open_and_close_smtp=False)
                     except ValueError:
                         pass
+        mailing_server.close_smtp_server()

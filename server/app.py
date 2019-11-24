@@ -9,6 +9,7 @@ from database import init_models, db_session
 from models import User, Serie, Notification
 from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, get_tv_series_discover_by_genre
 from sqlalchemy.exc import IntegrityError
+from psycopg2.errors import UniqueViolation
 from flask_httpauth import HTTPTokenAuth
 from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth, InvalidField
 from mail import MailingServer, init_mailing_context
@@ -109,16 +110,15 @@ def create_app():
         def add_user():
             username, email, password = validate_user_registration_form(
                 request.json)  # Might raise an InvalidForm exception
-            user = User(username, email, password)
-            try:
-                user.save_in_db()  # Might raise an IntegrityError if user already exist
-            except IntegrityError:
-                invalid_fields = []
-                if User.get_user_by_username(username) is not None:
-                    invalid_fields.append(InvalidField("username", "Username already taken"))
-                if User.get_user_by_email(email) is not None:
-                    invalid_fields.append(InvalidField("email", "Email already taken"))
+            invalid_fields = []
+            if User.get_user_by_username(username) is not None:
+                invalid_fields.append(InvalidField("username", "Username already taken"))
+            if User.get_user_by_email(email) is not None:
+                invalid_fields.append(InvalidField("email", "Email already taken"))
+            if len(invalid_fields) > 0:
                 raise InvalidDBOperation("Cannot register user", invalid_fields)
+            user = User(username, email, password)
+            user.save_in_db()  # Might raise an IntegrityError if user already exist
             return jsonify(user.as_dict())
 
         @app.route("/users/<int:user_id>", methods=['GET'])
@@ -157,12 +157,7 @@ def create_app():
             if serie is None:
                 serie = Serie.create_from_json(get_tv_serie(serie_id))
             if user.get_subscription_by_serie_id(serie_id) is None:
-                try:
-                    # Might raise an IntegrityError
-                    user.add_favorite_serie(serie)
-                except IntegrityError:
-                    raise InvalidDBOperation("Subscription already exist",
-                                             InvalidField("serie_id", "Serie already in favorites"))
+                user.add_favorite_serie(serie) # Might raise an IntegrityError
                 try:
                     notification = Notification.create_from_serie(
                         user_id, serie)  # Might raise a ValueError

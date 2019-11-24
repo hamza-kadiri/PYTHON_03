@@ -75,7 +75,7 @@ class RequestOMDB:
             query_string = query
         else:
             query_string = False
-        url = f'{RequestContext.get_api_url()}{endpoint}?api_key={RequestContext.get_api_key()}{query_string or ""}'
+        url = f'{RequestContext.get_api_url()}{endpoint}?api_key={RequestContext.get_api_key()}{"&"+query_string if query_string != False else ""}'
         if (method == 'GET'):
             response = requests.get(url)
             if response.status_code != 200:
@@ -91,7 +91,7 @@ def create_request_exception(method: str, url: str, resp: any):
 def search_tv_serie_by_title(query: str):
     endpoint = "/search/tv"
     request = RequestOMDB()
-    query_string = f'&query={urllib.parse.quote(query)}'
+    query_string = f'query={urllib.parse.quote(query)}'
     resp = request.perform_request(endpoint, query=query_string)
     json = resp.json()
     for result in json['results']:
