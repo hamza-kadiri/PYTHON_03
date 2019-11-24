@@ -7,14 +7,17 @@ from form_validation import validate_add_serie_form, validate_user_registration_
     validate_notifications_list_form, validate_favorite_form
 from database import init_models, db_session
 from models import User, Serie, Notification, Season
-from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, get_tv_series_discover_by_genre
+from tmdb_api import search_tv_serie_by_title, get_tv_serie, init_tmdb_context, get_tv_series_discover_by_genre, RequestExceptionOMDB
 from sqlalchemy.exc import IntegrityError
+from psycopg2.errors import UniqueViolation
 from flask_httpauth import HTTPTokenAuth
-from api_exceptions import InvalidForm, InvalidDBOperation
-from mail import update_all_series, init_mailing_context
-from helpers import get_assets_url
+from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth, InvalidField
+from mail import MailingServer, init_mailing_context
+from helpers import generate_assets_url, init_helpers_context
 from threading import Thread
 
+
+''' Defining CRON jobs'''
 
 def init_jobs(app):
     app.logger.info("Initializing CRON Jobs")
@@ -23,20 +26,26 @@ def init_jobs(app):
 
     def update_series_and_notify():
         app.logger.info("Starting updating series...")
-        update_all_series()
+        MailingServer.update_all_series()
         app.logger.info("Updating series finished !")
 
-    scheduler.add_job(update_series_and_notify, 'cron', second=0)
+    scheduler.add_job(update_series_and_notify, 'cron', hour=0)
     scheduler.start()
     # Shut down the scheduler when exiting the app
     atexit.register(lambda: scheduler.shutdown())
 
 
+'''Construct the core Flask application'''
+
+
 def create_app():
-    """Construct the core application."""
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
     app.logger.setLevel(logging.INFO)
+    # Init contexts
+    init_tmdb_context(app)
+    init_mailing_context(app)
+    init_helpers_context(app)
     # Set CORS
     CORS(app)
     # Set globals
@@ -44,15 +53,11 @@ def create_app():
     # Set auth
     auth = HTTPTokenAuth(scheme='Token')
     # Init CRON
-    # init_jobs(app)
-    # Init contexts
-    init_tmdb_context(app)
-    init_mailing_context(app)
-
-    def get_assets_url_app(dict) :
-        return get_assets_url(app, dict)
+    init_jobs(app)
 
     with app.app_context():
+
+        '''Setting up database and authentication for each session'''
 
         @app.teardown_appcontext
         def shutdown_session(exception=None):
@@ -68,6 +73,8 @@ def create_app():
             g.user = user
             return True
 
+        '''Routing for the whole application'''
+
         @app.route('/token', methods=['POST'])
         def generate_auth_token():
             username, password = validate_user_login_form(
@@ -75,18 +82,15 @@ def create_app():
             # try to authenticate with username/password
             user = User.get_user_by_username(username)
             if not user or not user.verify_password(password):
-                abort(400, {"error_message": "Invalid username or password",
-                            "invalid_fields": {"username": "", "password": ""}})
+                raise InvalidAuth()
             g.user = user
             token = g.user.generate_auth_token()
             return jsonify({'token': token.decode('ascii'), "user": user.as_dict()})
 
-        # Add some routes
         @app.route("/", methods=['GET'])
         def index():
             return jsonify("Welcome to our API")
 
-        # TODO Handle multiple pages results
         @app.route("/search", methods=['GET'])
         @auth.login_required
         def search():
@@ -107,11 +111,15 @@ def create_app():
         def add_user():
             username, email, password = validate_user_registration_form(
                 request.json)  # Might raise an InvalidForm exception
+            invalid_fields = []
+            if User.get_user_by_username(username) is not None:
+                invalid_fields.append(InvalidField("username", "Username already taken"))
+            if User.get_user_by_email(email) is not None:
+                invalid_fields.append(InvalidField("email", "Email already taken"))
+            if len(invalid_fields) > 0:
+                raise InvalidDBOperation("Cannot register user", invalid_fields)
             user = User(username, email, password)
-            try:
-                user.save_in_db()  # Might raise an IntegrityError if user already exist
-            except IntegrityError:
-                raise InvalidDBOperation("User already exist")
+            user.save_in_db()  # Might raise an IntegrityError if user already exist
             return jsonify(user.as_dict())
 
         @app.route("/users/<int:user_id>", methods=['GET'])
@@ -127,11 +135,8 @@ def create_app():
         @app.route("/favorite", methods=['GET'])
         @auth.login_required
         def check_favorite_serie():
-            args = request.args
-            json = {"user_id": int(request.args.get(
-                "user_id")), "serie_id": request.args.get("serie_id")}
             user_id, serie_id = validate_favorite_form(
-                json)  # Might raise an InvalidForm exception
+                request.args)  # Might raise an InvalidForm exception
             if user_id != g.user.id:
                 abort(403)
             user = User.get_user_by_id(user_id)
@@ -156,14 +161,12 @@ def create_app():
                 thread_seasons = Thread(target=Season.create_seasons_from_json, args=(json,))
                 thread_seasons.start()
             if user.get_subscription_by_serie_id(serie_id) is None:
+                user.add_favorite_serie(serie) # Might raise an IntegrityError
                 try:
-                    # Might raise an IntegrityError
-                    user.add_favorite_serie(serie)
-                except IntegrityError:
-                    raise InvalidDBOperation("Subscription already exist")
-                try:
-                    Notification.create_from_serie(
+                    notification = Notification.create_from_serie(
                         user_id, serie)  # Might raise a ValueError
+                    mailing_server = MailingServer()
+                    mailing_server.send_notification(notification)
                 except ValueError:
                     pass
                 is_favorite = True
@@ -179,19 +182,7 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             series = user.series
-            response = {"series": []}
-            poster_base_url = app.config["POSTER_BASE_URL"]
-            backdrop_base_url = app.config["BACKDROP_BASE_URL"]
-            for serie in series :
-                serie_dict = serie.as_dict()
-                serie_dict = get_assets_url_app(serie_dict)
-                serie_dict = {**serie_dict, 
-                                "seasons" : list(map(lambda season : {**get_assets_url_app(season), 
-                                                                        "episodes" : list(map(get_assets_url_app, season["episodes"]))
-                                                                        }, serie_dict["seasons"]))
-                            }
-                response['series'].append(serie_dict)
-            return jsonify(response)
+            return jsonify({"series": [serie.as_dict() for serie in series]})
 
         @app.route("/users/<int:user_id>/notifications", methods=['GET'])
         @auth.login_required
@@ -200,14 +191,7 @@ def create_app():
                 abort(403)
             user = User.get_user_by_id(user_id)
             notifications = Notification.get_notifications_by_user(user)
-            notifications_array = []
-            poster_base_url = app.config["POSTER_BASE_URL"]
-            for notification in notifications:
-                result = notification.as_dict()
-                if result['poster_path'] is not None:
-                    result['poster_url'] = f"{poster_base_url}{result['poster_path']}"
-                notifications_array.append(result)
-            return jsonify({"notifications": notifications_array})
+            return jsonify({"notifications": [notification.as_dict() for notification in notifications]})
 
         @app.route("/users/<int:user_id>/notifications", methods=['POST'])
         @auth.login_required
@@ -235,26 +219,48 @@ def create_app():
                     response_status = notif_status
                 else:
                     response_status = 207
-            return get_notifications(user_id)
+            user = User.get_user_by_id(user_id)
+            notifications = Notification.get_notifications_by_user(user)
+            return jsonify({"notifications": [notification.as_dict() for notification in notifications]})
+
+        '''Error Handlers'''
+
+        @app.errorhandler(RequestExceptionOMDB)
+        def handle_omdb_api_exception(error: RequestExceptionOMDB):
+            if error.http_status_code == 429:
+                app.logger.error("API Request Rate exceeded")
+                response = jsonify({"status_code": 429, "error_message": "API Request Rate exceeded"}), 429
+            else:
+                app.logger.error(error)
+                response = jsonify({"status_code": 500, "error_message": "API Internal Error"}), 500
+            return response
+
+
+        @app.errorhandler(InvalidAuth)
+        def handle_invalid_auth(error: InvalidAuth):
+            response = jsonify({"status_code": error.status_code, "error_message": error.error_message,
+                                "invalid_fields": error.invalid_fields}), error.status_code
+            app.logger.error(response)
+            return response
 
         @app.errorhandler(InvalidForm)
         def handle_invalid_usage(error: InvalidForm):
-            response = jsonify({"status_code": error.status_code, "error_message": "Invalid Fields",
-                                "invalid_fields": error.to_dict()}), error.status_code
+            response = jsonify({"status_code": error.status_code, "error_message": error.error_message,
+                                "invalid_fields": error.invalid_fields}), error.status_code
             app.logger.error(response)
             return response
 
         @app.errorhandler(InvalidDBOperation)
         def handle_invalid_usage(error: InvalidDBOperation):
             response = jsonify({"status_code": error.status_code,
-                                "error_message": error.error_message}), error.status_code
+                                "error_message": error.error_message,
+                                "invalids_fields": error.invalid_fields}), error.status_code
             app.logger.error(response)
             return response
 
         @app.errorhandler(400)
         def forbidden_error(error):
-            error_message = error.description or {"error_message": error}
-            return jsonify({'status_code': 400, **error_message}), 400
+            return jsonify({'status_code': 400, "error_message": "Bad Request"}), 400
 
         @app.errorhandler(401)
         def forbidden_error(error):
@@ -267,7 +273,8 @@ def create_app():
         @app.errorhandler(404)
         def not_found_error(error):
             app.logger.error('404 Not Found Error: %s', (error))
-            return jsonify({'status_code': 404, 'error_message': 'The ressource you have requested could not be found'}), 403
+            return jsonify(
+                {'status_code': 404, 'error_message': 'The ressource you have requested could not be found'}), 403
 
         @app.errorhandler(500)
         def internal_server_error(error):
@@ -286,5 +293,4 @@ def create_app():
 application = create_app()
 
 if __name__ == "__main__":
-    # use_reloader set to false to prevent CRON Jobs to be run twice
-    application.run(host="0.0.0.0", port=80, use_reloader=False)
+    application.run(host="0.0.0.0", port=80)
