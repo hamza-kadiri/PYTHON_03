@@ -442,6 +442,7 @@ class Season(DBObject, Base):
             return None
         except MultipleResultsFound:
             return None
+
     #static method to create all the seasons from a json      
     @classmethod
     def create_seasons_from_json(cls, json):
@@ -453,10 +454,10 @@ class Season(DBObject, Base):
                 new_season = Season.create_season_from_json(get_tv_serie_season(json['id'], season['season_number']), json['poster_path'],
                                                      json['id'])
             seasons.append(new_season)
-        serie = Serie.get_serie_by_id(json['id'])
-        serie.seasons = seasons
-        serie.save_in_db()
-        return serie
+            serie = Serie.get_serie_by_id(json['id'])
+            serie.seasons = seasons
+            serie.save_in_db()
+        return seasons
 
 
 
@@ -509,6 +510,7 @@ class Serie(DBObject, Base):
         self.__genres = genres
         self.__productors = productors
         self.__seasons = seasons
+
 
     def compare_value(self):
         return self.__tmdb_id_serie
@@ -605,6 +607,10 @@ class Serie(DBObject, Base):
     @property
     def seasons(self):
         return self.__seasons
+
+    @seasons.setter
+    def seasons(self, seasons):
+        self.__seasons = seasons
 
     # Static method for creation
     @classmethod
@@ -715,22 +721,16 @@ class Serie(DBObject, Base):
                 new_productor = Productor.create_from_json(productor)
             serie_productors.append(new_productor)
         self.productors = serie_productors
-        # Seasons informations
-        serie_seasons = []
-        for season in json['seasons']:
-            new_season = Season.get_season_by_id(season['id'])
-            if new_season is None:
-                new_season = Season.create_season_from_json(get_tv_serie_season(json['id'], season['season_number']), json['poster_path'],
-                                                     json['id'])
-            serie_seasons.append(new_season)
-        self.seasons = serie_seasons
         # Saving changes
         self.save_in_db()
         return self
 
 
 class User(DBObject, Base):
-    # Attributes and basic methods (init, compare_value, as_dict)
+    # Attributes and basic methods (init, compare_value
+    #         #serie = Serie.get_serie_by_id(json['id'])
+    #         #serie.__seasons = seasons
+    #         #serie.save_in_db(), as_dict)
     __tablename__ = 'users'
     __id = Column(SmallInteger, primary_key=True)
     __username = Column(String(20), unique=True)

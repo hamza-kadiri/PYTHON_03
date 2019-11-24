@@ -12,8 +12,8 @@ from sqlalchemy.exc import IntegrityError
 from psycopg2.errors import UniqueViolation
 from flask_httpauth import HTTPTokenAuth
 from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth, InvalidField
-from mail import update_all_series, init_mailing_context
-from helpers import get_assets_url, generate_assets_url, init_helpers_context
+from mail import MailingServer, init_mailing_context
+from helpers import generate_assets_url, init_helpers_context
 from threading import Thread
 
 
