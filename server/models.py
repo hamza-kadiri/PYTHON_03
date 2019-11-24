@@ -706,7 +706,6 @@ class User(DBObject, Base):
         self.__username = username
         self.__email = email
         self.__password_hash = User.hash_password(password)
-        self.__last_connexion = time()
 
     def compare_value(self):
         return self.__id
@@ -731,6 +730,7 @@ class User(DBObject, Base):
     @property
     def series(self):
         return self.__series
+
 
     # Methods related to authentication
 

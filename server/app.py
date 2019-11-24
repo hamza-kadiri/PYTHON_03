@@ -14,6 +14,7 @@ from flask_httpauth import HTTPTokenAuth
 from api_exceptions import InvalidForm, InvalidDBOperation, InvalidAuth, InvalidField
 from mail import MailingServer, init_mailing_context
 from helpers import generate_assets_url, init_helpers_context
+from tmdb_api import RequestExceptionOMDB
 
 ''' Defining CRON jobs'''
 
@@ -220,6 +221,17 @@ def create_app():
             return jsonify({"notifications": [notification.as_dict() for notification in notifications]})
 
         '''Error Handlers'''
+
+        @app.errorhandler(RequestExceptionOMDB)
+        def handle_omdb_api_exception(error: RequestExceptionOMDB):
+            if error.http_status_code == 429:
+                app.logger.error("API Request Rate exceeded")
+                response = jsonify({"status_code": 429, "error_message": "API Request Rate exceeded"}), 429
+            else:
+                app.logger.error(error)
+                response = jsonify({"status_code": 500, "error_message": "API Internal Error"}), 500
+            return response
+
 
         @app.errorhandler(InvalidAuth)
         def handle_invalid_auth(error: InvalidAuth):
