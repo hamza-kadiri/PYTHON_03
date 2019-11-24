@@ -321,8 +321,13 @@ class Episode(DBObject, Base):
 
     # Static method for creation
     @classmethod
-    def create_from_json(cls, json: dict, tmdb_id_season: int):
-        episode = Episode(json['id'], json['name'], json['overview'], json['season_number'], json['episode_number'],
+    def create_from_json(cls, json: dict, season_poster_path: str, tmdb_id_season: int):
+        if json['still_path'] is None or json['still_path'] == "" or json['still_path']  == "null":
+            episode = Episode(json['id'], json['name'], json['overview'], json['season_number'], json['episode_number'],
+                          json['vote_count'], json['vote_average'], json['air_date'],season_poster_path,
+                          tmdb_id_season)
+        else:
+            episode = Episode(json['id'], json['name'], json['overview'], json['season_number'], json['episode_number'],
                           json['vote_count'], json['vote_average'], json['air_date'], json['still_path'],
                           tmdb_id_season)
         episode.save_in_db()
@@ -411,17 +416,22 @@ class Season(DBObject, Base):
         # Static method for creation
 
     @classmethod
-    def create_from_json(cls, json: dict, tmdb_id_serie: int):
-        season = Season(json['id'], json['name'], json['overview'], json['season_number'], json['air_date'],
+    def create_season_from_json(cls, json: dict, serie_poster_path: str, tmdb_id_serie: int):
+        if json['poster_path'] is None or json['poster_path'] == "null" or json['poster_path'] == "":
+            season = Season(json['id'], json['name'], json['overview'], json['season_number'], json['air_date'],
+                        serie_poster_path, [], tmdb_id_serie)
+        else:
+            season = Season(json['id'], json['name'], json['overview'], json['season_number'], json['air_date'],
                         json['poster_path'], [], tmdb_id_serie)
         season.save_in_db()
         for episode in json['episodes']:
             new_episode = Episode.get_episode_by_id(episode['id'])
             if new_episode is None:
-                new_episode = Episode.create_from_json(episode, json['id'])
+                new_episode = Episode.create_from_json(episode, season.poster_path, json['id'])
             season.episodes.append(new_episode)
         season.save_in_db()
         return season
+
 
     # Static method for selection
     @classmethod
@@ -432,6 +442,22 @@ class Season(DBObject, Base):
             return None
         except MultipleResultsFound:
             return None
+    #static method to create all the seasons from a json      
+    @classmethod
+    def create_seasons_from_json(cls, json):
+        # Seasons informations
+        seasons = []
+        for season in json['seasons']:
+            new_season = Season.get_season_by_id(season['id'])
+            if new_season is None:
+                new_season = Season.create_season_from_json(get_tv_serie_season(json['id'], season['season_number']), json['poster_path'],
+                                                     json['id'])
+            seasons.append(new_season)
+        serie = Serie.get_serie_by_id(json['id'])
+        serie.seasons = seasons
+        serie.save_in_db()
+        return serie
+
 
 
 class Serie(DBObject, Base):
@@ -611,15 +637,25 @@ class Serie(DBObject, Base):
             if new_productor is None:
                 new_productor = Productor.create_from_json(productor)
             serie.productors.append(new_productor)
-        # Seasons informations
-        for season in json['seasons']:
-            new_season = Season.get_season_by_id(season['id'])
-            if new_season is None:
-                new_season = Season.create_from_json(get_tv_serie_season(json['id'], season['season_number']),
-                                                     json['id'])
-            serie.seasons.append(new_season)
         serie.save_in_db()
         return serie
+
+    def compare_value(self):
+        return self.tmdb_id_serie
+
+    def as_dict(self):
+        return {'tmdb_id_serie': self.tmdb_id_serie, 'name': self.name, 'overview': self.overview,
+                'backdrop_path': self.backdrop_path,
+                'poster_path': self.poster_path,
+                'nb_seasons': self.nb_seasons, 'nb_episodes': self.nb_episodes,
+                'next_episode_name': self.next_episode_name, 'next_episode_air_date': self.next_episode_air_date,
+                'next_episode_season_number': self.next_episode_season_number,
+                'next_episode_episode_number': self.next_episode_episode_number,
+                'vote_count': self.vote_count, 'vote_average': str(self.vote_average),
+                'genres': [genre.as_dict() for genre in self.genres],
+                'productors': [productor.as_dict() for productor in self.productors],
+                'seasons': [season.as_dict() for season in sortListByLambda(self.seasons, lambda x: x.season_number)]}
+
 
     # Static methods for selection
     @classmethod
@@ -678,18 +714,19 @@ class Serie(DBObject, Base):
             if new_productor is None:
                 new_productor = Productor.create_from_json(productor)
             serie_productors.append(new_productor)
-        self.__productors = serie_productors
+        self.productors = serie_productors
         # Seasons informations
         serie_seasons = []
         for season in json['seasons']:
             new_season = Season.get_season_by_id(season['id'])
             if new_season is None:
-                new_season = Season.create_from_json(get_tv_serie_season(json['id'], season['season_number']),
+                new_season = Season.create_season_from_json(get_tv_serie_season(json['id'], season['season_number']), json['poster_path'],
                                                      json['id'])
             serie_seasons.append(new_season)
-        self.__seasons = serie_seasons
+        self.seasons = serie_seasons
         # Saving changes
         self.save_in_db()
+        return self
 
 
 class User(DBObject, Base):

@@ -12,6 +12,8 @@ export function signup(state = initialState, action) {
       return { ...initialState, isFetching: false, user: action.user };
     case actions.USER_SIGNUP_ERROR:
       return { ...initialState, error: action.error };
+    case actions.USER_SIGNUP_RESET_STATE:
+      return initialState;
     default:
       return state;
   }

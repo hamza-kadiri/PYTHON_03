@@ -5,7 +5,8 @@ import { handleError } from "./common.actions";
 export const actions = {
   REQUEST_USER_SIGNUP: "REQUEST_USER_SIGNUP",
   USER_SIGNUP_ERROR: "USER_SIGNUP_ERROR",
-  USER_SIGNUP_SUCCESS: "USER_SIGNUP_SUCCESS"
+  USER_SIGNUP_SUCCESS: "USER_SIGNUP_SUCCESS",
+  USER_SIGNUP_RESET_STATE: "USER_SIGNUP_RESET_STATE"
 };
 
 export const userSignup = user => {
