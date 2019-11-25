@@ -135,8 +135,10 @@ def create_app():
         @app.route("/favorite", methods=['GET'])
         @auth.login_required
         def check_favorite_serie():
+            json = {"user_id": int(request.args.get(
+                "user_id")), "serie_id": request.args.get("serie_id")}
             user_id, serie_id = validate_favorite_form(
-                request.args)  # Might raise an InvalidForm exception
+                json)
             if user_id != g.user.id:
                 abort(403)
             user = User.get_user_by_id(user_id)
