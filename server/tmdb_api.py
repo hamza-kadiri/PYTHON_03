@@ -127,17 +127,23 @@ def get_tv_genres():
     resp = request.perform_request(endpoint)
     return resp.json()
 
-def get_tv_series_discover():
+def get_tv_series_discover_current():
     endpoint = f'/discover/tv'
     query = "language=en-US&sort_by=popularity.desc&air_date.gte=1573992374&page=1&timezone=America%2FNew_York&include_null_first_air_dates=false"
     request = RequestOMDB()
-    resp = request.perform_request(endpoint,query=query)
+    resp = request.perform_request(endpoint, query=query)
+    return resp.json()
+
+def get_tv_series_discover_all():
+    endpoint = f'/discover/tv'
+    request = RequestOMDB()
+    resp = request.perform_request(endpoint)
     return resp.json()
 
 def get_tv_series_discover_by_genre():
-    series = get_tv_series_discover()['results']
+    series = get_tv_series_discover_all()['results']
     genres = get_tv_genres()['genres']
-    result = []
+    series_by_genre = []
     for genre in genres:
         series_concerned = []
         for serie in series:
@@ -148,5 +154,8 @@ def get_tv_series_discover_by_genre():
             except ValueError:
                 pass
         if len(series_concerned) > 0:
-            result.append({"id":genre['id'],"name":genre['name'],"series":series_concerned})
-    return result
+            series_by_genre.append({"id":genre['id'],"name":genre['name'],"series":series_concerned})
+    series_currently_screening = get_tv_series_discover_current()['results']
+    for serie in series_currently_screening:
+        generate_assets_url(serie)
+    return {"series_by_genre":series_by_genre,"series_currently_screening":series_currently_screening}

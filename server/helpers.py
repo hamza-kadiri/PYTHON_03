@@ -59,4 +59,3 @@ def sortListByLambda(list,func):
     sortedList = sorted(filteredList, key=func)
     sortedList.extend(numberZero)
     return sortedList
-
