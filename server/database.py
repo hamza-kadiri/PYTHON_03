@@ -22,17 +22,28 @@ def deletion_db():
     """Function permitting to delete the database"""
     #Sorting the tables by dependency between the tables
     for tbl in reversed(Base.metadata.sorted_tables):
-        tbl.drop(engine)
+        tbl.drop(engine, checkfirst=True)
 
 def creation_db():
     """Function creating the database following the defined model"""
     Base.metadata.create_all(bind=engine)
 
-def initiation_db():
+def import_data():
+    """Function to import some data to test the app"""
+    sql = open("data_init.sql", "r")
+    text = ""
+    for line in sql:
+        text += line
+    engine.execute(text)
+
+
+def initiation_db(init_data=False):
     """Initialize the database by importing the models then deleting the old database and creating the new one"""
     init_models()
     deletion_db()
     creation_db()
+    if (init_data):
+        import_data()
 
 def save_obj(obj:Base):
     """Function to save an object in the database through the session"""
