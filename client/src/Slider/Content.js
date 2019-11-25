@@ -138,7 +138,7 @@ const Content = ({ serie, onClose, singleSlider, episode, refProp }) => {
                 </div>
               ) : (
                 <Grid item>
-                  <div className={classes.contentDetails}>
+                  <div>
                     <Button
                       component={Link}
                       to={`/serie/${serie.id}`}

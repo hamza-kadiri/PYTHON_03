@@ -4,7 +4,8 @@ import Typography from "@material-ui/core/Typography";
 import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
 import FormControl from "@material-ui/core/FormControl";
-import { Grid } from "@material-ui/core";
+import { Grid, Button } from "@material-ui/core";
+import { Link } from "react-router-dom";
 
 const FavoriteSerie = ({ serie }) => {
   const [season, setSeason] = useState(0);
@@ -53,6 +54,16 @@ const FavoriteSerie = ({ serie }) => {
               ))}
             </Select>
           </FormControl>
+        </Grid>
+        <Grid item>
+          <Button
+            component={Link}
+            to={`/serie/${serie.id}`}
+            variant="outlined"
+            color="primary"
+          >
+            More Details
+          </Button>
         </Grid>
       </Grid>
       <Slider episode>
