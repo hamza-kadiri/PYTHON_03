@@ -56,8 +56,8 @@ cependant avec cet utilisateur vous ne pourrez pas voir les notifications par ma
 - Recherche d'une série
 - Ajout d'une série au favoris
 - Notifications (sur l’application et par mails)
-- Parcourt des saisons et épisodes des séries favorites
-- gestion des exceptions
+- Parcours des saisons et épisodes des séries favorites
+- Gestion des exceptions
 
 ## Architecture et choix techniques
 
@@ -69,6 +69,56 @@ Nous avons choisi de réaliser le front-end en ReactJS qui communique avec le se
 
 Pour la partie client, nous nous sommes appuyés sur le framework [Material UI](https://material-ui.com/) pour les composants CSS.
 Pour une gestion du flux de donnéés plus organisée, nous avons utilisé la librairie [Redux](https://redux.js.org/)
+
+### Api 
+
+L'API du serveur est conçue pour renvoyer des données au format JSON.
+
+Elle se base sur une authentification de l'utilisateur à l'aide d'un système de token :
+
+1. Lorsqu'un utilisateur se connecte sur l'application, celui-ci envoie au serveur son nom d'utilisateur et son mot de passe.
+2. Si ceux-ci sont corrects, un token est renvoyé au client. Celui-ci est créé à partir de la classe TimedJSONWebSignatureSerializer de la librairie itsdangerous, de l'id de l'utilisateur, d'une durée de validité fixée (ici 10 minutes) et de la clé secrète du serveur.
+3. Par la suite, lorsqu'un utilisateur veut utiliser une route nécessitant une authentification, celui envoie son token précédée de "Token" dans l'en-tête "Authorization" de sa requête HTTP. 
+4. Le token est ensuite désérialisé à l'aide de la clé secrète du serveur afin de vérifier sa date d'expiration et d'obtenir l'id de l'utilisateur. 
+Si le token est valide, on peut alors directement récupérer les droits d'accès de l'utilisateur dans la BDD à l'aide de l'id ainsi obtenue.
+
+L'API comporte les endpoints suivants, correspondants aux fonctionnalités de l'application :
+
+1. **Ping :**
+    - **Endpoint :** *"/"*, **Méthode :** *GET*  
+    Renvoie un statut "200 OK" si le serveur est en marche
+   
+2. **Authentification :**
+    - **Endpoint :** *"/token"*, **Méthode :** *POST*   
+    Reçoit une requête POST comportant un nom d'utilisateur et un mot de passe et renvoie un token si ceux-ci sont corrects
+    
+3. **Recherche d'informations sur les séries :**
+    - **Endpoint :** *"/search"*, **Méthode :** *GET*  
+    Reçoit une chaîne de caractères et renvoie toutes les séries dont le nom comporte cette chaîne de caractère
+    - **Endpoint :** *"/discover"*, **Méthode :** *GET*  
+    Renvoie des suggestions de série Sends series suggestions
+    - **Endoint :** *"/series/<serie_id>"*, **Méthode :** *GET*  
+    Renvoie des informations à propos de la série identifiée par serie_id Sends information about the serie identified by serie_id
+    
+4. **Ajout d'utilisateurs :**
+    - **Endpoint :** *"/users"*, POST*  
+    Reçoit un nom d'utilisateur, un mot de passe et une addresse mail et inscrit l'utilisateur dans la BDD si cela est possible
+    
+5. **Obtention d'informations sur un utilisateur :**
+    - **Endpoint :** *"/users/<user_id>"*, **Méthode :** *GET*  
+    Renvoie les informations de l'utilisateur identifié par user_id
+    - **Endpoint :** *"/users/<user_id>/series"*, **Méthode :** *GET*  
+    Renvoie les séries favorites de l'utilisateur identifié par user_id
+    - **Endpoint :** *"/users/<user_id>/notifications"*, **Méthode :** *GET*  
+    Renvoie les notifications de l'utilisateur identifié par user_id
+    - **Endpoint :** *"/users/<user_id>/notifications"*, **Méthode :** *POST*  
+    Reçoit une liste de notifications concernant l'utilisateur identifié par user_id et qui doivent être marquées comme lu, et effectue ces opérations en BDD si possible   
+    
+6. **Gestion des favoris :**
+    - **Endpoint :** *"/favorite"*, **Méthode :** *GET*  
+    Reçoit un user_id et une serie_id et renvoie une valeur "is_favorite" valant True si la série est dans les favoris de l'utilisateur
+    - **Endpoint :** *"/favorite"*, **Méthode :** *POST*  
+    Reçoit un user_id et une serie_id  et permet d'ajouter (ou d'enlever) une série aux favoris de l'utilisateur
 
 ### Api
 
