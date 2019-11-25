@@ -13,7 +13,7 @@ const Slider = ({ children, activeSlide, singleSlider, episode }) => {
     return () => {
       handleClose();
     };
-  }, [children]);
+  }, [activeSlide]);
   const [currentSlide, setCurrentSlide] = useState(activeSlide);
   let { width, elementRef } = useSizeElement();
   let {
@@ -24,7 +24,6 @@ const Slider = ({ children, activeSlide, singleSlider, episode }) => {
     hasNext,
     hasPrev
   } = useSliding(width, React.Children.count(children));
-
   const handleSelect = movie => {
     setCurrentSlide(movie);
   };

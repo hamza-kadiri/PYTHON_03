@@ -11,8 +11,9 @@ const FavoriteSerie = ({ serie }) => {
   const handleChange = event => {
     setSeason(event.target.value);
   };
+  console.log(serie);
   const seasons = serie.seasons;
-  return (
+  return seasons ? (
     <React.Fragment key={serie.id}>
       <Grid
         container
@@ -64,7 +65,7 @@ const FavoriteSerie = ({ serie }) => {
         })}
       </Slider>
     </React.Fragment>
-  );
+  ) : null;
 };
 
 export default FavoriteSerie;

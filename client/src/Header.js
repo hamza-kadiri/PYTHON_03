@@ -54,8 +54,8 @@ const useStyles = makeStyles(theme => {
 
     appBar: scrollY => ({
       backgroundColor: fade(
-        theme.palette.primary.main,
-        Math.min(0.3 + scrollY / 50, 1)
+        theme.palette.common.black,
+        Math.min(0.3 + scrollY / 10, 1)
       ),
       position: "fixed",
       zIndex: 10
@@ -267,7 +267,7 @@ function PrimarySearchAppBar({
       />
     </MenuItem>
   );
-  const renderNotifications = (
+  const renderNotifications = notifications.length > 0 && (
     <Menu
       anchorEl={notificationsAnchorEl}
       id={menuId}

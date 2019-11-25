@@ -90,7 +90,6 @@ class MailingServer:
         self.__smtp_server.send_message(message)
 
     def send_notification(self, notification: Notification, open_and_close_smtp: bool = True, sent_from: str = None):
-        print('SENDING NOTIFICATION')
         if open_and_close_smtp:
             self.open_smtp_server()
         sent_from = sent_from if sent_from is not None else MailingContext.get_mailing_address()

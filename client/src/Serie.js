@@ -2,6 +2,7 @@ import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import CircularProgress from "@material-ui/core/CircularProgress";
+import Chip from "@material-ui/core/Chip";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import LikeIcon from "@material-ui/icons/Favorite";
@@ -77,7 +78,7 @@ const Serie = ({
           }}
         >
           <CardContent>
-            {isLoading ? (
+            {isLoading || serie.name == "" ? (
               <CircularProgress
                 style={{
                   position: "absolute",
@@ -92,11 +93,25 @@ const Serie = ({
               />
             ) : (
               <React.Fragment>
-                <Typography variant="h3" gutterBottom>
-                  {serie.name}
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {serie.overview}
+                <Typography variant="h3">{serie.name}</Typography>
+                <Typography
+                  variant="h6"
+                  style={{ paddingLeft: 5 }}
+                  gutterBottom
+                >
+                  {new Date(serie.last_air_date).getFullYear()}
+                  {serie.seasons.length > 0 &&
+                    ` - ${serie.seasons.length} Seasons - `}
+                  {serie.in_production ? (
+                    <Chip color="primary" size="small" label="In production" />
+                  ) : (
+                    <Chip
+                      variant="outlined"
+                      color="primary"
+                      size="small"
+                      label="Finished"
+                    />
+                  )}
                 </Typography>
                 <Button
                   variant={
@@ -104,7 +119,7 @@ const Serie = ({
                   }
                   color="primary"
                   onClick={handleLike}
-                  style={{ width: "50%", minWidth: "200px" }}
+                  style={{ width: "50%", minWidth: "200px", marginBottom: 10 }}
                 >
                   {isLoadingSubscriptions ? (
                     <CircularProgress
@@ -121,6 +136,28 @@ const Serie = ({
                     ? "Remove Favorite"
                     : "Favorite"}
                 </Button>
+                {serie.genres.length > 0 && (
+                  <Typography variant="body1" gutterBottom>
+                    <b>Genres: </b>
+                    {serie.genres.map(
+                      (genre, index) => (index ? ", " : "") + genre.name
+                    )}
+                  </Typography>
+                )}
+                {serie.created_by.length > 0 && (
+                  <Typography variant="body1" gutterBottom>
+                    <b>Producers: </b>
+                    {serie.created_by.map(
+                      (person, index) => (index ? ", " : "") + person.name
+                    )}
+                  </Typography>
+                )}
+                {serie.overview && (
+                  <Typography variant="body1" gutterBottom>
+                    <b>Overview: </b>
+                    {serie.overview}
+                  </Typography>
+                )}
               </React.Fragment>
             )}
           </CardContent>

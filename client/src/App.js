@@ -12,11 +12,6 @@ import Login from "./Login";
 import Serie from "./Serie";
 import Signup from "./Signup";
 
-const handleScroll = e => {
-  console.log("coucou");
-  console.log(e);
-};
-
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route
     {...rest}
@@ -110,7 +105,7 @@ function App() {
   });
   return (
     <MuiThemeProvider theme={theme}>
-      <Router onScroll={handleScroll} history={history}>
+      <Router history={history}>
         <Header scrollY={scrollY} className="App-header"></Header>
         <div
           style={{
@@ -121,7 +116,6 @@ function App() {
             alignItems: "center",
             zIndex: 2
           }}
-          onScroll={handleScroll}
         >
           <Switch>
             <PrivateRoute path="/serie/:id" component={Serie}></PrivateRoute>
