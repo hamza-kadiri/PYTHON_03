@@ -15,7 +15,8 @@ import Lock from "@material-ui/icons/Lock";
 import React, { useState } from "react";
 import { connect, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
-import { userLogin } from "./actions/auth.actions";
+import { userLogin, actions } from "./actions/auth.actions";
+import MessageSnackbar from "./MessageSnackbar";
 
 const useStyles = makeStyles(theme => ({
   margin: {
@@ -63,9 +64,18 @@ const Login = ({ match, isLoading, error }) => {
           height: "100%",
           alignItems: "center",
           justifyContent: "center",
+          flexDirection: "column",
           zIndex: 2
         }}
       >
+        {error && error.error_message && (
+          <MessageSnackbar
+            variant="error"
+            message={error.error_message}
+            onClose={() => dispatch({ type: actions.USER_TOKEN_RESET_STATE })}
+          ></MessageSnackbar>
+        )}
+
         <Card
           onKeyPress={e => e.key === "Enter" && handleLogin()}
           style={{ background: "rgba(0,0,0,0.6)" }}

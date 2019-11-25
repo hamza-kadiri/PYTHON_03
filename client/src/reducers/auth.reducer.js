@@ -21,6 +21,9 @@ export function user(state = initialState, action) {
       return { ...initialState, error: action.error };
     case actions.USER_LOGOUT:
       return initialState;
+    case actions.USER_TOKEN_RESET_STATE:
+      console.log("coucou");
+      return initialState;
     default:
       return state;
   }

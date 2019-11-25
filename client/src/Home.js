@@ -35,11 +35,18 @@ const Home = ({ suggestions, query, categories, isFetching }) => {
           </Slider>
         </React.Fragment>
       ) : query !== "" ? (
-        <React.Fragment>
-          <Typography style={{ margin: "auto" }} variant="h5" component="h5">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%"
+          }}
+        >
+          <Typography variant="h5" component="h5">
             No result for: "<b>{query}</b>"
           </Typography>
-        </React.Fragment>
+        </div>
       ) : isFetching ? (
         <CircularProgress
           style={{

@@ -58,6 +58,7 @@ const SerieThumbnail = ({ serie }) => {
                     position: "absolute",
                     bottom: "20px",
                     right: "16px",
+                    left: "10px",
                     lineHeight: 1.4,
                     fontWeight: "bold",
                     textShadow: "0 1px 1px rgba(0, 0, 0, 0.7)",

@@ -52,18 +52,22 @@ const useStyles = makeStyles(theme => {
       }
     },
 
-    appBar: {
-      backgroundColor: fade(theme.palette.primary.main, 0.4),
+    appBar: scrollY => ({
+      backgroundColor: fade(
+        theme.palette.primary.main,
+        Math.min(0.3 + scrollY / 50, 1)
+      ),
       position: "fixed",
       zIndex: 10
-    },
+    }),
     search: {
       position: "relative",
       borderRadius: theme.shape.borderRadius,
       opacity: 1,
-      backgroundColor: fade(theme.palette.common.white, 0.15),
+      color: "black",
+      backgroundColor: fade(theme.palette.common.white, 0.3),
       "&:hover": {
-        backgroundColor: fade(theme.palette.common.white, 0.25)
+        backgroundColor: fade(theme.palette.common.white, 0.5)
       },
       marginRight: theme.spacing(2),
       marginLeft: 0,
@@ -132,9 +136,10 @@ function PrimarySearchAppBar({
   selectedSerie,
   suggestionQuery,
   user,
-  notifications
+  notifications,
+  scrollY
 }) {
-  const classes = useStyles();
+  const classes = useStyles(scrollY);
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
