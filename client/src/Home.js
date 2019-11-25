@@ -22,7 +22,11 @@ const Home = ({ suggestions, query, categories, isFetching }) => {
       {suggestions.length ? (
         <React.Fragment>
           <Typography
-            style={{ marginLeft: "10px" }}
+            style={{
+              paddingLeft: "10px",
+              fontSize: "42px",
+              paddingTop: "10px"
+            }}
             variant="h4"
             component="h4"
           >
@@ -61,9 +65,9 @@ const Home = ({ suggestions, query, categories, isFetching }) => {
           color="primary"
         />
       ) : (
-        categories.map(category => {
+        categories.map((category, index) => {
           return (
-            <React.Fragment>
+            <React.Fragment key={`category-${index}`}>
               <Typography
                 variant="h4"
                 style={{

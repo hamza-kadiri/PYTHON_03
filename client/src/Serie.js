@@ -101,7 +101,7 @@ const Serie = ({
                 >
                   {new Date(serie.last_air_date).getFullYear()}
                   {serie.seasons.length > 0 &&
-                    ` - ${serie.seasons.length} Seasons - `}
+                    ` - ${serie.seasons.length} Seasons  `}
                   {serie.in_production ? (
                     <Chip color="primary" size="small" label="In production" />
                   ) : (

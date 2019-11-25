@@ -148,7 +148,9 @@ function PrimarySearchAppBar({
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getNotifications(user.id));
+    if (user.id) {
+      dispatch(getNotifications(user.id));
+    }
   }, [user, dispatch]);
   useEffect(() => {
     setValue(selectedSerie.serie.name);
