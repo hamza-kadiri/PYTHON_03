@@ -276,7 +276,7 @@ def create_app():
         def not_found_error(error):
             app.logger.error('404 Not Found Error: %s', (error))
             return jsonify(
-                {'status_code': 404, 'error_message': 'The ressource you have requested could not be found'}), 403
+                {'status_code': 404, 'error_message': 'The ressource you have requested could not be found'}), 404
 
         @app.errorhandler(500)
         def internal_server_error(error):
