@@ -93,25 +93,35 @@ const Serie = ({
               />
             ) : (
               <React.Fragment>
-                <Typography variant="h3">{serie.name}</Typography>
-                <Typography
-                  variant="h6"
-                  style={{ paddingLeft: 5 }}
-                  gutterBottom
-                >
-                  {new Date(serie.last_air_date).getFullYear()}
-                  {serie.seasons.length > 0 &&
-                    ` - ${serie.seasons.length} Seasons  `}
+                <Typography variant="h3">
+                  {serie.name}{" "}
                   {serie.in_production ? (
-                    <Chip color="primary" size="small" label="In production" />
+                    <Chip
+                      color="primary"
+                      label="In production"
+                      style={{ color: "white", fontWeight: "bold" }}
+                    />
                   ) : (
                     <Chip
                       variant="outlined"
                       color="primary"
-                      size="small"
+                      style={{ color: "white", fontWeight: "bold" }}
                       label="Finished"
                     />
                   )}
+                </Typography>
+                <Typography variant="h6" style={{ paddingLeft: 5 }}>
+                  {new Date(serie.last_air_date).getFullYear()}
+                  {serie.seasons.length > 0 &&
+                    ` - ${serie.seasons.length} Seasons  `}
+                </Typography>
+                <Typography
+                  gutterBottom
+                  variant="h6"
+                  style={{ paddingLeft: 5 }}
+                >
+                  {serie.next_episode_to_air &&
+                    `Next Episode: S${serie.next_episode_to_air.season_number} E${serie.next_episode_to_air.episode_number}`}
                 </Typography>
                 <Button
                   variant={
