@@ -117,11 +117,18 @@ const Serie = ({
                 </Typography>
                 <Typography
                   gutterBottom
-                  variant="h6"
+                  variant="subtitle2"
                   style={{ paddingLeft: 5 }}
                 >
                   {serie.next_episode_to_air &&
-                    `Next Episode: S${serie.next_episode_to_air.season_number} E${serie.next_episode_to_air.episode_number}`}
+                    `Next Episode: S${
+                      serie.next_episode_to_air.season_number
+                    } E${
+                      serie.next_episode_to_air.episode_number
+                    } - ${Math.floor(
+                      (Date.now() - new Date(serie.last_air_date).getTime()) /
+                        (1000 * 3600 * 24)
+                    )} day(s) left`}
                 </Typography>
                 <Button
                   variant={
