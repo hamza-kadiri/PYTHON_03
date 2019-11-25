@@ -125,19 +125,33 @@ def get_tv_genres():
     endpoint = f'/genre/tv/list'
     request = RequestOMDB()
     resp = request.perform_request(endpoint)
-    return resp.json()
+    return (resp.json())['genres']
 
-def get_tv_series_discover():
+def get_tv_series_discover_current():
     endpoint = f'/discover/tv'
     query = "language=en-US&sort_by=popularity.desc&air_date.gte=1573992374&page=1&timezone=America%2FNew_York&include_null_first_air_dates=false"
     request = RequestOMDB()
-    resp = request.perform_request(endpoint,query=query)
-    return resp.json()
+    resp = request.perform_request(endpoint, query=query)
+    return (resp.json())['results']
+
+def get_tv_series_discover_all():
+    results = []
+    for i in range(5):
+        endpoint = f'/discover/tv'
+        query=f"sort_by=popularity.desc&air_date.gte=1573992374&page={i+1}"
+        request = RequestOMDB()
+        resp = request.perform_request(endpoint,query=query)
+        results.extend((resp.json())['results'])
+    return results
 
 def get_tv_series_discover_by_genre():
-    series = get_tv_series_discover()['results']
-    genres = get_tv_genres()['genres']
-    result = []
+    series_by_category = []
+    series_currently_screening = get_tv_series_discover_current()
+    for serie in series_currently_screening:
+        generate_assets_url(serie)
+    series_by_category.append({"id": 0, "name": "Series currently screening", "series": series_currently_screening})
+    genres = get_tv_genres()
+    series = get_tv_series_discover_all()
     for genre in genres:
         series_concerned = []
         for serie in series:
@@ -147,6 +161,6 @@ def get_tv_series_discover_by_genre():
                 series_concerned.append(serie)
             except ValueError:
                 pass
-        if len(series_concerned) > 0:
-            result.append({"id":genre['id'],"name":genre['name'],"series":series_concerned})
-    return result
+        if len(series_concerned) > 2:
+            series_by_category.append({"id":genre['id'],"name":genre['name'],"series":series_concerned})
+    return series_by_category
