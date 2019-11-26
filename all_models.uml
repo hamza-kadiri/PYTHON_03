@@ -3,151 +3,152 @@
   <ID>Python</ID>
   <OriginalElement>#/home/clem/POOA/PYTHON_03/server/models.py</OriginalElement>
   <nodes>
-    <node x="596.75" y="0.0">object</node>
-    <node x="544.25" y="76.0">server.models.EqMixin</node>
-    <node x="183.0" y="318.0">server.models.Productor</node>
-    <node x="774.0" y="318.0">server.models.Genre</node>
-    <node x="394.0" y="318.0">server.models.Serie</node>
-    <node x="957.0" y="318.0">server.models.User</node>
-    <node x="67.85277777777776" y="152.0">server.models.Person</node>
-    <node x="0.0" y="318.0">server.models.Actor</node>
-    <node x="540.75" y="152.0">server.models.DBObject</node>
-    <node x="863.625" y="152.0">Base</node>
-    <node x="1323.0" y="318.0">server.models.Notification</node>
-    <node x="1133.0" y="318.0">server.models.Season</node>
-    <node x="577.0" y="318.0">server.models.Episode</node>
+    <node x="2627.0" y="0.0">object</node>
+    <node x="2677.5" y="607.0">server.models.EqMixin</node>
+    <node x="0.0" y="1982.0">server.models.Productor</node>
+    <node x="3082.0" y="1934.0">server.models.Genre</node>
+    <node x="5842.0" y="1286.0">server.models.Serie</node>
+    <node x="2662.0" y="1790.0">server.models.User</node>
+    <node x="380.14166666666733" y="781.0">server.models.Person</node>
+    <node x="595.0" y="1982.0">server.models.Actor</node>
+    <node x="2681.5" y="925.5">server.models.DBObject</node>
+    <node x="3296.125" y="950.5">Base</node>
+    <node x="4580.0" y="1574.0">server.models.Notification</node>
+    <node x="3431.0" y="1730.0">server.models.Season</node>
+    <node x="1278.0000000000002" y="1670.0">server.models.Episode</node>
   </nodes>
   <notes />
   <edges>
     <edge source="server.models.Episode" target="Base">
-      <point x="44.25" y="-13.0" />
-      <point x="709.75" y="298.0" />
-      <point x="889.0" y="298.0" />
-      <point x="-3.625" y="13.0" />
-    </edge>
-    <edge source="server.models.Notification" target="server.models.DBObject">
-      <point x="-52.99999999999994" y="-13.0" />
-      <point x="1376.0" y="208.0" />
-      <point x="713.25" y="208.0" />
-      <point x="80.5" y="13.0" />
-    </edge>
-    <edge source="server.models.DBObject" target="server.models.EqMixin">
-      <point x="0.0" y="-13.0" />
-      <point x="0.0" y="13.0" />
-    </edge>
-    <edge source="server.models.Episode" target="server.models.DBObject">
-      <point x="-44.25" y="-13.0" />
-      <point x="-11.5" y="13.0" />
-    </edge>
-    <edge source="server.models.EqMixin" target="object">
-      <point x="0.0" y="-13.0" />
-      <point x="0.0" y="13.0" />
-    </edge>
-    <edge source="server.models.Serie" target="server.models.DBObject">
-      <point x="-40.75" y="-13.0" />
-      <point x="434.75" y="258.0" />
-      <point x="598.25" y="258.0" />
-      <point x="-34.5" y="13.0" />
-    </edge>
-    <edge source="server.models.Productor" target="server.models.Person">
-      <point x="-63.66666666666666" y="-13.0" />
-      <point x="214.83333333333337" y="228.0" />
-      <point x="195.35277777777776" y="228.0" />
-      <point x="42.5" y="13.0" />
-    </edge>
-    <edge source="server.models.User" target="Base">
-      <point x="39.0" y="-13.0" />
-      <point x="1074.0" y="238.0" />
-      <point x="903.5" y="238.0" />
-      <point x="10.875" y="13.0" />
-    </edge>
-    <edge source="server.models.Actor" target="server.models.Person">
-      <point x="-54.33333333333334" y="-13.0" />
-      <point x="27.16666666666663" y="228.0" />
-      <point x="110.35277777777776" y="228.0" />
-      <point x="-42.5" y="13.0" />
-    </edge>
-    <edge source="server.models.User" target="server.models.DBObject">
-      <point x="-39.0" y="-13.0" />
-      <point x="996.0" y="248.0" />
-      <point x="667.25" y="248.0" />
-      <point x="34.5" y="13.0" />
-    </edge>
-    <edge source="server.models.Actor" target="Base">
-      <point x="54.33333333333334" y="-13.0" />
-      <point x="135.83333333333337" y="268.0" />
-      <point x="867.25" y="268.0" />
-      <point x="-25.375" y="13.0" />
-    </edge>
-    <edge source="server.models.Genre" target="server.models.DBObject">
-      <point x="-40.75" y="-13.0" />
-      <point x="814.75" y="258.0" />
-      <point x="644.25" y="258.0" />
-      <point x="11.5" y="13.0" />
-    </edge>
-    <edge source="server.models.Season" target="server.models.DBObject">
-      <point x="-42.5" y="-13.0" />
-      <point x="1175.5" y="228.0" />
-      <point x="690.25" y="228.0" />
-      <point x="57.5" y="13.0" />
-    </edge>
-    <edge source="server.models.Season" target="Base">
-      <point x="42.5" y="-13.0" />
-      <point x="1260.5" y="218.0" />
-      <point x="910.75" y="218.0" />
-      <point x="18.125" y="13.0" />
-    </edge>
-    <edge source="server.models.Productor" target="server.models.DBObject">
-      <point x="0.0" y="-13.0" />
-      <point x="278.5" y="248.0" />
-      <point x="575.25" y="248.0" />
-      <point x="-57.5" y="13.0" />
-    </edge>
-    <edge source="server.models.Person" target="object">
-      <point x="0.0" y="-13.0" />
-      <point x="152.85277777777776" y="51.0" />
-      <point x="608.75" y="51.0" />
-      <point x="-24.0" y="13.0" />
-    </edge>
-    <edge source="server.models.Serie" target="Base">
-      <point x="40.75" y="-13.0" />
-      <point x="516.25" y="288.0" />
-      <point x="881.75" y="288.0" />
+      <point x="341.0" y="-446.5" />
+      <point x="2301.0" y="1256.0" />
+      <point x="3314.25" y="1256.0" />
       <point x="-10.875" y="13.0" />
     </edge>
-    <edge source="server.models.Productor" target="Base">
-      <point x="63.666666666666686" y="-13.0" />
-      <point x="342.1666666666667" y="278.0" />
-      <point x="874.5" y="278.0" />
+    <edge source="server.models.Notification" target="server.models.DBObject">
+      <point x="-310.5000000000002" y="-542.5" />
+      <point x="4890.5" y="1196.0" />
+      <point x="2831.0" y="1196.0" />
+      <point x="57.5" y="38.0" />
+    </edge>
+    <edge source="server.models.DBObject" target="server.models.EqMixin">
+      <point x="0.0" y="-38.0" />
+      <point x="0.0" y="62.0" />
+    </edge>
+    <edge source="server.models.Episode" target="server.models.DBObject">
+      <point x="-341.0" y="-446.5" />
+      <point x="1619.0000000000002" y="1226.0" />
+      <point x="2739.0" y="1226.0" />
+      <point x="-34.5" y="38.0" />
+    </edge>
+    <edge source="server.models.EqMixin" target="object">
+      <point x="0.0" y="-62.0" />
+      <point x="0.0" y="278.5" />
+    </edge>
+    <edge source="server.models.Serie" target="server.models.DBObject">
+      <point x="-676.0" y="-830.5" />
+      <point x="6518.0" y="1176.0" />
+      <point x="2854.0" y="1176.0" />
+      <point x="80.5" y="38.0" />
+    </edge>
+    <edge source="server.models.Productor" target="server.models.Person">
+      <point x="-191.66666666666663" y="-134.5" />
+      <point x="95.83333333333348" y="1196.0" />
+      <point x="503.39166666666733" y="1196.0" />
+      <point x="-123.25" y="182.5" />
+    </edge>
+    <edge source="server.models.Actor" target="server.models.Person">
+      <point x="-221.0" y="-134.5" />
+      <point x="705.5" y="1196.0" />
+      <point x="749.8916666666673" y="1196.0" />
+      <point x="123.25" y="182.5" />
+    </edge>
+    <edge source="server.models.User" target="Base">
+      <point x="100.0" y="-326.5" />
+      <point x="2962.0" y="1266.0" />
+      <point x="3321.5" y="1266.0" />
+      <point x="-3.625" y="13.0" />
+    </edge>
+    <edge source="server.models.Actor" target="Base">
+      <point x="221.0" y="-134.5" />
+      <point x="1147.5" y="1246.0" />
+      <point x="3307.0" y="1246.0" />
       <point x="-18.125" y="13.0" />
     </edge>
-    <edge source="server.models.Genre" target="Base">
-      <point x="40.75" y="-13.0" />
-      <point x="3.625" y="13.0" />
+    <edge source="server.models.User" target="server.models.DBObject">
+      <point x="-100.0" y="-326.5" />
+      <point x="-11.5" y="38.0" />
     </edge>
-    <edge source="server.models.Notification" target="Base">
-      <point x="53.00000000000006" y="-13.0" />
-      <point x="1482.0" y="198.0" />
-      <point x="918.0" y="198.0" />
+    <edge source="server.models.Genre" target="server.models.DBObject">
+      <point x="-82.25" y="-182.5" />
+      <point x="3164.25" y="1226.0" />
+      <point x="2785.0" y="1226.0" />
+      <point x="11.5" y="38.0" />
+    </edge>
+    <edge source="server.models.Season" target="server.models.DBObject">
+      <point x="-282.25" y="-386.5" />
+      <point x="3713.25" y="1216.0" />
+      <point x="2808.0" y="1216.0" />
+      <point x="34.5" y="38.0" />
+    </edge>
+    <edge source="server.models.Season" target="Base">
+      <point x="282.25" y="-386.5" />
+      <point x="4277.75" y="1206.0" />
+      <point x="3336.0" y="1206.0" />
+      <point x="10.875" y="13.0" />
+    </edge>
+    <edge source="server.models.Productor" target="server.models.DBObject">
+      <point x="0.0" y="-134.5" />
+      <point x="287.5" y="1206.0" />
+      <point x="2693.0" y="1206.0" />
+      <point x="-80.5" y="38.0" />
+    </edge>
+    <edge source="server.models.Person" target="object">
+      <point x="0.0" y="-182.5" />
+      <point x="626.6416666666673" y="582.0" />
+      <point x="2675.833333333334" y="582.0" />
+      <point x="-97.66666666666652" y="278.5" />
+    </edge>
+    <edge source="server.models.Serie" target="Base">
+      <point x="676.0" y="-830.5" />
+      <point x="7870.0" y="1166.0" />
+      <point x="3350.5" y="1166.0" />
       <point x="25.375" y="13.0" />
     </edge>
-    <edge source="server.models.Actor" target="server.models.DBObject">
-      <point x="0.0" y="-13.0" />
-      <point x="81.5" y="238.0" />
-      <point x="552.25" y="238.0" />
-      <point x="-80.5" y="13.0" />
+    <edge source="server.models.Notification" target="Base">
+      <point x="310.4999999999998" y="-542.5" />
+      <point x="5511.5" y="1186.0" />
+      <point x="3343.25" y="1186.0" />
+      <point x="18.125" y="13.0" />
+    </edge>
+    <edge source="server.models.Productor" target="Base">
+      <point x="191.66666666666674" y="-134.5" />
+      <point x="479.16666666666697" y="1236.0" />
+      <point x="3299.75" y="1236.0" />
+      <point x="-25.375" y="13.0" />
+    </edge>
+    <edge source="server.models.Genre" target="Base">
+      <point x="82.25" y="-182.5" />
+      <point x="3.625" y="13.0" />
     </edge>
     <edge source="Base" target="object">
       <point x="0.0" y="-13.0" />
-      <point x="892.625" y="51.0" />
-      <point x="656.75" y="51.0" />
-      <point x="24.0" y="13.0" />
+      <point x="3325.125" y="582.0" />
+      <point x="2871.166666666667" y="582.0" />
+      <point x="97.66666666666652" y="278.5" />
+    </edge>
+    <edge source="server.models.Actor" target="server.models.DBObject">
+      <point x="0.0" y="-134.5" />
+      <point x="926.5" y="1216.0" />
+      <point x="2716.0" y="1216.0" />
+      <point x="-57.5" y="38.0" />
     </edge>
   </edges>
-  <settings layout="Hierarchic Group" zoom="0.6546623794212219" x="767.5" y="172.0" />
-  <SelectedNodes>
-    <node>server.models.Episode</node>
-  </SelectedNodes>
-  <Categories />
+  <settings layout="Hierarchic Group" zoom="0.4144694533762059" x="563.2676493405738" y="1418.0372381691232" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Fields</Category>
+    <Category>Methods</Category>
+  </Categories>
 </Diagram>
 
