@@ -1,9 +1,12 @@
 # DOCUMENTATION
 
-- [DOCUMENTATION](#documentation)
-      - [Groupe: PYTHON_03](#groupe-python03)
-      - [Sujet : Application Web de séries](#sujet--application-web-de-s%c3%a9ries)
-      - [Participants : KADIRI Hamza | BENAUW Edouard | QUESNEL Clement](#participants--kadiri-hamza--benauw-edouard--quesnel-clement)
+
+#### Groupe: PYTHON_03
+
+#### Sujet : Application Web de séries
+
+#### Participants : KADIRI Hamza | BENAUW Edouard | QUESNEL Clement
+
   - [Guide d'installation](#guide-dinstallation)
   - [Manuel d'utilisation](#manuel-dutilisation)
   - [Fonctionnalités](#fonctionnalit%c3%a9s)
@@ -15,15 +18,12 @@
     - [Modèle de données](#mod%c3%a8le-de-donn%c3%a9es)
     - [Stockage des données](#stockage-des-donn%c3%a9es)
 
-#### Groupe: PYTHON_03
-
-#### Sujet : Application Web de séries
-
-#### Participants : KADIRI Hamza | BENAUW Edouard | QUESNEL Clement
-
 ## Guide d'installation
 - Si vous avez docker et docker compose d'installer passez à l'étape suivante sinon:
-  1. installer docker
+  1. installer docker engine
+   - Linux : https://docs.docker.com/install/linux/docker-ce/ubuntu/
+   - Windows : https://docs.docker.com/docker-for-windows/install/
+   - Macos : https://docs.docker.com/docker-for-mac/install/
   2. installer docker-compose en vous aidant du tutoriel suivant : https://docs.docker.com/compose/install/
  
  
