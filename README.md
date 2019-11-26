@@ -30,32 +30,46 @@ Pour cela, ouvrir un terminal dans le dossier de l'application et afin de rentre
 
 `docker exec -it server sh`
 
-Une fois sur le terminal du serveur deux possibilités vous sont offertes:
-
-1. Créer une base de donnée vierge en executant la commande suivante:
+Une fois sur le terminal du serveur il faut créer une base de donnée vierge en executant la commande suivante:
 
    `python db_creation.py`
 
-2. Créer une base de donnée contenant un user avec quelques séries favorites:
-
-   `python db_creation.py import`
-
-Si vous choisissez la deuxième option l'utilisateur existant a pour attributs:
-
-**username** : user_test
-**email** : test@test.com
-**password** : test
-
-cependant avec cet utilisateur vous ne pourrez pas voir les notifications par mail
-
 ## Manuel d'utilisation
 
-## Fonctionnalités
+Une fois l'application et la base de données créées, l'utilisateur peut découvrir l'application 
+grâce à un navigateur web de son choix, en entrant l'adresse suivante:
+localhost:3001.
+
+Lors de la première utilisation l'utilisateur doit s'enregistrer grâce au bouton signup.
+Une fois enregistré, il est redirigé vers la page d'accueil. Depuis cette page d'accueil l'utilisateur a 
+plusieurs possibilités :
+ - l'application lui proprose différentes séries du moment classées par genre.
+
+ - il peut utiliser la barre de recherche lui permet de recherche sur l'ensemble des séries. Pour voir l'ensemble des détails,
+il doit cliquer sur l'image de sa série puis "more details" pour accéder à la page détailée.
+
+ - il peut consulter ses notifications (s'il possède des séries favorites en cours) en cliquant sur la petite cloche
+ en haut à droite
+ 
+ - il peut cliquer sur l'icon utilisateur en haut à droite pour:
+   1. Se déconnecter grâce à Signup
+   2. Consulter et parcourir les episodes de ses saisons favorites grâce au bouton favorites 
+
+
+## Fonctionnalités de l'application
 
 - Gestion d'utilisateur
-- Recherche d'une série
-- Ajout d'une série au favoris
-- Notifications (sur l’application et par mails)
+  1. Connexion
+  2. Déconnexion
+  3. Creation de compte
+  4. Attribution d'un token d'identification
+  5. Vérification de la validité du tokken
+- Barre de recherche dynamique
+- Gestion des séries favorites d'un utilisateur
+  1. Ajout d'une ou plusieurs au favoris
+  2. Suppression d'une ou plusieurs séries au favoris
+  3. Création de notifications dans l'application pour prévenir des nouveaux épisodes à venir
+  4. Création de notifications mail, à l'ajout d'une série et à chaque nouvel épisode sortie
 - Parcours des saisons et épisodes des séries favorites
 - Gestion des exceptions
 
@@ -68,7 +82,7 @@ Nous avons choisi de réaliser le front-end en ReactJS qui communique avec le se
 ### Client
 
 Pour la partie client, nous nous sommes appuyés sur le framework [Material UI](https://material-ui.com/) pour les composants CSS.
-Pour une gestion du flux de donnéés plus organisée, nous avons utilisé la librairie [Redux](https://redux.js.org/)
+Pour une gestion du flux de données plus organisée, nous avons utilisé la librairie [Redux](https://redux.js.org/)
 
 ### Api 
 
@@ -153,4 +167,23 @@ L'API gère un panel d'exceptions. Certaines sont des exceptions personnalisées
 
 ### Modèle de données
 
+Les données sont organisées selon 8 grandes classes pythons:
+ - Série
+ - Saison
+ - Episode
+ - Notification
+ - User
+ - Personne
+ - Actor
+ - Productor
+
+Pour avoir l'ensemble des détails sur le modèle de données, le diagramme UML est disponible
+à la racine du dossier (all_models.uml)
+ 
 ### Stockage des données
+
+Nous avons décidé d'utiliser une base de données postgressql dont la connexion se fait
+par sql alchemy. 
+
+La base de données est accessible grâce un adminer à l'adresse:
+localhost:8080
