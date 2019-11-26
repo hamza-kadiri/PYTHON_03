@@ -78,7 +78,7 @@ const Serie = ({
           }}
         >
           <CardContent>
-            {isLoading || serie.name == "" ? (
+            {isLoading || serie.name === "" ? (
               <CircularProgress
                 style={{
                   position: "absolute",

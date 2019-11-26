@@ -1,10 +1,9 @@
 import cx from "classnames";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import SliderContext from "./context";
 import Mark from "./Mark";
 import "./SerieThumbnail.scss";
 import ShowDetailsButton from "./ShowDetailsButton";
-import { height } from "@material-ui/system";
 
 const SerieThumbnail = ({ serie }) => {
   const [isHovered, setIsHovered] = useState(false);

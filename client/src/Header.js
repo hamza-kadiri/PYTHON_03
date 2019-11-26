@@ -1,3 +1,4 @@
+import { Button } from "@material-ui/core";
 import AppBar from "@material-ui/core/AppBar";
 import Avatar from "@material-ui/core/Avatar";
 import Badge from "@material-ui/core/Badge";
@@ -15,14 +16,14 @@ import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import AccountCircle from "@material-ui/icons/AccountCircleOutlined";
 import ClearIcon from "@material-ui/icons/ClearOutlined";
-import MenuIcon from "@material-ui/icons/MenuOutlined";
 import MoreIcon from "@material-ui/icons/MoreVertOutlined";
 import NotificationsIcon from "@material-ui/icons/NotificationsOutlined";
 import SearchIcon from "@material-ui/icons/SearchOutlined";
 import React, { useEffect, useState } from "react";
 import Autosuggest from "react-autosuggest";
 import { connect, useDispatch } from "react-redux";
-import { withRouter, NavLink } from "react-router-dom";
+import { NavLink, withRouter } from "react-router-dom";
+import { Link } from "react-router-dom/";
 import { userLogout } from "./actions/auth.actions";
 import {
   getNotifications,
@@ -33,8 +34,6 @@ import {
   fetchSuggestedSeries
 } from "./actions/series.actions";
 import { history } from "./helpers/history";
-import { Button } from "@material-ui/core";
-import { Link } from "react-router-dom/";
 
 const useStyles = makeStyles(theme => {
   return {
