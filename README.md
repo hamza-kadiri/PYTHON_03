@@ -6,7 +6,7 @@
       - [Participants : KADIRI Hamza | BENAUW Edouard | QUESNEL Clement](#participants--kadiri-hamza--benauw-edouard--quesnel-clement)
   - [Guide d'installation](#guide-dinstallation)
   - [Manuel d'utilisation](#manuel-dutilisation)
-  - [Fonctionnalités :](#fonctionnalit%c3%a9s)
+  - [Fonctionnalités](#fonctionnalit%c3%a9s)
   - [Architecture et choix techniques](#architecture-et-choix-techniques)
     - [Introduction](#introduction)
     - [Client](#client)
@@ -50,7 +50,7 @@ cependant avec cet utilisateur vous ne pourrez pas voir les notifications par ma
 
 ## Manuel d'utilisation
 
-## Fonctionnalités :
+## Fonctionnalités
 
 - Gestion d'utilisateur
 - Recherche d'une série
@@ -72,7 +72,7 @@ Pour une gestion du flux de donnéés plus organisée, nous avons utilisé la li
 
 ### Api 
 
-L'API du serveur est conçue pour renvoyer des données au format JSON.
+L'API du serveur est conçue pour renvoyer des données au format JSON. Il s'agit d'une application Flask, dont le point d'entrée se situe dans app.py et la configuration dans config.py.
 
 Elle se base sur une authentification de l'utilisateur à l'aide d'un système de token :
 
@@ -118,11 +118,38 @@ L'API comporte les endpoints suivants, correspondants aux fonctionnalités de l'
     - **Endpoint :** *"/favorite"*, **Méthode :** *GET*  
     Reçoit un user_id et une serie_id et renvoie une valeur "is_favorite" valant True si la série est dans les favoris de l'utilisateur
     - **Endpoint :** *"/favorite"*, **Méthode :** *POST*  
-    Reçoit un user_id et une serie_id  et permet d'ajouter (ou d'enlever) une série aux favoris de l'utilisateur
+    Reçoit un user_id et une serie_id  et permet d'ajouter (ou d'enlever) une série aux favoris de l'utilisateur. Dans le cas de l'ajout aux favoris et si la série a un prochain épisode de prévu, une notification et un mail sont envoyés à l'utilisateur.
 
-### Api
+Pour tous les endpoint utilisant des inputs de l'utilisateur, ceux-ci sont préalablement vérifiés avec les fonctions situées dans form_validation.py.
+
+L'application se base sur des données sur les séries récupérées via l'API de TMDB (https://developers.themoviedb.org/3/getting-started/introduction), qui sont récupérées via les fonctions situées dans tmdb_api.py.
 
 ### Gestion des exceptions
+
+L'API gère un panel d'exceptions. Certaines sont des exceptions personnalisées, créées pour l'application. D'autres sont des exceptions standards, gérées nativement par Flask et appelées à l'aide de la fonction abort(error_code).
+
+**Exceptions personnalisées :**
+
+- **RequestExceptionOMDB :** l'exception est renvoyée en cas d'erreur lors d'une requête faite à l'API de TMDB.
+ L'erreur la plus commune correspond à un dépassement de la limite de requêtes de l'API (40 requêtes toutes les 10 secondes) et une erreur 429 est renvoyée dans ce cas. Dans les autres cas, une erreur 500 est renvoyée.
+ 
+- **InvalidAuth :** l'utilisateur a tenté de s'identifier avec un nom d'utilisateur ou un mot de passe erroné sur la route "/token". Une erreur 400 est renvoyée.
+
+- **InvalidForm :** l'utilisateur a fait une requête POST comportant des données erronées. Une erreur 400 est renvoyée.
+
+- **InvalidDBOperation :** une erreur est survenue lors d'une opération dans la BDD à cause d'une opération non authorisée. Une erreur 403 est renvoyée.
+
+**Exceptions standard de Flask :**
+
+- **400 : Bad Request.** Cette erreur est renvoyée en cas de requête erronée de l'utilisateur, dans les cas non prévus par InvalidAuth et InvalidForm.
+
+- **401 : Unauthorized.** Cette erreur est renvoyée lorsque l'utilisateur envoie un token non valide (le client n'est pas autorisé à accéder à l'application)
+
+- **403 : Forbidden.** Cette erreur est renvoyée lorsque l'utilisateur veut faire une opération interdite, typiquement accéder à une route correspondant aux informations d'un autre utilisateur.
+
+- **404 : Not Found.** Cette erreur est renvoyée lorsque l'entité concernée par la requête (utilisateur, notification) n'est pas trouvée en BDD.
+
+- **500 : Internal Error.** Cette erreur est l'erreur par défaut et correspond aux exceptions non prévues lors du développement de l'application.
 
 ### Modèle de données
 
