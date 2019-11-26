@@ -22,15 +22,20 @@
 #### Participants : KADIRI Hamza | BENAUW Edouard | QUESNEL Clement
 
 ## Guide d'installation
+- Si vous avez docker et docker compose d'installer passez à l'étape suivante sinon:
+  1. installer docker
+  2. installer docker-compose en vous aidant du tutoriel suivant : https://docs.docker.com/compose/install/
+ 
+ 
+- Après avoir dézippé le dossier, ouvrez un terminal et placer vous dans le dossier et exécuter la commande suivante:
+`docker-compose up --build`
 
-blabla
-
-Une fois l'application lancée vous devez créer la base de donnée.
+ - Une fois l'application lancée vous devez créer la base de donnée.
 Pour cela, ouvrir un terminal dans le dossier de l'application et afin de rentrer dans le terminal du serveur exécuter la commande suivante :
 
-`docker exec -it server sh`
+    `docker exec -it server sh`
 
-Une fois sur le terminal du serveur il faut créer une base de donnée vierge en executant la commande suivante:
+ - Une fois sur le terminal du serveur il faut créer une base de donnée vierge en executant la commande suivante:
 
    `python db_creation.py`
 

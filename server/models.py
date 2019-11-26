@@ -960,7 +960,7 @@ class User(DBObject, Base):
         """
         return pwd_context.verify(password, self.__password_hash)
 
-    def generate_auth_token(self, expiration: int = 600):
+    def generate_auth_token(self, expiration: int = 900):
         """Method to generate a token for the authentification with the API
         :param expiration: (int) lifetime of the token
         :return:
