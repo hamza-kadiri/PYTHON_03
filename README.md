@@ -19,46 +19,49 @@
     - [Stockage des données](#stockage-des-donn%c3%a9es)
 
 ## Guide d'installation
-- Si vous avez docker et docker compose d'installer passez à l'étape suivante sinon:
-  1. installer docker engine
+
+- Si vous avez docker et docker compose déja installés, passez à l'étape suivante sinon:
+  1. Installez docker engine
    - Linux : https://docs.docker.com/install/linux/docker-ce/ubuntu/
    - Windows : https://docs.docker.com/docker-for-windows/install/
    - Macos : https://docs.docker.com/docker-for-mac/install/
-  2. installer docker-compose en vous aidant du tutoriel suivant : https://docs.docker.com/compose/install/
+  2. Installez docker-compose en vous aidant du tutoriel suivant : https://docs.docker.com/compose/install/
  
- 
-- Après avoir dézippé le dossier, ouvrez un terminal et placer vous dans le dossier et exécuter la commande suivante:
-`docker-compose up --build`
+- Après avoir dézippé le dossier, ouvrez un terminal, placez-vous à la racine du projet et exécutez la commande suivante :
+
+    `docker-compose up --build`
 
  - Une fois l'application lancée vous devez créer la base de donnée.
-Pour cela, ouvrir un terminal dans le dossier de l'application et afin de rentrer dans le terminal du serveur exécuter la commande suivante :
+Pour cela, ouvrez un terminal, placez-vous à la racine du projet et exécutez la commande suivante afin de rentrer dans le terminal du serveur :
 
     `docker exec -it server sh`
 
- - Une fois sur le terminal du serveur il faut créer une base de donnée vierge en executant la commande suivante:
+ - Une fois sur le terminal du serveur, exécutez la commande suivante pour créer une base de donnée vierge :
 
-   `python db_creation.py`
+    `python db_creation.py`
 
 ## Manuel d'utilisation
 
 Une fois l'application et la base de données créées, l'utilisateur peut découvrir l'application 
-grâce à un navigateur web de son choix, en entrant l'adresse suivante:
-localhost:3001.
+grâce à un navigateur web de son choix, en entrant l'adresse suivante :
 
-Lors de la première utilisation l'utilisateur doit s'enregistrer grâce au bouton signup.
+`localhost:3001`
+
+Lors de la première utilisation, l'utilisateur doit s'enregistrer grâce au bouton signup.
 Une fois enregistré, il est redirigé vers la page d'accueil. Depuis cette page d'accueil l'utilisateur a 
 plusieurs possibilités :
- - l'application lui proprose différentes séries du moment classées par genre.
 
- - il peut utiliser la barre de recherche lui permet de recherche sur l'ensemble des séries. Pour voir l'ensemble des détails,
-il doit cliquer sur l'image de sa série puis "more details" pour accéder à la page détailée.
+ - L'application lui propose différentes séries du moment classées par genre
 
- - il peut consulter ses notifications (s'il possède des séries favorites en cours) en cliquant sur la petite cloche
+ - Il peut utiliser la barre de recherche pour effectuer des recherches sur l'ensemble des séries. Pour voir l'ensemble des détails,
+En cliquant sur l'image de sa série puis "more details", il accède à la page détailée de la série. Il peut ensuite ajouter la série à ses favoris.
+
+ - Il peut consulter ses notifications (s'il possède des séries favorites diffusant prochainement des épisodes) en cliquant sur la petite cloche
  en haut à droite
  
- - il peut cliquer sur l'icon utilisateur en haut à droite pour:
+ - Il peut cliquer sur l'icon utilisateur en haut à droite pour:
    1. Se déconnecter grâce à Signup
-   2. Consulter et parcourir les episodes de ses saisons favorites grâce au bouton favorites 
+   2. Consulter et parcourir les épisodes de ses saisons favorites grâce au bouton "favorites"
 
 
 ## Fonctionnalités de l'application
@@ -68,11 +71,11 @@ il doit cliquer sur l'image de sa série puis "more details" pour accéder à la
   2. Déconnexion
   3. Creation de compte
   4. Attribution d'un token d'identification
-  5. Vérification de la validité du tokken
+  5. Vérification de la validité du token
 - Barre de recherche dynamique
 - Gestion des séries favorites d'un utilisateur
-  1. Ajout d'une ou plusieurs au favoris
-  2. Suppression d'une ou plusieurs séries au favoris
+  1. Ajout d'un ou plusieurs aux favoris
+  2. Suppression d'une ou plusieurs séries favorites
   3. Création de notifications dans l'application pour prévenir des nouveaux épisodes à venir
   4. Création de notifications mail, à l'ajout d'une série et à chaque nouvel épisode sortie
 - Parcours des saisons et épisodes des séries favorites
@@ -82,7 +85,8 @@ il doit cliquer sur l'image de sa série puis "more details" pour accéder à la
 
 ### Introduction
 
-Nous avons choisi de réaliser le front-end en ReactJS qui communique avec le serveur grâce à une API developpee en Python avec la librairie flask. La gestion des donnees se fait en python grâce au fichier models.py qui utilise sqlalchemy afin de structurer les données selon les principes de programmation orientée objet et de les stocker dans une base de données postgresql.
+Nous avons choisi de réaliser le front-end en **ReactJS**. Celui-ci communique avec le serveur, écrit en **Python**, grâce à une API developpée avec la **librairie Flask**.  
+Les données sont stockées dans une base de données **PostgreSQL**. La communication avec celle-ci se fait grâce à l'**ORM sqlalchemy** et le fichier models.py, qui déclare les différents objets utilisés.
 
 ### Client
 
@@ -187,8 +191,8 @@ Pour avoir l'ensemble des détails sur le modèle de données, le diagramme UML 
  
 ### Stockage des données
 
-Nous avons décidé d'utiliser une base de données postgressql dont la connexion se fait
-par sql alchemy. 
+Nous avons décidé d'utiliser une base de données PostgreSQL avec laquelle on interagit grâce à l'ORM sqlalchemy.
 
-La base de données est accessible grâce un adminer à l'adresse:
-localhost:8080
+Il est possible d'adminsitrer la base de données grâce à une image adminer, accessible à l'adresse :
+
+`localhost:8080`
