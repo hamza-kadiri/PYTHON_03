@@ -22,12 +22,12 @@
 
 - Si vous avez docker et docker compose déja installés, passez à l'étape suivante sinon:
   1. Installez docker engine
-   - Linux : https://docs.docker.com/install/linux/docker-ce/ubuntu/
+   - Linux : https://docs.docker.com/install/linux/docker-ce/ubuntu/ puis https://docs.docker.com/install/linux/linux-postinstall/
    - Windows : https://docs.docker.com/docker-for-windows/install/
    - Macos : https://docs.docker.com/docker-for-mac/install/
   2. Installez docker-compose en vous aidant du tutoriel suivant : https://docs.docker.com/compose/install/
  
-- Après avoir dézippé le dossier, ouvrez un terminal, placez-vous à la racine du projet et exécutez la commande suivante :
+- Ouvrez un terminal, placez-vous à la racine du projet et exécutez la commande suivante :
 
     `docker-compose up --build`
 
